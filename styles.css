@@ -416,6 +416,16 @@
 	width: 8px;
 }
 
+/* updateTabOverflow still sets the fade classes here - they also drive the
+   picker chevron - but the gradients they carry are the strip's horizontal
+   ones, and a sticky header pinned inside one would be washed out. */
+.is-tabs-side .ai-agent-panel-tab-list.is-fade-start,
+.is-tabs-side .ai-agent-panel-tab-list.is-fade-end,
+.is-tabs-side .ai-agent-panel-tab-list.is-fade-start.is-fade-end {
+	-webkit-mask-image: none;
+	mask-image: none;
+}
+
 .is-tabs-side .ai-agent-panel-tab {
 	max-width: none;
 	min-width: 0;

@@ -1025,9 +1025,13 @@ export class AgentPanelView extends ItemView {
 	 */
 	private setupSideResizer(): void {
 		const handle = this.sideResizerEl;
+		let resizing = false;
 		this.registerDomEvent(handle, "pointerdown", (evt) => {
-			if (evt.button !== 0 || !this.tabsOnSide) return;
+			// A second pointer (touch) landing mid-drag would add a second set
+			// of move/up listeners that the first drag's cleanup cannot see.
+			if (evt.button !== 0 || !this.tabsOnSide || resizing) return;
 			evt.preventDefault();
+			resizing = true;
 			const startX = evt.clientX;
 			const startWidth = this.sideWidth;
 			handle.setPointerCapture(evt.pointerId);
@@ -1042,6 +1046,7 @@ export class AgentPanelView extends ItemView {
 				this.setSideWidthPref(startWidth - (e.clientX - startX));
 			};
 			const finish = () => {
+				resizing = false;
 				handle.removeEventListener("pointermove", move);
 				handle.removeEventListener("pointerup", finish);
 				handle.removeEventListener("pointercancel", finish);
@@ -1126,8 +1131,26 @@ export class AgentPanelView extends ItemView {
 		});
 	}
 
+	/** The live object an open tab owns, if any - never a second copy of it. */
+	private conversationById(id: string): StoredConversation | null {
+		return this.tabs.find((tab) => tab.conversation?.id === id)?.conversation ?? null;
+	}
+
+	/**
+	 * The conversation to act on. An open tab's own object is used as-is;
+	 * otherwise it is read from disk, and then looked for again - a tab can
+	 * open it while the read is in flight, and writing the copy we read would
+	 * roll back everything that tab has recorded since.
+	 */
+	private async conversationFor(id: string): Promise<StoredConversation | null> {
+		const owned = this.conversationById(id);
+		if (owned) return owned;
+		const loaded = await this.plugin.history.load(id);
+		return this.conversationById(id) ?? loaded;
+	}
+
 	private isPinned(id: string): boolean {
-		const open = this.tabs.find((tab) => tab.conversation?.id === id)?.conversation;
+		const open = this.conversationById(id);
 		if (open) return open.pinned === true;
 		return this.plugin.history.meta(id)?.pinned === true;
 	}
@@ -1138,8 +1161,7 @@ export class AgentPanelView extends ItemView {
 	 * hand rather than to start work on it now.
 	 */
 	private async togglePin(id: string, pinned: boolean): Promise<void> {
-		const open = this.tabs.find((tab) => tab.conversation?.id === id)?.conversation;
-		const conversation = open ?? (await this.plugin.history.load(id));
+		const conversation = await this.conversationFor(id);
 		if (!conversation) {
 			new Notice("Could not load that conversation.");
 			return;
@@ -1226,6 +1248,10 @@ export class AgentPanelView extends ItemView {
 				.join(",");
 		return [
 			"side",
+			// Recent rows carry a relative time. Nothing else in the key moves
+			// as it goes stale, so the minute is part of it - the next render
+			// for any reason then redraws "5m" as "6m".
+			Math.floor(Date.now() / 60_000),
 			this.tabFilter.trim().toLowerCase(),
 			[...this.collapsedSections].sort().join(","),
 			this.plugin.history.isScanned ? "scanned" : "scanning",
@@ -1248,6 +1274,10 @@ export class AgentPanelView extends ItemView {
 	 */
 	private renderTabList(): void {
 		if (!this.tabListEl) return; // onResize can fire before onOpen built the view
+		// A save landing mid-drag would re-parent the element being dragged and
+		// silently cancel the reorder. dragend renders unconditionally, so
+		// nothing is lost by waiting for it.
+		if (this.draggedTab) return;
 		const sections = this.tabsOnSide
 			? groupConversations(this.columnEntries(), Date.now(), this.tabFilter)
 			: null;
@@ -1481,8 +1511,8 @@ export class AgentPanelView extends ItemView {
 
 	private confirmDeleteConversation(id: string): void {
 		const title =
-			this.tabs.find((tab) => tab.conversation?.id === id)?.conversation?.title ??
-			this.plugin.history.snapshot().find((meta) => meta.id === id)?.title ??
+			this.conversationById(id)?.title ??
+			this.plugin.history.meta(id)?.title ??
 			"This conversation";
 		new DeleteConversationModal(this.app, title, () => {
 			void this.plugin.history.delete(id).then(() => {
@@ -1495,9 +1525,7 @@ export class AgentPanelView extends ItemView {
 
 	/** Export one conversation, open or not, from the row menu. */
 	private async exportConversation(id: string): Promise<void> {
-		const conversation =
-			this.tabs.find((tab) => tab.conversation?.id === id)?.conversation ??
-			(await this.plugin.history.load(id));
+		const conversation = await this.conversationFor(id);
 		if (!conversation || conversation.messages.length === 0) {
 			new Notice("Nothing to export yet.");
 			return;
@@ -1612,11 +1640,19 @@ export class AgentPanelView extends ItemView {
 			if (this.tabDropCommitted) {
 				// Rows can live in different section bodies, so positions are
 				// read in document order across the whole list rather than as
-				// indices within one parent.
-				const order = Array.from(
-					this.tabListEl.querySelectorAll(".ai-agent-panel-tab")
-				);
-				this.tabs.sort((a, b) => order.indexOf(a.tabEl) - order.indexOf(b.tabEl));
+				// indices within one parent. History rows match the selector
+				// too, but they only ever widen the gaps between tab ranks.
+				const rank = new Map<Element, number>();
+				this.tabListEl
+					.querySelectorAll(".ai-agent-panel-tab")
+					.forEach((el, index) => rank.set(el, index));
+				// A tab the filter is hiding is not in the list at all. Those
+				// keep the slots they already had - resequencing them by a rank
+				// they do not have would herd them all to the front.
+				const shown = this.tabs.filter((t) => rank.has(t.tabEl));
+				shown.sort((a, b) => rank.get(a.tabEl)! - rank.get(b.tabEl)!);
+				let next = 0;
+				this.tabs = this.tabs.map((t) => (rank.has(t.tabEl) ? shown[next++] : t));
 			}
 			this.tabDropCommitted = false;
 			// Either way the DOM is now out of step with the array: on a commit
