@@ -35,6 +35,10 @@ This release is the community-directory review pass.
   already there.
 - **Dead type-level code removed**: four type assertions that asserted nothing
   and three unused imports/constants.
+- **File/folder handling narrows with `instanceof`** in the `@`-mention
+  suggester and the context chips, instead of asserting "not a folder, so a
+  file". Obsidian has more than two kinds of `TAbstractFile`, so the assertion
+  was an assumption; now it is a check.
 - **Device-local storage reads are typed `unknown`.** Obsidian declares
   `loadLocalStorage` as returning `any`, so a stale or hand-edited value used
   to enter the plugin unchecked. `src/local-store.ts` narrows the type at the

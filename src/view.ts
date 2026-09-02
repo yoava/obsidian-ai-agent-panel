@@ -4313,7 +4313,7 @@ export class AgentPanelView extends ItemView {
 			setIcon(icon, isFolder ? "folder" : "paperclip");
 			chip.createSpan({
 				cls: "ai-agent-panel-chip-name",
-				text: isFolder ? `${attached.name}/` : (attached as TFile).basename,
+				text: attached instanceof TFile ? attached.basename : `${attached.name}/`,
 			});
 			if (attached instanceof TFile) {
 				chip.addEventListener("click", () => {

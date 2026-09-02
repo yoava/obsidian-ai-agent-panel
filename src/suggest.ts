@@ -1,10 +1,10 @@
 import {
 	prepareFuzzySearch,
 	setIcon,
+	TFile,
 	TFolder,
 	type App,
 	type TAbstractFile,
-	type TFile,
 } from "obsidian";
 
 const MAX_FILE_RESULTS = 8;
@@ -187,7 +187,7 @@ export class FileMentionSuggest extends TextareaSuggest<TAbstractFile> {
 		const scored: Array<{ item: TAbstractFile; score: number }> = [];
 		for (const item of this.app.vault.getAllLoadedFiles()) {
 			if (item.path === "/") continue; // vault root
-			const name = item instanceof TFolder ? item.name : (item as TFile).basename;
+			const name = item instanceof TFile ? item.basename : item.name;
 			const pathMatch = fuzzy(item.path);
 			const nameMatch = fuzzy(name);
 			const score = Math.max(
@@ -211,7 +211,7 @@ export class FileMentionSuggest extends TextareaSuggest<TAbstractFile> {
 		setIcon(icon, folder ? "folder" : "file-text");
 		el.createSpan({
 			cls: "ai-agent-panel-suggest-name",
-			text: folder ? item.name : (item as TFile).basename,
+			text: item instanceof TFile ? item.basename : item.name,
 		});
 		el.createSpan({
 			cls: "ai-agent-panel-suggest-detail",
