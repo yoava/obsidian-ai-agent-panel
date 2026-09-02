@@ -22,6 +22,20 @@
         └─────────────────────┘
 ```
 
+## Vocabulary
+
+Four words, kept distinct in code, docs and UI text. The important pair is
+*conversation* vs *session*: one conversation can span several CLI sessions
+(every reload resumes it in a new process), so collapsing them would make
+"restore the session" ambiguous.
+
+| Word | Means |
+|---|---|
+| **conversation** | The durable thread: tabbed, saved under `history/`, resumed, branched, exported. The user-facing unit. |
+| **chat** | The panel itself, and the act of using it - "Open chat", "Add selection to chat". Never one thread. |
+| **session** | The Claude Code CLI process behind a conversation. Internal only; it never appears in UI text. |
+| **transcript** | The exported Markdown note. |
+
 ## Why spawn the CLI instead of bundling the Agent SDK?
 
 Obsidian plugins ship as a single bundled `main.js`. The official
@@ -75,7 +89,7 @@ the toggle is already on).
 `{cliPath, useWsl}` profiles rather than one pair of fields - most vaults have
 exactly one (the pre-profile settings migrate into it), in which case the
 settings UI looks unchanged. `AgentPanelPlugin.resolveCli(profile)` performs
-the detection above per profile (cached per profile id), each chat tab carries
+the detection above per profile (cached per profile id), each conversation tab carries
 a `selectedProfileId` (seeded from the default profile, offered by the
 composer's *Profile* control only when several profiles exist), and
 account-level lookups (plan usage) follow the default profile.
@@ -109,12 +123,12 @@ resolves a promise; the client answers with
 to persist an always-allow rule the CLI suggested) or
 `{"behavior":"deny","message":…}`.
 
-The chat's *Auto-approve everything* mode is the plugin's own, not one of the
+The conversation's *Auto-approve everything* mode is the plugin's own, not one of the
 CLI's four: `cliPermissionMode` (`src/settings-core.ts`) maps it to `default`
 for `--permission-mode` and `set_permission_mode`, and `handlePermissionRequest`
 answers `allow` without rendering a card. The CLI's rules and hooks therefore
 still run - a request they deny never arrives - which is what separates it from
-`bypassPermissions`. Stored conversations keep the chat-level value, so
+`bypassPermissions`. Stored conversations keep the conversation-level value, so
 reopening one restores the mode it ran in.
 
 `AskUserQuestion` is special-cased: instead of an Allow/Deny card, the view

@@ -132,7 +132,7 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 		);
 		this.displayCliProfiles(containerEl);
 
-		new Setting(containerEl).setName("Chat").setHeading();
+		new Setting(containerEl).setName("Conversations").setHeading();
 
 		this.addSyncBadge(
 			new Setting(containerEl)
@@ -141,7 +141,7 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 					'Model alias (e.g. "sonnet", "opus", "fable", "haiku") - always the ' +
 						"latest of that family - or a full model id. " +
 						"Leave empty to use your Claude Code default. Picking a model " +
-						"in the chat overrides this for later chats."
+						"in the chat overrides this for later conversations."
 				)
 				.addText((text) =>
 					text
@@ -280,8 +280,8 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 			.setDesc(
 				"Where the open conversations are listed. \"Top\" is a strip above " +
 					"the transcript; \"Side\" is a column beside it, which reads " +
-					"better with many chats; \"Automatic\" uses the column whenever " +
-					"the panel is wide enough for one."
+					"better with many conversations; \"Automatic\" uses the column " +
+					"whenever the panel is wide enough for one."
 			)
 			.addDropdown((dropdown) =>
 				dropdown
@@ -399,8 +399,8 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 		this.addSyncBadge(new Setting(containerEl)
 			.setName("Export transcripts to Markdown")
 			.setDesc(
-				"Keep a Markdown note of each conversation in your vault, updated " +
-					"as the chat progresses. Past conversations export when they next " +
+				"Keep a Markdown transcript of each conversation in your vault, " +
+					"updated as it progresses. Past conversations export when they next " +
 					"change; the \"Export conversation to Markdown\" command works " +
 					"anytime. The badge covers the folder, name, and date settings too."
 			)
@@ -417,7 +417,7 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 		if (this.plugin.settings.exportEnabled) {
 			new Setting(containerEl)
 				.setName("Transcript folder")
-				.setDesc("Vault folder the notes are written to; created if missing.")
+				.setDesc("Vault folder the transcripts are written to; created if missing.")
 				.addText((text) => {
 					text
 						.setPlaceholder("Agent Chats")

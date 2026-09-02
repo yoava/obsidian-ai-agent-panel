@@ -100,7 +100,7 @@ extra process. Needs Claude Code 2.1.210+; can be switched off.
   releases are selectable without a plugin update and unsupported effort levels
   are greyed out.
 - **CLI profiles**: several named launch configurations (say, a Windows install
-  and a WSL one) with a default, pickable per chat from the row's *Profile*
+  and a WSL one) with a default, pickable per conversation from the row's *Profile*
   control. Both are invisible with a single profile.
 - **Per-setting sync**: each settings row carries a cloud badge that flips it
   between synced plugin data and this-device-only storage. CLI paths and

@@ -281,7 +281,7 @@ interface ChatTab {
 	selectedModel: string;
 	selectedEffort: string;
 	selectedMode: ChatPermissionMode;
-	/** CLI profile this chat spawns with; falls back to the default profile. */
+	/** CLI profile this conversation spawns with; falls back to the default profile. */
 	selectedProfileId: string;
 	/** Header status line (model name) shown while this tab is active. */
 	statusText: string;
@@ -549,8 +549,8 @@ export class AgentPanelView extends ItemView {
 		slashBtn.addEventListener("click", () => this.openCommandList());
 
 		// This conversation's own token/cost total, next to the account-wide plan
-		// usage below - the two answer "how full is this chat" and "how much of
-		// my plan is left", so they read as one line.
+		// usage below - the two answer "how full is this conversation" and "how
+		// much of my plan is left", so they read as one line.
 		this.contextMeterEl = footer.createDiv({
 			cls: "ai-agent-panel-context-meter is-hidden",
 		});
@@ -820,7 +820,7 @@ export class AgentPanelView extends ItemView {
 		tabEl.createSpan({ cls: "ai-agent-panel-tab-dot" });
 		const labelEl = tabEl.createSpan({
 			cls: "ai-agent-panel-tab-label",
-			text: "New chat",
+			text: "New conversation",
 		});
 		const closeEl = tabEl.createSpan({
 			cls: "ai-agent-panel-tab-close",
@@ -864,7 +864,7 @@ export class AgentPanelView extends ItemView {
 			includeVaultContext: false,
 			contextItems: [],
 			attachments: [],
-			// Seed model/effort from the last chat pick, falling back to settings.
+			// Seed model/effort from the last conversation's pick, falling back to settings.
 			selectedModel: settings.lastModel ?? settings.model,
 			selectedEffort: settings.lastEffort ?? settings.effort,
 			selectedMode: mode,
@@ -979,7 +979,7 @@ export class AgentPanelView extends ItemView {
 	private openTabMenu(): void {
 		const menu = new Menu();
 		for (const tab of this.tabs) {
-			const full = tab.conversation?.title || "New chat";
+			const full = tab.conversation?.title || "New conversation";
 			const title =
 				full.length > MAX_TAB_MENU_LABEL_CHARS
 					? full.slice(0, MAX_TAB_MENU_LABEL_CHARS - 1) + "…"
@@ -1114,7 +1114,7 @@ export class AgentPanelView extends ItemView {
 	}
 
 	private updateTabTitle(tab: ChatTab): void {
-		const full = tab.conversation?.title || "New chat";
+		const full = tab.conversation?.title || "New conversation";
 		const label =
 			full.length > MAX_TAB_LABEL_CHARS
 				? full.slice(0, MAX_TAB_LABEL_CHARS - 1) + "…"
@@ -1128,7 +1128,7 @@ export class AgentPanelView extends ItemView {
 	/** Hover tooltip with the tab's conversation metadata. */
 	private refreshTabTooltip(tab: ChatTab): void {
 		const conv = tab.conversation;
-		const lines: string[] = [conv?.title || "New chat"];
+		const lines: string[] = [conv?.title || "New conversation"];
 
 		const model = describeModel(
 			tab.selectedModel,
@@ -1360,7 +1360,7 @@ export class AgentPanelView extends ItemView {
 
 		let result: ShellResult;
 		try {
-			// The "!" escape runs where this chat's CLI runs, so paths and
+			// The "!" escape runs where this conversation's CLI runs, so paths and
 			// tools behave the way the conversation sees them.
 			const profile =
 				profileById(this.plugin.settings, tab.selectedProfileId) ??
@@ -3729,7 +3729,7 @@ export class AgentPanelView extends ItemView {
 				this.profileSegmentEl,
 				"terminal",
 				profile.name || "Unnamed",
-				`Profile: ${profile.name || "Unnamed"}\nWhich Claude Code install this chat runs on`
+				`Profile: ${profile.name || "Unnamed"}\nWhich Claude Code install this conversation runs on`
 			);
 		}
 
