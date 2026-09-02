@@ -1,4 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { clearTimer, setTimer, type TimerHandle } from "../timers";
 import type {
 	ContentBlock,
 	ContextUsage,
@@ -70,7 +71,7 @@ export interface ClaudeClientCallbacks {
 interface PendingRequest {
 	resolve(value: unknown): void;
 	reject(err: Error): void;
-	timer?: ReturnType<typeof setTimeout>;
+	timer?: TimerHandle;
 }
 
 const STDERR_TAIL_LINES = 40;
@@ -348,18 +349,18 @@ export class ClaudeClient {
 		} catch {
 			// stdin may already be gone
 		}
-		const killTimer = setTimeout(() => {
+		const killTimer = setTimer(() => {
 			try {
 				proc.kill("SIGKILL");
 			} catch {
 				// already exited
 			}
 		}, 3000);
-		proc.once("close", () => clearTimeout(killTimer));
+		proc.once("close", () => clearTimer(killTimer));
 		try {
 			proc.kill("SIGTERM");
 		} catch {
-			clearTimeout(killTimer);
+			clearTimer(killTimer);
 		}
 	}
 
@@ -369,7 +370,7 @@ export class ClaudeClient {
 		if (this.closed) return;
 		this.closed = true;
 		for (const [, pending] of this.pendingRequests) {
-			if (pending.timer) clearTimeout(pending.timer);
+			clearTimer(pending.timer);
 			pending.reject(new Error("Claude process exited"));
 		}
 		this.pendingRequests.clear();
@@ -407,7 +408,7 @@ export class ClaudeClient {
 				const pending = this.pendingRequests.get(payload.request_id);
 				if (!pending) return;
 				this.pendingRequests.delete(payload.request_id);
-				if (pending.timer) clearTimeout(pending.timer);
+				clearTimer(pending.timer);
 				if (payload.subtype === "success") pending.resolve(payload.response);
 				else pending.reject(new Error(payload.error));
 				return;
@@ -514,7 +515,7 @@ export class ClaudeClient {
 		if (!this.running) return Promise.reject(new Error("Claude is not running"));
 		const requestId = `obs_${++this.nextRequestId}`;
 		return new Promise((resolve, reject) => {
-			const timer = setTimeout(() => {
+			const timer = setTimer(() => {
 				this.pendingRequests.delete(requestId);
 				reject(new Error(`Control request timed out: ${String(request.subtype)}`));
 			}, timeoutMs);

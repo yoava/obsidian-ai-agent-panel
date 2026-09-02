@@ -7,6 +7,7 @@ import {
 	type FuzzyMatch,
 } from "obsidian";
 import type { ChatPermissionMode } from "./settings-core";
+import { clearTimer, setTimer, type TimerHandle } from "./timers";
 
 /**
  * Plugin-owned conversation history.
@@ -117,7 +118,7 @@ function isSafeConversationId(id: string): boolean {
 }
 
 export class HistoryStore {
-	private saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+	private saveTimers = new Map<string, TimerHandle>();
 	private dirReady: Promise<void> | null = null;
 
 	/**
@@ -184,11 +185,10 @@ export class HistoryStore {
 
 	/** Debounced save; call after every recorded message. */
 	queueSave(conversation: StoredConversation): void {
-		const existing = this.saveTimers.get(conversation.id);
-		if (existing) clearTimeout(existing);
+		clearTimer(this.saveTimers.get(conversation.id));
 		this.saveTimers.set(
 			conversation.id,
-			setTimeout(() => {
+			setTimer(() => {
 				this.saveTimers.delete(conversation.id);
 				void this.save(conversation);
 			}, SAVE_DEBOUNCE_MS)
@@ -246,11 +246,8 @@ export class HistoryStore {
 		options: { touch?: boolean } = {}
 	): Promise<void> {
 		if (!conversation) return;
-		const timer = this.saveTimers.get(conversation.id);
-		if (timer) {
-			clearTimeout(timer);
-			this.saveTimers.delete(conversation.id);
-		}
+		clearTimer(this.saveTimers.get(conversation.id));
+		this.saveTimers.delete(conversation.id);
 		await this.save(conversation, options);
 	}
 
@@ -325,11 +322,8 @@ export class HistoryStore {
 	 * the next scan brings the original back alongside it.
 	 */
 	async delete(id: string): Promise<boolean> {
-		const timer = this.saveTimers.get(id);
-		if (timer) {
-			clearTimeout(timer);
-			this.saveTimers.delete(id);
-		}
+		clearTimer(this.saveTimers.get(id));
+		this.saveTimers.delete(id);
 		try {
 			await this.app.vault.adapter.remove(this.pathFor(id));
 		} catch (err) {

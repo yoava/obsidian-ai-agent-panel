@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { clearTimer, setTimer } from "./timers";
 
 /**
  * The composer's "!" mode: run a shell command the user typed themselves.
@@ -98,7 +99,7 @@ export function runShellCommand(
 		const finish = (code: number | null, error?: string) => {
 			if (settled) return;
 			settled = true;
-			clearTimeout(timer);
+			clearTimer(timer);
 			const out = cap(stdout, maxChars);
 			const err = cap(stderr, maxChars);
 			resolve({
@@ -127,7 +128,7 @@ export function runShellCommand(
 			return;
 		}
 
-		const timer = setTimeout(() => {
+		const timer = setTimer(() => {
 			timedOut = true;
 			try {
 				proc.kill("SIGKILL");

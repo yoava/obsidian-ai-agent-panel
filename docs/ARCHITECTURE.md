@@ -605,3 +605,4 @@ answer it renders nothing rather than erroring.
 | `src/usage.ts` | plan-usage service, formatting, and detail modal |
 | `src/suggest.ts` | `@` file-mention and `/` slash-command autocompletes |
 | `src/icon.ts` | the plugin's vendor-neutral ribbon icon (chat bubble with a terminal prompt) |
+| `src/timers.ts` | `setTimer`/`clearTimer` - window-scoped timers with a fallback for the plain-Node test bundle |

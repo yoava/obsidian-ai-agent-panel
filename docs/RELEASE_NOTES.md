@@ -18,6 +18,9 @@ This release is the community-directory review pass.
   signed build-provenance attestation, so you can check that the file you
   installed came from this repository's release workflow:
   `gh attestation verify main.js --repo yoava/obsidian-ai-agent-panel`.
+- **Timers are scoped to the window that scheduled them**, as Obsidian asks, so
+  a debounced save or a process kill-timer belonging to a popout window stops
+  when that window closes instead of firing into a closed document.
 
 ### Development
 
