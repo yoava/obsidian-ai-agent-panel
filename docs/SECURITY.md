@@ -154,3 +154,7 @@
 Please open a GitHub security advisory (or a private report to the
 maintainer) rather than a public issue. Include reproduction steps and the
 plugin/Obsidian/Claude Code versions involved.
+
+The full policy - supported versions, response expectations, and how a
+confirmed issue gets published as an advisory - is in
+[SECURITY.md](../SECURITY.md) at the repository root.

@@ -1,6 +1,6 @@
 # Release notes
 
-## Unreleased - first public release
+## 0.3.2 - first public release
 
 AI Agent Panel puts an AI coding agent in an Obsidian sidebar, with the vault
 as its working directory. It drives an agent CLI you installed and logged into
@@ -36,7 +36,9 @@ and a vault on the local file system.
   use for the *Previous conversations* picker (which stays, for the top strip
   and its fuzzy search). Right-click or long-press a row for *Open*, *Export
   to Markdown*, *Close* and *Delete* - deletion asks first and lives only
-  here, so `×` can keep meaning "close the tab" and nothing else.
+  here, so `×` can keep meaning "close the tab" and nothing else. Exports are
+  written through Obsidian's Vault API, so the file explorer and other plugins
+  see the note immediately.
 - **Pinned conversations.** Pin from a row's context menu or the pin that
   appears on hover. Pinned rows lead the column in their own section, oldest
   pin first so it stays stable as more are added, and a pinned conversation
@@ -51,7 +53,8 @@ and a vault on the local file system.
 - **Undo a turn or branch off one.** Every finished turn offers *Restore
   files*, which shows the diff it would undo before putting the notes back, and
   *Branch from here*, which continues from just before that turn in a new tab
-  and leaves the original intact.
+  and leaves the original intact. Restoring goes through Obsidian's atomic file
+  processing, so a note is never left half-written if something interrupts it.
 
 ### Context and input
 
@@ -106,13 +109,15 @@ extra process. Needs Claude Code 2.1.210+; can be switched off.
 - **Background tasks** appear as a strip above the composer while they run,
   each with a stop button.
 - **Per-conversation context meter** showing window occupancy and cost so far,
-  with a hover breakdown by category.
+  with a hover breakdown by category. Its bar is driven by a CSS variable
+  rather than an inline style, so a theme or snippet can restyle it.
 - **Plan usage** with an optional strip below the composer, configurable
   warning and critical thresholds, a popup with progress bars, and `/usage`,
   `/usage-credits`, `/extra-usage`. The numbers are asked of the running CLI
   session over the channel the plugin already owns, so they spend no tokens and
   the plugin never reads a credential of yours - they appear once a
-  conversation is under way.
+  conversation is under way. The figures refresh every five minutes by default;
+  *Usage refresh interval* in settings changes that.
 
 ### Configuration
 
@@ -134,15 +139,6 @@ extra process. Needs Claude Code 2.1.210+; can be switched off.
 - **Windows**: native installs work out of the box, including npm's
   `claude.cmd` shim; a WSL-only install is auto-detected and launched through
   `wsl.exe`.
-
-### Recent changes
-
-- Plan usage refreshes every five minutes by default instead of every minute;
-  the setting is unchanged.
-- Transcript export writes through Obsidian's Vault API so other plugins and
-  the file explorer see the note immediately.
-- Restoring files uses Obsidian's atomic file processing; the context meter is
-  styled through a CSS variable.
 
 ### Notes
 
