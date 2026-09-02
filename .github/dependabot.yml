@@ -11,6 +11,10 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+        # Majors are excluded from the group deliberately, so each one arrives
+        # as its own pull request with its own CI run rather than hiding
+        # inside a batch.
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: ci
     open-pull-requests-limit: 3
@@ -25,6 +29,11 @@ updates:
     groups:
       dev-dependencies:
         patterns: ["*"]
+        # Same rule, and it earns its keep here: the first grouped run bundled
+        # four majors including typescript 5 -> 7, which fails the build
+        # outright (7 no longer picks up @types/node without an explicit
+        # "types" field in tsconfig).
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: build
     open-pull-requests-limit: 3
