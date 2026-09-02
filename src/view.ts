@@ -43,6 +43,12 @@ import {
 	type FileChange,
 } from "./diffview";
 import { planRestore, type Checkpoint } from "./checkpoints";
+import {
+	clampSideWidth,
+	parseStoredSideWidth,
+	sideLayoutThreshold,
+	SIDE_WIDTH_DEFAULT_PX,
+} from "./tabs-layout";
 import { describeModel, describeModelId, modelOptions, parseCliModels } from "./models";
 import { AGENT_ICON } from "./icon";
 import {
@@ -84,17 +90,15 @@ const TAB_DRAG_EDGE_PX = 28;
 const TAB_DRAG_SCROLL_PX = 12;
 /** Slack left beside a tab that was just scrolled into view. */
 const TAB_REVEAL_PAD_PX = 12;
-/**
- * Pane width from which "auto" puts the tabs in a side column: the column plus
- * a transcript still worth reading. The second number is the slack that has to
- * be lost again before it flips back, so dragging the pane edge across the
- * threshold cannot make the layout flicker.
- */
-const TABS_SIDE_MIN_WIDTH_PX = 560;
-const TABS_SIDE_HYSTERESIS_PX = 40;
 
 /** App.saveLocalStorage key holding the open-tab state (per vault+machine). */
 const TAB_STATE_KEY = "ai-agent-panel:open-tabs";
+/**
+ * Width of the side column, in the same per-device store as the open tabs: how
+ * wide a column fits is a property of this screen, not of the vault, so it must
+ * not ride along with the synced settings onto a laptop with a narrower one.
+ */
+const SIDE_WIDTH_KEY = "ai-agent-panel:side-width";
 
 /** Name of the in-process MCP server; tools appear as `mcp__obsidian__…`. */
 const OBSIDIAN_MCP_SERVER = "obsidian";
@@ -307,6 +311,12 @@ export class AgentPanelView extends ItemView {
 	private tabMenuBtn!: HTMLElement;
 	/** Tabs are a column beside the transcript rather than a strip above it. */
 	private tabsOnSide = false;
+	/** Drag handle on the side column's inner edge. */
+	private sideResizerEl!: HTMLElement;
+	/** Column width the user dragged to, before the pane's own cap. Persisted. */
+	private sideWidthPref = SIDE_WIDTH_DEFAULT_PX;
+	/** What that comes to in this pane; drives --ai-agent-panel-side-width. */
+	private sideWidth = SIDE_WIDTH_DEFAULT_PX;
 	private messagesContainerEl!: HTMLElement;
 	private inputEl!: HTMLTextAreaElement;
 	private sendButton!: HTMLButtonElement;
@@ -403,6 +413,15 @@ export class AgentPanelView extends ItemView {
 
 		// Tab strip
 		const tabs = body.createDiv({ cls: "ai-agent-panel-tabs" });
+		// The column sits to the right of the transcript (order: 2), so the edge
+		// it can be dragged by is its left one. Absolutely positioned rather than
+		// a flex child so it spans the column's full height without competing
+		// with the tab list for space; hidden by CSS in the top-strip layout.
+		this.sideResizerEl = tabs.createDiv({
+			cls: "ai-agent-panel-side-resizer",
+			attr: { "aria-label": "Drag to resize · double-click to reset" },
+		});
+		this.setupSideResizer();
 		this.tabListEl = tabs.createDiv({ cls: "ai-agent-panel-tab-list" });
 		// A one-line strip has no vertical axis to scroll, so a plain wheel (the
 		// only scroll gesture most mice offer) is redirected sideways. The event
@@ -606,6 +625,9 @@ export class AgentPanelView extends ItemView {
 		});
 		this.renderUsageBar();
 		this.updateUsageScheduling();
+		this.sideWidthPref = parseStoredSideWidth(
+			this.app.loadLocalStorage(SIDE_WIDTH_KEY)
+		);
 		this.applyTabPosition();
 
 		// Reopen this machine's tabs from the previous session (falls back to
@@ -905,9 +927,15 @@ export class AgentPanelView extends ItemView {
 	 */
 	private applyTabPosition(): void {
 		if (!this.bodyEl) return; // onResize can fire before onOpen built the view
+		// The pane may have changed width since the last call, which can cap the
+		// column lower - or free it to grow back to the width that was chosen.
+		this.applySideWidth();
 		const position = this.plugin.settings.tabPosition ?? "top";
-		const threshold =
-			TABS_SIDE_MIN_WIDTH_PX - (this.tabsOnSide ? TABS_SIDE_HYSTERESIS_PX : 0);
+		// The threshold follows the column rather than assuming the default
+		// width: a column the user dragged wide needs a correspondingly wider
+		// pane before "auto" will use it, so widening it can never leave the
+		// transcript narrower than this layout was chosen to keep it.
+		const threshold = sideLayoutThreshold(this.sideWidth, this.tabsOnSide);
 		const side =
 			position === "side" ||
 			(position === "auto" && this.contentEl.clientWidth >= threshold);
@@ -920,6 +948,81 @@ export class AgentPanelView extends ItemView {
 			if (this.active) this.scrollTabIntoView(this.active);
 		}
 		this.updateTabOverflow();
+	}
+
+	/**
+	 * Drag the column's inner edge to resize it. Pointer events with capture,
+	 * not mousemove on document: capture keeps the stream arriving when the
+	 * pointer outruns the 9px handle or leaves the window, and the same code
+	 * then covers pen and touch without a second path.
+	 */
+	private setupSideResizer(): void {
+		const handle = this.sideResizerEl;
+		this.registerDomEvent(handle, "pointerdown", (evt) => {
+			if (evt.button !== 0 || !this.tabsOnSide) return;
+			evt.preventDefault();
+			const startX = evt.clientX;
+			const startWidth = this.sideWidth;
+			handle.setPointerCapture(evt.pointerId);
+			handle.addClass("is-dragging");
+			// A horizontal drag across the transcript would otherwise paint a
+			// text selection the whole way.
+			this.contentEl.addClass("is-resizing");
+
+			const move = (e: PointerEvent) => {
+				// The column is on the right, so dragging its left edge leftwards
+				// (a negative delta) is what makes it wider.
+				this.setSideWidthPref(startWidth - (e.clientX - startX));
+			};
+			const finish = () => {
+				handle.removeEventListener("pointermove", move);
+				handle.removeEventListener("pointerup", finish);
+				handle.removeEventListener("pointercancel", finish);
+				handle.removeClass("is-dragging");
+				this.contentEl.removeClass("is-resizing");
+				this.saveSideWidth();
+				// Settle the layout once, at the end: a new column width can move
+				// the "auto" threshold across the pane's width, and re-running
+				// that per pointermove would flip the layout under the pointer.
+				// applyTabPosition ends in updateTabOverflow, so the fades and
+				// the chevron are re-evaluated for the new width here too.
+				this.applyTabPosition();
+			};
+			handle.addEventListener("pointermove", move);
+			handle.addEventListener("pointerup", finish);
+			handle.addEventListener("pointercancel", finish);
+		});
+
+		this.registerDomEvent(handle, "dblclick", (evt) => {
+			evt.preventDefault();
+			this.setSideWidthPref(SIDE_WIDTH_DEFAULT_PX);
+			this.saveSideWidth();
+			this.applyTabPosition();
+		});
+	}
+
+	/** Record a user-chosen column width and draw it. */
+	private setSideWidthPref(px: number): void {
+		this.sideWidthPref = clampSideWidth(px, this.contentEl.clientWidth);
+		this.applySideWidth();
+	}
+
+	/**
+	 * Push the width to CSS, re-clamped to the pane as it is now. The stored
+	 * preference is deliberately left alone, so a pane that is briefly too
+	 * narrow caps only what is drawn and the column returns to the chosen width
+	 * once there is room for it again.
+	 */
+	private applySideWidth(): void {
+		this.sideWidth = clampSideWidth(this.sideWidthPref, this.contentEl.clientWidth);
+		this.bodyEl.style.setProperty(
+			"--ai-agent-panel-side-width",
+			`${this.sideWidth}px`
+		);
+	}
+
+	private saveSideWidth(): void {
+		this.app.saveLocalStorage(SIDE_WIDTH_KEY, this.sideWidthPref);
 	}
 
 	/** Called by the plugin when a setting the chat's chrome reflects changes. */

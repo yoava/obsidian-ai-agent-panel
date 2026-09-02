@@ -22,7 +22,11 @@ and a vault on the local file system.
   sent mid-turn steer or queue into the running turn. Open tabs are restored on
   reload, per device. The tabs can sit above the transcript as a strip, beside
   it as a column, or switch between the two by panel width (*Conversation tabs*
-  in settings).
+  in settings). The side column is resizable - drag its inner edge,
+  double-click the handle to reset - and its width is remembered per device
+  rather than synced. Widening it also raises the width at which *Automatic*
+  is willing to use the column, so a wide column never buys itself a squashed
+  transcript.
 - **Conversation history**, saved locally and reopenable, resuming the CLI
   session where it left off.
 - **Undo a turn or branch off one.** Every finished turn offers *Restore

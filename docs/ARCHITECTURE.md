@@ -398,7 +398,33 @@ stays the source of truth.
 The set of open tabs (conversation ids + the active one) is persisted through
 `App.saveLocalStorage`, which is scoped to the vault on the current machine
 and never syncs; on view open the tabs are restored from the history store,
-silently dropping conversations that were deleted in the meantime.
+silently dropping conversations that were deleted in the meantime. The side
+column's width (`ai-agent-panel:side-width`) rides in the same store for the
+same reason - how wide a column fits is a fact about the screen, not the
+vault - which is why it is not an `AgentPanelSettings` key and has no sync
+unit.
+
+## Conversation-column geometry (src/tabs-layout.ts)
+
+The side column is resized by dragging its inner (left) edge; the width lands
+on `bodyEl` as `--ai-agent-panel-side-width`, which the `flex-basis` reads.
+Two numbers govern it, both in the Obsidian-free `src/tabs-layout.ts` so they
+can be unit-tested and cannot drift apart:
+
+- `clampSideWidth(width, paneWidth)` - the draggable range, `[140px,
+  min(480px, half the pane)]`, with the minimum winning in a pane too narrow
+  for both. The view keeps the user's chosen width separately from the drawn
+  one, so a pane that is briefly too narrow caps what is drawn without
+  discarding the preference.
+- `sideLayoutThreshold(sideWidth, onSide)` - the pane width from which
+  *Automatic* uses the column: the column itself plus a 380px transcript
+  budget, less a 40px hysteresis while the column is already showing. Deriving
+  it from the *current* width (rather than the old hard-coded 560px, which
+  assumed a 180px column) is what stops a column dragged wide from leaving a
+  squashed transcript. At the 180px default it still evaluates to 560px.
+
+The layout is re-settled once on drag end rather than per `pointermove`, so a
+threshold crossing cannot flip the layout under the pointer mid-drag.
 
 ## Settings storage (src/settings-core.ts)
 
@@ -472,6 +498,7 @@ answer it renders nothing rather than erroring.
 |---|---|
 | `src/main.ts` | plugin entry: view/commands/ribbon/settings registration, service wiring |
 | `src/view.ts` | the chat panel UI: tabs, transcript, composer, usage strip |
+| `src/tabs-layout.ts` | side-column clamp + "auto" layout threshold (no Obsidian imports - plain-Node tests) |
 | `src/diff.ts` | original line + word diff (no Obsidian imports - plain-Node tests) |
 | `src/edits.ts` | what an Edit/Write/MultiEdit call would do (same, pure) |
 | `src/diffview.ts` | diff DOM and the "changes this conversation" modal |

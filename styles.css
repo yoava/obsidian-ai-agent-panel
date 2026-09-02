@@ -272,12 +272,62 @@
 	align-items: stretch;
 	/* Order 2: the column sits to the right of the transcript. */
 	order: 2;
-	flex: 0 0 180px;
-	width: 180px;
+	/* Width comes from view.ts, which clamps it to the pane and remembers it
+	   per device; the literal is only the pre-onOpen fallback. */
+	flex: 0 0 var(--ai-agent-panel-side-width, 180px);
+	width: var(--ai-agent-panel-side-width, 180px);
 	min-width: 0;
 	padding: var(--size-2-2);
 	gap: var(--size-2-2);
 	box-shadow: inset 1px 0 0 var(--background-modifier-border);
+	/* Anchors the resize handle below. */
+	position: relative;
+}
+
+/* Resize handle on the column's inner (left) edge ---------------------------
+   Out of the flex flow so it spans the full height without taking width from
+   the tab list. The top strip has no edge worth dragging, so it is hidden. */
+
+.ai-agent-panel-side-resizer {
+	display: none;
+}
+
+.is-tabs-side .ai-agent-panel-side-resizer {
+	display: block;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	/* Straddles the column's 1px seam, so the grab target covers both sides of
+	   the line the user is aiming at - a 4px bar alone is a hard target. */
+	left: -4px;
+	width: 9px;
+	cursor: col-resize;
+	/* Over the tab rows, which would otherwise take the pointer at the edge. */
+	z-index: 1;
+}
+
+/* The visible bar is thin; the element around it is only the hit area. */
+.ai-agent-panel-side-resizer::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 3px;
+	width: 3px;
+	background-color: transparent;
+	transition: background-color 120ms ease;
+}
+
+.ai-agent-panel-side-resizer:hover::after,
+.ai-agent-panel-side-resizer.is-dragging::after {
+	background-color: var(--interactive-accent);
+}
+
+/* Held for the length of a drag: a horizontal sweep across the transcript
+   would otherwise select text all the way. */
+.ai-agent-panel-view.is-resizing {
+	cursor: col-resize;
+	user-select: none;
 }
 
 /* New conversation first, as the list's own header. */
