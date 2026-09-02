@@ -123,8 +123,10 @@
   read/write/delete, and each loaded record's id is pinned to its file name.
   This blocks a tampered or synced history/settings file from steering a
   write or delete outside the plugin's folders.
-- Zero runtime npm dependencies; dev dependencies are audited in CI
-  (`npm audit` was clean at release time).
+- Zero runtime npm dependencies. CI audits the tree that ships
+  (`npm audit --omit=dev`); the full tree, dev dependencies included, was also
+  clean at release time. A dev-only advisory affects the build, not the
+  plugin you install, so it does not gate contributor pull requests.
 - Tool inputs/results shown in the UI are length-capped before rendering.
 
 ## Residual considerations
