@@ -127,6 +127,11 @@
   (`npm audit --omit=dev`); the full tree, dev dependencies included, was also
   clean at release time. A dev-only advisory affects the build, not the
   plugin you install, so it does not gate contributor pull requests.
+- **Release workflow actions are pinned to commit SHAs**, not to mutable tags.
+  `release.yml` runs with `contents: write` and produces the `main.js` users
+  install, so a third party who moved a `v4` tag could otherwise have run code
+  in that job. The trailing comment records which version each SHA was, and
+  the pins are reviewed when an action is deliberately upgraded.
 - Tool inputs/results shown in the UI are length-capped before rendering.
 
 ## Residual considerations
