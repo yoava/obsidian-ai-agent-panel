@@ -486,8 +486,7 @@ export class ClaudeClient {
 	 */
 	private async handleMcpMessage(env: ControlRequestEnvelope): Promise<void> {
 		const request = env.request as { server_name?: string; message?: unknown };
-		const handler = this.callbacks.onMcpMessage;
-		if (!handler) {
+		if (!this.callbacks.onMcpMessage) {
 			this.writeControlResponse({
 				subtype: "error",
 				request_id: env.request_id,
@@ -496,7 +495,12 @@ export class ClaudeClient {
 			return;
 		}
 		try {
-			const response = await handler(String(request.server_name ?? ""), request.message);
+			// Called on `this.callbacks` rather than through a local, so a
+			// callback implemented as a method keeps its receiver.
+			const response = await this.callbacks.onMcpMessage(
+				request.server_name ?? "",
+				request.message
+			);
 			this.writeControlResponse({
 				subtype: "success",
 				request_id: env.request_id,
