@@ -1,5 +1,20 @@
 # Security
 
+## The four capabilities, up front
+
+An automated plugin review flags these, and they are all inherent to hosting a
+coding agent. Stated plainly so nothing about them is a surprise:
+
+| Capability | Where | Why |
+| --- | --- | --- |
+| Process execution | `node:child_process` in `src/protocol/client.ts`, `src/cli.ts`, `src/bash.ts` | Launching and talking to the `claude` CLI, detecting where it is installed, and running the `!` command you typed. `shell: false` with array arguments everywhere the platform allows; the two exceptions are documented under *Hardening choices* below. |
+| Filesystem access outside the vault | `node:fs`'s `existsSync` in `src/cli.ts` | Probing a short list of standard CLI install paths under your home directory. Read-only, and the only paths tested are ones the plugin composes itself. The plugin writes nothing outside the vault; the *agent* can, with your approval, exactly as it could from a terminal. |
+| Vault enumeration | `getFiles` / `getMarkdownFiles` / `getAllLoadedFiles` in `src/suggest.ts`, `src/view.ts`, `src/settings.ts`, `src/mcp/vault-tools.ts` | `@`-mention completion, the transcript-folder suggester, and `obsidian_search`'s tag/property queries. These read Obsidian's index - paths, tags, frontmatter - not note bodies. |
+| Clipboard | `navigator.clipboard.writeText` in `src/view.ts` | The copy buttons on messages and tool results. **Write only.** The plugin calls no clipboard read API; pasted images reach it through a `paste` event the user triggered, which carries its own data. |
+
+`isDesktopOnly` is `true` in `manifest.json` - a mobile Obsidian has no Node,
+and every one of these except the clipboard depends on it.
+
 ## Model
 
 - **Local first.** The plugin spawns your locally installed `claude` CLI with

@@ -35,6 +35,33 @@ properties as properties, search by tag and property - instead of a folder of
 text files. [docs/COMPARISON.md](docs/COMPARISON.md) sets that out plugin by
 plugin, including the cases where you should install one of the others.
 
+## What runs on your machine
+
+A plugin that hosts a coding agent needs capabilities most plugins don't, and
+Obsidian's review flags every one of them. Rather than leave you to find that
+list on a review page, here it is, with the reason for each.
+
+| Capability | Why it is needed |
+| --- | --- |
+| **Starts a program** (Node `child_process`) | This is the plugin. It launches the `claude` CLI *you* installed, with your vault as its working directory, and talks to it over stdin/stdout. Arguments are passed as an array with `shell: false`, so nothing is re-parsed by a shell. Also used for the `!` escape, where you are the one typing the command. |
+| **Reads files outside the vault** (Node `fs`) | Only to *find* that CLI: a few standard install locations under your home directory, plus `which` / `where`. The plugin writes nothing outside the vault. What the agent itself reads or writes, with your approval, is bounded by your user account - as it would be in a terminal. |
+| **Lists the vault's files** (`getFiles`, `getMarkdownFiles`) | `@`-mention completions, the transcript-folder autocomplete, and the `obsidian_search` tool's tag/property search. This reads Obsidian's file index; note *contents* are read only by a tool call you approved. |
+| **Writes to the clipboard** (`navigator.clipboard.writeText`) | The copy buttons on messages and tool output. The plugin never **reads** the clipboard - images you paste arrive through the paste event you triggered, which is not clipboard access. |
+
+And what it does not do:
+
+- **No network requests of its own.** Not one, including plan usage - that is
+  asked of the CLI over the pipe the plugin already owns.
+- **No credentials.** No API keys, no tokens, no reading `~/.claude`'s login.
+  Authentication is entirely your CLI's, under your own Anthropic account.
+- **No telemetry.** Nothing is collected and the maintainer receives nothing.
+- **Nothing sensitive runs unasked.** In the default mode every file edit,
+  shell command and web fetch shows an Allow/Deny card in the chat first.
+
+Desktop only (`isDesktopOnly: true`) - a mobile Obsidian cannot spawn a
+process. The full picture is under [Disclosures](#disclosures) and in
+[docs/SECURITY.md](docs/SECURITY.md).
+
 ## Features
 
 - **Native chat panel** in the right sidebar with streamed responses, rendered as Obsidian Markdown. Transcript text is selectable, and every prompt and reply has a hover copy button. Links work as they do in a note: a link to a vault file opens it (Ctrl/Cmd-click for a new tab, hover for a page preview), external links open in your browser. Your own messages get a fixed amber/gold tint, border, and left bar - deliberately not the vault theme's accent color, so they stand out consistently and stay distinguishable under deuteranopia.
