@@ -1,6 +1,6 @@
 {
   "name": "obsidian-ai-agent-panel",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Unofficial Obsidian plugin that brings an AI coding agent into your vault as a native chat panel. First integration: Anthropic's Claude Code CLI.",
   "main": "main.js",
   "scripts": {
