@@ -414,12 +414,12 @@ export class AgentPanelView extends ItemView {
 		title.createSpan({ cls: "ai-agent-panel-title-text", text: "AI Agent Panel" });
 		this.statusEl = header.createSpan({ cls: "ai-agent-panel-status" });
 		this.transcriptLinkEl = header.createSpan({
-			cls: "ai-agent-panel-transcript-link is-hidden",
+			cls: "ai-agent-panel-transcript-link ai-agent-panel-hidden",
 			text: "transcript",
 		});
 		this.transcriptLinkEl.addEventListener("click", () => this.openTranscriptNote());
 		this.changesLinkEl = header.createSpan({
-			cls: "ai-agent-panel-changes-link is-hidden",
+			cls: "ai-agent-panel-changes-link ai-agent-panel-hidden",
 		});
 		this.changesLinkEl.addEventListener("click", () => this.openSessionChanges());
 		const headerActions = header.createDiv({ cls: "ai-agent-panel-header-actions" });
@@ -520,7 +520,7 @@ export class AgentPanelView extends ItemView {
 			this.renderTabList();
 		});
 		this.tabMenuBtn = this.tabsToolbarEl.createEl("button", {
-			cls: "clickable-icon ai-agent-panel-tab-menu is-hidden",
+			cls: "clickable-icon ai-agent-panel-tab-menu ai-agent-panel-hidden",
 			attr: { "aria-label": "All conversation tabs" },
 		});
 		setIcon(this.tabMenuBtn, "chevron-down");
@@ -557,7 +557,7 @@ export class AgentPanelView extends ItemView {
 		this.composerEl = composer;
 
 		this.backgroundTasksEl = composer.createDiv({
-			cls: "ai-agent-panel-bgtasks is-hidden",
+			cls: "ai-agent-panel-bgtasks ai-agent-panel-hidden",
 		});
 
 		this.chipsEl = composer.createDiv({ cls: "ai-agent-panel-chips" });
@@ -628,11 +628,11 @@ export class AgentPanelView extends ItemView {
 		// usage below - the two answer "how full is this conversation" and "how
 		// much of my plan is left", so they read as one line.
 		this.contextMeterEl = footer.createDiv({
-			cls: "ai-agent-panel-context-meter is-hidden",
+			cls: "ai-agent-panel-context-meter ai-agent-panel-hidden",
 		});
 
 		// Compact plan-usage strip (optional; see settings).
-		this.usageBarEl = footer.createDiv({ cls: "ai-agent-panel-usage-bar is-hidden" });
+		this.usageBarEl = footer.createDiv({ cls: "ai-agent-panel-usage-bar ai-agent-panel-hidden" });
 		this.usageBarEl.addEventListener("click", () =>
 			new UsageDetailModal(this.app, this.plugin.usage, () => ({
 				warn: this.plugin.settings.usageWarnPercent,
@@ -775,7 +775,7 @@ export class AgentPanelView extends ItemView {
 	/** Sync the header's small "transcript" link with the active conversation. */
 	private updateTranscriptLink(): void {
 		const path = this.active?.conversation?.exportPath;
-		this.transcriptLinkEl.toggleClass("is-hidden", !path);
+		this.transcriptLinkEl.toggleClass("ai-agent-panel-hidden", !path);
 		if (path)
 			setTooltip(this.transcriptLinkEl, `Open the exported note\n${path}`, {
 				placement: "bottom",
@@ -786,7 +786,7 @@ export class AgentPanelView extends ItemView {
 	private updateChangesLink(): void {
 		const changes = this.active ? [...this.active.changedFiles.values()] : [];
 		const totals = changeTotals(changes);
-		this.changesLinkEl.toggleClass("is-hidden", totals.files === 0);
+		this.changesLinkEl.toggleClass("ai-agent-panel-hidden", totals.files === 0);
 		if (totals.files === 0) return;
 		this.changesLinkEl.empty();
 		const icon = this.changesLinkEl.createSpan();
@@ -930,7 +930,7 @@ export class AgentPanelView extends ItemView {
 		setIcon(closeEl, "x");
 
 		const messagesEl = this.messagesContainerEl.createDiv({
-			cls: "ai-agent-panel-messages is-hidden",
+			cls: "ai-agent-panel-messages ai-agent-panel-hidden",
 		});
 
 		const tab: ChatTab = {
@@ -1597,7 +1597,7 @@ export class AgentPanelView extends ItemView {
 			: el.scrollWidth - el.clientWidth;
 		const offset = this.tabsOnSide ? el.scrollTop : el.scrollLeft;
 		const scrollable = max > 1;
-		this.tabMenuBtn.toggleClass("is-hidden", !scrollable);
+		this.tabMenuBtn.toggleClass("ai-agent-panel-hidden", !scrollable);
 		el.toggleClass("is-fade-start", scrollable && offset > 1);
 		el.toggleClass("is-fade-end", scrollable && offset < max - 1);
 	}
@@ -1756,12 +1756,12 @@ export class AgentPanelView extends ItemView {
 			const el = prev.messagesEl;
 			prev.scrollTop = el.scrollTop;
 			prev.nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-			prev.messagesEl.addClass("is-hidden");
+			prev.messagesEl.addClass("ai-agent-panel-hidden");
 			prev.tabEl.removeClass("is-active");
 		}
 		this.active = tab;
 		tab.tabEl.addClass("is-active");
-		tab.messagesEl.removeClass("is-hidden");
+		tab.messagesEl.removeClass("ai-agent-panel-hidden");
 		// Scroll state is lost while display: none - restore it, following new
 		// content when the tab was previously at the bottom.
 		tab.messagesEl.scrollTop = tab.nearBottom
@@ -2841,7 +2841,7 @@ export class AgentPanelView extends ItemView {
 		const el = this.backgroundTasksEl;
 		el.empty();
 		const tasks = [...tab.backgroundTasks.values()];
-		el.toggleClass("is-hidden", tasks.length === 0);
+		el.toggleClass("ai-agent-panel-hidden", tasks.length === 0);
 		if (tasks.length === 0) return;
 		for (const task of tasks) {
 			const row = el.createDiv({ cls: "ai-agent-panel-bgtask" });
@@ -3190,7 +3190,7 @@ export class AgentPanelView extends ItemView {
 			// action rather than offer something that will fail.
 			void this.plugin.checkpoints
 				.has(conversationId, turn)
-				.then((exists) => button.toggleClass("is-hidden", !exists));
+				.then((exists) => button.toggleClass("ai-agent-panel-hidden", !exists));
 		}
 
 		if (msg.rewindUuid) {
@@ -3221,7 +3221,7 @@ export class AgentPanelView extends ItemView {
 		const checkpoint = await this.plugin.checkpoints.load(conversationId, turn);
 		if (!checkpoint) {
 			new Notice("That restore point is no longer available.");
-			button.addClass("is-hidden");
+			button.addClass("ai-agent-panel-hidden");
 			return;
 		}
 		const plan = planRestore(checkpoint);
@@ -3365,7 +3365,7 @@ export class AgentPanelView extends ItemView {
 		if (tab !== this.active) return;
 		const el = this.contextMeterEl;
 		const usage = tab.usage;
-		el.toggleClass("is-hidden", usage.turns === 0);
+		el.toggleClass("ai-agent-panel-hidden", usage.turns === 0);
 		if (usage.turns === 0) return;
 		el.empty();
 
@@ -4040,7 +4040,7 @@ export class AgentPanelView extends ItemView {
 	 * the cache outlives the configured interval.
 	 */
 	private updateUsageScheduling(): void {
-		this.usageBarEl.toggleClass("is-hidden", !this.plugin.settings.showUsage);
+		this.usageBarEl.toggleClass("ai-agent-panel-hidden", !this.plugin.settings.showUsage);
 		if (!this.usageVisible()) {
 			this.clearUsageTimer();
 			return;
@@ -4099,7 +4099,7 @@ export class AgentPanelView extends ItemView {
 		this.usageDirty = false;
 		const el = this.usageBarEl;
 		const show = this.plugin.settings.showUsage;
-		el.toggleClass("is-hidden", !show);
+		el.toggleClass("ai-agent-panel-hidden", !show);
 		if (!show) return;
 		el.empty();
 		const usage = this.plugin.usage;
@@ -4150,7 +4150,7 @@ export class AgentPanelView extends ItemView {
 		const busy = this.active?.busy ?? false;
 		const waiting = (this.active?.pendingPermissions.size ?? 0) > 0;
 		// The send button stays visible while busy: sends then queue/steer.
-		this.stopButton.toggleClass("is-hidden", !busy);
+		this.stopButton.toggleClass("ai-agent-panel-hidden", !busy);
 		this.sendButton.setAttribute("aria-label", busy ? "Queue message" : "Send");
 		this.inputEl.setAttribute(
 			"placeholder",
@@ -4332,7 +4332,7 @@ export class AgentPanelView extends ItemView {
 			});
 		}
 
-		this.chipsEl.toggleClass("is-hidden", this.chipsEl.childElementCount === 0);
+		this.chipsEl.toggleClass("ai-agent-panel-hidden", this.chipsEl.childElementCount === 0);
 	}
 
 	private modeOptions(): typeof MODE_OPTIONS {
@@ -4412,7 +4412,7 @@ export class AgentPanelView extends ItemView {
 		// The profile only matters - and only shows - once there are several.
 		const settings = this.plugin.settings;
 		const several = settings.cliProfiles.length > 1;
-		this.profileSegmentEl.toggleClass("is-hidden", !several);
+		this.profileSegmentEl.toggleClass("ai-agent-panel-hidden", !several);
 		if (several) {
 			const profile =
 				profileById(settings, tab.selectedProfileId) ?? defaultProfile(settings);

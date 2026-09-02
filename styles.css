@@ -60,6 +60,9 @@
 	color: var(--text-faint);
 	font-size: var(--font-ui-smaller);
 	cursor: pointer;
+	/* Plain underline first: the dotted style is the enhancement, and a
+	   renderer that does not take the two-value shorthand keeps the line. */
+	text-decoration: underline;
 	text-decoration: underline dotted;
 	text-underline-offset: 2px;
 	white-space: nowrap;
@@ -1245,6 +1248,9 @@
 
 .ai-agent-panel-changes-path.is-link {
 	cursor: pointer;
+	/* Plain underline first: the dotted style is the enhancement, and a
+	   renderer that does not take the two-value shorthand keeps the line. */
+	text-decoration: underline;
 	text-decoration: underline dotted;
 	text-underline-offset: 2px;
 }
@@ -1451,6 +1457,9 @@
 	color: var(--text-faint);
 	font-size: var(--font-ui-smaller);
 	cursor: pointer;
+	/* Plain underline first: the dotted style is the enhancement, and a
+	   renderer that does not take the two-value shorthand keeps the line. */
+	text-decoration: underline;
 	text-decoration: underline dotted;
 	text-underline-offset: 2px;
 	opacity: 0;
@@ -1882,8 +1891,18 @@
 	margin-top: var(--size-4-3);
 }
 
-.is-hidden {
-	display: none !important;
+/*
+ * Repeating the class doubles the selector's specificity without changing what
+ * it matches, so this beats the single-class `display` rules above without
+ * !important - which a plugin has no business using, since it cannot be undone
+ * by a theme or a snippet.
+ *
+ * The class is prefixed like every other one here: a bare `.is-hidden` would
+ * have hidden any element in the app carrying that state class, not only this
+ * plugin's.
+ */
+.ai-agent-panel-hidden.ai-agent-panel-hidden {
+	display: none;
 }
 
 /* History picker ------------------------------------------------------------------ */

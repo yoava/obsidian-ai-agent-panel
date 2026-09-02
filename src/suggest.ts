@@ -33,7 +33,7 @@ abstract class TextareaSuggest<T> {
 		protected inputEl: HTMLTextAreaElement,
 		anchorEl: HTMLElement
 	) {
-		this.popupEl = anchorEl.createDiv({ cls: "ai-agent-panel-suggest is-hidden" });
+		this.popupEl = anchorEl.createDiv({ cls: "ai-agent-panel-suggest ai-agent-panel-hidden" });
 
 		this.inputEl.addEventListener("input", () => this.update());
 		// Reposition/close on caret moves, but don't pop open on a mere click
@@ -121,7 +121,7 @@ abstract class TextareaSuggest<T> {
 	private render(): void {
 		this.popupEl.empty();
 		const visible = this.isOpen && this.items.length > 0;
-		this.popupEl.toggleClass("is-hidden", !visible);
+		this.popupEl.toggleClass("ai-agent-panel-hidden", !visible);
 		if (!visible) return;
 		this.items.forEach((item, index) => {
 			const el = this.popupEl.createDiv({ cls: "ai-agent-panel-suggest-item" });

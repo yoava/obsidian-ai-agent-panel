@@ -28,6 +28,14 @@ This release is the community-directory review pass.
   `eslint-plugin-obsidianmd` - the same rule set the Obsidian community-plugin
   review applies to a submitted release - and CI runs it on every push and pull
   request, so a finding cannot regress silently.
+- **The stylesheet stops reaching outside the plugin.** The rule that hides
+  elements was a bare `.is-hidden { display: none !important }`, which applied
+  to *any* element in the app carrying that state class, not only this
+  plugin's - and `!important` meant a theme or snippet could not undo it. It is
+  now a prefixed class winning on specificity alone.
+- **A plain underline stands in** where a renderer does not take the
+  `text-decoration: underline dotted` shorthand, so the transcript and changed-
+  file links keep their underline either way.
 - **The plugin's settings are in Obsidian's settings search.** On Obsidian 1.13
   and later the tab is built from the declarative settings API
   (`getSettingDefinitions()`), so searching *Settings* for "usage", "WSL" or
