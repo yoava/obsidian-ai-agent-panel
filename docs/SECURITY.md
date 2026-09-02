@@ -19,6 +19,14 @@
   `manifest.json` is not an exception to this: Obsidian renders it as a link in
   the plugin list, and nothing is fetched unless you click it, which hands the
   URL to your browser like any other external link.
+- **The README's badges are the one thing that fetches without a click**, and
+  they are not the plugin doing it. Whatever renders the README - GitHub, or
+  Obsidian's plugin browser - loads three badge images: two from `github.com`,
+  which it is already talking to for the README itself, and the release badge
+  from `img.shields.io`, which is a third party that therefore sees a request
+  when the page is viewed. No badge is in the installed plugin, so none of this
+  happens in your vault at runtime; it is a property of reading the project
+  page, like any image in any README.
 - **No credentials of the plugin's own.** The plugin never stores API keys or
   tokens. Its `data.json` holds only plugin settings (model alias, mode
   defaults, vault instructions, export/usage preferences); device-local

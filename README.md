@@ -1,5 +1,9 @@
 # AI Agent Panel for Obsidian
 
+[![CI](https://github.com/yoava/obsidian-ai-agent-panel/actions/workflows/ci.yml/badge.svg)](https://github.com/yoava/obsidian-ai-agent-panel/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/yoava/obsidian-ai-agent-panel/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/yoava/obsidian-ai-agent-panel/security/code-scanning)
+[![Release](https://img.shields.io/github/v/release/yoava/obsidian-ai-agent-panel?sort=semver&label=release)](https://github.com/yoava/obsidian-ai-agent-panel/releases/latest)
+
 Chat with an AI coding agent inside your Obsidian vault - a native panel that drives an agent CLI you have already installed and logged in to yourself.
 
 The agent gets your vault as its working directory: it can search notes, answer questions about them, refactor and link notes, draft new ones, and run any of its tools - always behind Obsidian-native permission prompts.
