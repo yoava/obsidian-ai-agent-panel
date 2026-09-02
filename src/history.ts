@@ -241,14 +241,17 @@ export class HistoryStore {
 	}
 
 	/** Flush a pending debounced save immediately (e.g. on view close). */
-	async flush(conversation: StoredConversation | null): Promise<void> {
+	async flush(
+		conversation: StoredConversation | null,
+		options: { touch?: boolean } = {}
+	): Promise<void> {
 		if (!conversation) return;
 		const timer = this.saveTimers.get(conversation.id);
 		if (timer) {
 			clearTimeout(timer);
 			this.saveTimers.delete(conversation.id);
 		}
-		await this.save(conversation);
+		await this.save(conversation, options);
 	}
 
 	/** Everything, scanning the folder the first time it is asked. */
@@ -315,7 +318,13 @@ export class HistoryStore {
 		return conversation;
 	}
 
-	async delete(id: string): Promise<void> {
+	/**
+	 * Returns false when the file is still on disk afterwards. Callers must
+	 * check: detaching an open tab from a conversation that still exists would
+	 * strand it - the tab loses its resume id and starts a second record, and
+	 * the next scan brings the original back alongside it.
+	 */
+	async delete(id: string): Promise<boolean> {
 		const timer = this.saveTimers.get(id);
 		if (timer) {
 			clearTimeout(timer);
@@ -326,21 +335,20 @@ export class HistoryStore {
 		} catch (err) {
 			console.error("AI Agent Panel: failed to delete conversation", err);
 			// A file that was already gone is a success as far as the caller is
-			// concerned. One that is still there is not: dropping it from the
-			// cache anyway would take the row off the column now and have the
-			// next scan bring the conversation back as a duplicate.
+			// concerned. One that is still there is not.
 			const survived = await this.app.vault.adapter
 				.exists(this.pathFor(id))
 				.catch(() => false);
 			if (survived) {
 				new Notice("Could not delete that conversation.");
-				return;
+				return false;
 			}
 		}
 		this.metas.delete(id);
 		if (this.scanning) this.deletedDuringScan.add(id);
 		this.onDeleted?.(id);
 		this.onChanged?.();
+		return true;
 	}
 
 	private pathFor(id: string): string {
@@ -475,7 +483,10 @@ export class ConversationPickerModal extends FuzzySuggestModal<ConversationMeta>
 		deleteBtn.addEventListener("click", (evt) => {
 			evt.preventDefault();
 			evt.stopPropagation();
-			void this.store.delete(match.item.id).then(() => {
+			void this.store.delete(match.item.id).then((deleted) => {
+				// A delete that failed leaves the conversation on disk, so the
+				// row stays and no open tab may be detached from it.
+				if (!deleted) return;
 				// Detach any open tab first so its next save can't rewrite the
 				// file we just removed.
 				this.onDelete?.(match.item.id);

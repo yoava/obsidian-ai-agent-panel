@@ -473,6 +473,10 @@ second.
   mid-scan are dropped from its result rather than resurrected.
 - `snapshot()` is the synchronous, IO-free read the renderer uses; `list()`
   still exists for the picker modal and scans once on first use.
+- `delete()` returns `false` when the file is still on disk afterwards, and
+  every caller must check before detaching an open tab from it. Detaching a
+  conversation that still exists costs the tab its resume id and starts a
+  second record beside the original.
 - A scan that cannot read the folder still completes, keeping whatever the
   cache holds: the view calls `refresh()` as `void`, and nothing calls it
   again, so a rejection would strand the column on "Loading…" for the session.
@@ -492,7 +496,9 @@ already means "not pinned", which is exactly what every existing file says.
 
 Two consequences worth keeping straight:
 
-- `save()` takes `{ touch: false }` for a pin toggle. Every other save stamps
+- `save()` (and `flush()`) take `{ touch: false }` for a pin toggle or an
+  export - neither is activity, and the row menu can export a conversation no
+  tab owns. Every other save stamps
   `updatedAt`, and pinning is not activity - without it, unpinning a
   months-old conversation would drop it into *Recent* under today's date.
 - `remember()` compares `pinned`/`pinnedAt` as well as title and timestamps,

@@ -87,7 +87,12 @@ export const VIEW_TYPE_AGENT_PANEL = "ai-agent-panel-chat";
 
 const MAX_SELECTION_CHARS = 8000;
 const MAX_PREVIEW_CHARS = 1500;
-const MAX_TAB_LABEL_CHARS = 24;
+/**
+ * Row titles are cut by CSS (`text-overflow: ellipsis`) rather than by
+ * character count: the side column is resizable, so any fixed number is wrong
+ * at every width but one. Only the overflow menu below, which is a real menu
+ * with no box to ellipsize inside, still truncates by hand.
+ */
 /** Links/backlinks/properties listed per section in the vault-context chip. */
 const MAX_CONTEXT_LINKS = 40;
 /** Titles in the overflow tab picker, which has the whole pane width. */
@@ -839,7 +844,10 @@ export class AgentPanelView extends ItemView {
 		}
 		try {
 			const path = await this.plugin.exporter.export(conversation);
-			await this.plugin.history.flush(conversation); // persists exportPath
+			// Persists exportPath. touch: false - exporting is no more activity
+			// than pinning is, and the row menu can export a conversation no tab
+			// owns, which would otherwise pull it up into "Today".
+			await this.plugin.history.flush(conversation, { touch: false });
 			this.updateTranscriptLink();
 			new Notice(`Exported to ${path}`);
 		} catch (err) {
@@ -852,7 +860,18 @@ export class AgentPanelView extends ItemView {
 	 * is still empty, so "+" (and the command) never silently do nothing.
 	 */
 	newConversation(): void {
+		// A filter left over from finding something else would hide the tab
+		// that was just asked for, leaving "+" looking broken.
+		this.clearTabFilter();
 		this.addTab();
+	}
+
+	/** Drop the column's title filter, if one is set, and redraw. */
+	private clearTabFilter(): void {
+		if (!this.tabFilter) return;
+		this.tabFilter = "";
+		if (this.tabFilterEl) this.tabFilterEl.value = "";
+		this.renderTabList();
 	}
 
 	async openHistory(): Promise<void> {
@@ -978,6 +997,12 @@ export class AgentPanelView extends ItemView {
 
 		this.renderWelcome(tab);
 		this.tabs.push(tab);
+		// A tab with no conversation yet keys as "new#<index>", so replacing one
+		// unsaved tab with another (closing the last tab, which reopens a fresh
+		// one) produces an identical fingerprint. The element is created
+		// detached and only the renderer parents it, so a skipped render here
+		// would leave the new tab nowhere on screen.
+		this.tabListKey = null;
 		// Before switchTab: it scrolls the row into view, which needs it placed.
 		this.renderTabList();
 		this.switchTab(tab);
@@ -1073,9 +1098,21 @@ export class AgentPanelView extends ItemView {
 		});
 	}
 
+	/**
+	 * Whether the layout is the pane's decision rather than the user's. Only
+	 * then does the column's width have to stay inside what "auto" will keep
+	 * showing - on an explicit "side" the column is never taken away, so the
+	 * width may go to the full half-pane.
+	 */
+	private sideLayoutIsAutomatic(): boolean {
+		return (this.plugin.settings.tabPosition ?? "top") === "auto";
+	}
+
 	/** Record a user-chosen column width and draw it. */
 	private setSideWidthPref(px: number): void {
-		this.sideWidthPref = clampSideWidth(px, this.contentEl.clientWidth);
+		this.sideWidthPref = clampSideWidth(px, this.contentEl.clientWidth, {
+			keepAutoLayout: this.sideLayoutIsAutomatic(),
+		});
 		this.applySideWidth();
 	}
 
@@ -1086,7 +1123,9 @@ export class AgentPanelView extends ItemView {
 	 * once there is room for it again.
 	 */
 	private applySideWidth(): void {
-		this.sideWidth = clampSideWidth(this.sideWidthPref, this.contentEl.clientWidth);
+		this.sideWidth = clampSideWidth(this.sideWidthPref, this.contentEl.clientWidth, {
+			keepAutoLayout: this.sideLayoutIsAutomatic(),
+		});
 		this.bodyEl.style.setProperty(
 			"--ai-agent-panel-side-width",
 			`${this.sideWidth}px`
@@ -1402,7 +1441,7 @@ export class AgentPanelView extends ItemView {
 		this.createPinToggle(row, () => id);
 		row.createSpan({
 			cls: "ai-agent-panel-tab-label",
-			text: tabLabel(entry.title),
+			text: entry.title,
 		});
 		row.createSpan({
 			cls: "ai-agent-panel-tab-time",
@@ -1518,10 +1557,11 @@ export class AgentPanelView extends ItemView {
 			this.plugin.history.meta(id)?.title ??
 			"This conversation";
 		new DeleteConversationModal(this.app, title, () => {
-			void this.plugin.history.delete(id).then(() => {
-				// Detach any open tab first, so its next save cannot recreate
-				// the file that was just removed.
-				this.detachDeletedConversation(id);
+			void this.plugin.history.delete(id).then((deleted) => {
+				// Only detach when the file really went. Detaching after a
+				// failed delete would cost the open tab its resume id while the
+				// conversation it belongs to is still on disk.
+				if (deleted) this.detachDeletedConversation(id);
 			});
 		}).open();
 	}
@@ -1535,7 +1575,10 @@ export class AgentPanelView extends ItemView {
 		}
 		try {
 			const path = await this.plugin.exporter.export(conversation);
-			await this.plugin.history.flush(conversation); // persists exportPath
+			// Persists exportPath. touch: false - exporting is no more activity
+			// than pinning is, and the row menu can export a conversation no tab
+			// owns, which would otherwise pull it up into "Today".
+			await this.plugin.history.flush(conversation, { touch: false });
 			this.updateTranscriptLink();
 			new Notice(`Exported to ${path}`);
 		} catch (err) {
@@ -1682,13 +1725,13 @@ export class AgentPanelView extends ItemView {
 			// "Recent" would mean nothing, and the pinned order is by pin time.
 			if (!parent || parent !== dragged.tabEl.parentElement) return;
 			if (this.tabsOnSide && parent.dataset.section !== SECTION_OPEN) return;
-			// In the strip both runs share one parent, so the pinned front has
-			// to be kept separate here: its order is by pin time, not by drag.
-			if (
-				(dragged.conversation?.pinned === true) !==
-				(tab.conversation?.pinned === true)
-			)
-				return;
+			// In the strip both runs share one parent, so the pinned front has to
+			// be kept separate here. Refusing a pinned tab outright, rather than
+			// only refusing to cross the boundary, is what stops a drag between
+			// two pinned tabs from animating a reorder that stripOrder() then
+			// undoes: that run is ordered by pin time, and nothing else.
+			if (dragged.conversation?.pinned === true) return;
+			if (tab.conversation?.pinned === true) return;
 			evt.preventDefault();
 			if (evt.dataTransfer) evt.dataTransfer.dropEffect = "move";
 			const rect = el.getBoundingClientRect();
@@ -1766,7 +1809,7 @@ export class AgentPanelView extends ItemView {
 	}
 
 	private updateTabTitle(tab: ChatTab): void {
-		tab.labelEl.setText(tabLabel(tab.conversation?.title || "New conversation"));
+		tab.labelEl.setText(tab.conversation?.title || "New conversation");
 		this.refreshTabTooltip(tab);
 		// A longer title can push the strip into overflow.
 		this.updateTabOverflow();
@@ -4663,13 +4706,6 @@ function formatElapsed(ms: number): string {
 	const minutes = Math.floor(total / 60);
 	if (minutes < 60) return `${minutes}m ${String(total % 60).padStart(2, "0")}s`;
 	return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
-}
-
-/** Row label, cut to the width a tab can show. */
-function tabLabel(title: string): string {
-	return title.length > MAX_TAB_LABEL_CHARS
-		? title.slice(0, MAX_TAB_LABEL_CHARS - 1) + "…"
-		: title;
 }
 
 interface UserQuestionOption {

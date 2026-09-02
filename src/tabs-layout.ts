@@ -36,15 +36,26 @@ export const TABS_SIDE_HYSTERESIS_PX = 40;
  * already moved the tabs back to the top strip, and an explicit "side" is the
  * user insisting - neither case is improved by an illegible 70px column.
  */
-export function clampSideWidth(width: number, paneWidth: number): number {
+export function clampSideWidth(
+	width: number,
+	paneWidth: number,
+	options: { keepAutoLayout?: boolean } = {}
+): number {
 	if (!Number.isFinite(width)) return SIDE_WIDTH_DEFAULT_PX;
+	const measured = Number.isFinite(paneWidth) && paneWidth > 0;
 	// A pane that has not been laid out yet reports 0; fall back to the plain
 	// ceiling rather than clamping every restored width down to the minimum.
-	const fromPane =
-		Number.isFinite(paneWidth) && paneWidth > 0
-			? paneWidth * SIDE_WIDTH_MAX_FRACTION
-			: SIDE_WIDTH_MAX_PX;
-	const upper = Math.max(SIDE_WIDTH_MIN_PX, Math.min(SIDE_WIDTH_MAX_PX, fromPane));
+	const limits = measured
+		? [SIDE_WIDTH_MAX_PX, paneWidth * SIDE_WIDTH_MAX_FRACTION]
+		: [SIDE_WIDTH_MAX_PX];
+	// In "auto" the column is only shown while the pane clears the threshold
+	// that this very width feeds. Without this cap, dragging the handle to the
+	// fraction limit in a pane under ~680px pushes the threshold past the pane
+	// and the layout flips to the top strip - taking the handle, and the
+	// double-click that would undo it, with it.
+	if (measured && options.keepAutoLayout)
+		limits.push(paneWidth - TABS_SIDE_MIN_TRANSCRIPT_PX + TABS_SIDE_HYSTERESIS_PX);
+	const upper = Math.max(SIDE_WIDTH_MIN_PX, Math.min(...limits));
 	return Math.round(Math.max(SIDE_WIDTH_MIN_PX, Math.min(upper, width)));
 }
 

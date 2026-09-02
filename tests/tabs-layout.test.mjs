@@ -95,6 +95,35 @@ test("a junk stored width reads back as the default", () => {
 	assert.equal(parseStoredSideWidth(NaN), SIDE_WIDTH_DEFAULT_PX);
 });
 
+test("in auto, the column can never grow wide enough to remove itself", () => {
+	// Dragging to the fraction limit in a 600px pane used to push the "auto"
+	// threshold (width + 380 - 40) past the pane, flipping to the top strip -
+	// which hides the drag handle and the double-click that would undo it.
+	const pane = 600;
+	const capped = clampSideWidth(9999, pane, { keepAutoLayout: true });
+	assert.ok(capped < clampSideWidth(9999, pane));
+	assert.ok(pane >= sideLayoutThreshold(capped, true));
+});
+
+test("the auto cap holds across pane widths, and never below the minimum", () => {
+	for (const pane of [420, 520, 600, 700, 900, 1400, 2400]) {
+		const width = clampSideWidth(9999, pane, { keepAutoLayout: true });
+		assert.ok(width >= SIDE_WIDTH_MIN_PX);
+		// Either the layout survives at this width, or the pane is so narrow
+		// that the minimum column already exceeds what auto would keep.
+		assert.ok(
+			pane >= sideLayoutThreshold(width, true) || width === SIDE_WIDTH_MIN_PX
+		);
+	}
+});
+
+test("an explicit side layout is not capped by the auto threshold", () => {
+	// The column is never taken away in "side", so the width may use the whole
+	// half-pane the fraction allows.
+	assert.equal(clampSideWidth(9999, 600), 300);
+	assert.ok(clampSideWidth(9999, 600, { keepAutoLayout: true }) < 300);
+});
+
 test("a stored width is clamped on the way in", () => {
 	assert.equal(parseStoredSideWidth(240), 240);
 	assert.equal(parseStoredSideWidth(9999), SIDE_WIDTH_MAX_PX);
