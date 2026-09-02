@@ -262,6 +262,17 @@
 	margin-bottom: 2px;
 }
 
+/* One toolbar element serves both layouts. In the top strip it dissolves, so
+   its buttons stay direct flex children of the strip and lay out exactly as
+   they did before it existed; the side column turns it into a real row. */
+.ai-agent-panel-tabs-toolbar {
+	display: contents;
+}
+
+.ai-agent-panel-tab-filter {
+	display: none;
+}
+
 /* Tabs as a side column ------------------------------------------------------
    Same elements, stacked: the strip's browser-tab shape (bottom-open, merging
    with the transcript) becomes a plain list of rows, and every axis the strip
@@ -330,15 +341,30 @@
 	user-select: none;
 }
 
-/* New conversation first, as the list's own header. */
-.is-tabs-side .ai-agent-panel-tab-new {
+/* Filter field and "+" as the column's header row. */
+.is-tabs-side .ai-agent-panel-tabs-toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
 	order: -1;
-	align-self: flex-end;
+}
+
+.is-tabs-side .ai-agent-panel-tab-filter {
+	display: block;
+	flex: 1 1 auto;
+	min-width: 0;
+	height: auto;
+	padding: var(--size-2-1) var(--size-2-2);
+	font-size: var(--font-ui-smaller);
+}
+
+.is-tabs-side .ai-agent-panel-tab-new {
+	order: 0;
 	margin-bottom: 0;
 }
 
-/* A vertical list scrolls under the pointer on its own, and its fade already
-   says there is more - so the overflow picker is a top-strip affordance only. */
+/* The column lists every conversation, so the overflow picker - which only
+   ever knew about the open ones - has nothing left to add here. */
 .is-tabs-side .ai-agent-panel-tab-menu {
 	display: none;
 }
@@ -349,6 +375,16 @@
 	min-height: 0;
 	overflow-x: hidden;
 	overflow-y: auto;
+	gap: 0;
+	/* The strip hides its scrollbar because a fade stands in for it. The column
+	   cannot: its section headers are sticky, and an edge fade would wash out
+	   whichever one is currently pinned against it. */
+	scrollbar-width: thin;
+}
+
+.is-tabs-side .ai-agent-panel-tab-list::-webkit-scrollbar {
+	display: block;
+	width: 8px;
 }
 
 .is-tabs-side .ai-agent-panel-tab {
@@ -363,31 +399,101 @@
 	flex: 1 1 auto;
 }
 
-.is-tabs-side .ai-agent-panel-tab-list.is-fade-start {
-	-webkit-mask-image: linear-gradient(to bottom, transparent 0, black 20px);
-	mask-image: linear-gradient(to bottom, transparent 0, black 20px);
+/* Sections: Pinned / Open / Recent ------------------------------------------
+   One scroller, three labelled runs, every conversation in exactly one. */
+
+.ai-agent-panel-section-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+	padding-bottom: var(--size-4-2);
 }
 
-.is-tabs-side .ai-agent-panel-tab-list.is-fade-end {
-	-webkit-mask-image: linear-gradient(to top, transparent 0, black 20px);
-	mask-image: linear-gradient(to top, transparent 0, black 20px);
+.ai-agent-panel-section.is-collapsed .ai-agent-panel-section-body {
+	display: none;
 }
 
-.is-tabs-side .ai-agent-panel-tab-list.is-fade-start.is-fade-end {
-	-webkit-mask-image: linear-gradient(
-		to bottom,
-		transparent 0,
-		black 20px,
-		black calc(100% - 20px),
-		transparent 100%
-	);
-	mask-image: linear-gradient(
-		to bottom,
-		transparent 0,
-		black 20px,
-		black calc(100% - 20px),
-		transparent 100%
-	);
+.ai-agent-panel-section-header {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	padding: var(--size-2-2) var(--size-2-2) var(--size-2-1);
+	/* Opaque: rows scroll underneath it. */
+	background-color: var(--background-secondary);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	cursor: pointer;
+	user-select: none;
+}
+
+.ai-agent-panel-section-header:hover {
+	color: var(--text-muted);
+}
+
+.ai-agent-panel-section-label {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ai-agent-panel-section-count {
+	flex-shrink: 0;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: normal;
+}
+
+.ai-agent-panel-section-chevron {
+	display: flex;
+	flex-shrink: 0;
+	transition: transform 120ms ease;
+}
+
+.ai-agent-panel-section-chevron svg {
+	width: 12px;
+	height: 12px;
+}
+
+.ai-agent-panel-section.is-collapsed .ai-agent-panel-section-chevron {
+	transform: rotate(-90deg);
+}
+
+/* Date runs inside "Recent". Not sticky - two headers stacking at the top
+   edge would cost more height than the rows they label. */
+.ai-agent-panel-date-header {
+	padding: var(--size-2-2) var(--size-2-2) var(--size-2-1);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+}
+
+.ai-agent-panel-column-empty {
+	padding: var(--size-2-2);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	font-style: italic;
+}
+
+/* History rows: muted, timestamped, and with no close button - "×" already
+   means "close the tab" one section above, and it must never also mean
+   "delete forever". Deletion lives in the row's context menu. */
+.ai-agent-panel-tab.is-recent {
+	color: var(--text-muted);
+	cursor: pointer;
+}
+
+.ai-agent-panel-tab-time {
+	flex-shrink: 0;
+	margin-left: auto;
+	padding-left: var(--size-2-2);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	white-space: nowrap;
 }
 
 /* Transcript --------------------------------------------------------------- */

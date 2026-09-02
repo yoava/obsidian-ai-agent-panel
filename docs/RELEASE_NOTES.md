@@ -27,6 +27,16 @@ and a vault on the local file system.
   rather than synced. Widening it also raises the width at which *Automatic*
   is willing to use the column, so a wide column never buys itself a squashed
   transcript.
+- **The side column lists every conversation**, not only the open ones: one
+  scroller with *Pinned*, *Open* (drag-reorderable, busy dot, `×` closes) and
+  *Recent* - everything in history that is not open, muted, with a relative
+  time and no `×`, under *Today* / *Yesterday* / *Previous 7 days* / *Older*.
+  Sections collapse and remember it per device, a filter field narrows all of
+  them by title, and clicking a *Recent* row opens it, so this layout has no
+  use for the *Previous conversations* picker (which stays, for the top strip
+  and its fuzzy search). Right-click or long-press a row for *Open*, *Export
+  to Markdown*, *Close* and *Delete* - deletion asks first and lives only
+  here, so `×` can keep meaning "close the tab" and nothing else.
 - **Conversation history**, saved locally and reopenable, resuming the CLI
   session where it left off.
 - **Undo a turn or branch off one.** Every finished turn offers *Restore

@@ -47,6 +47,11 @@ export default class AgentPanelPlugin extends Plugin {
 			`${pluginDir}/checkpoints`
 		);
 		this.history.onDeleted = (id) => void this.checkpoints.forget(id);
+		// The conversation column draws from the store's cache, so it has to be
+		// told when the cache moves - it never re-reads the folder itself.
+		this.history.onChanged = () => {
+			for (const view of this.chatViews()) view.onHistoryChanged();
+		};
 		this.exporter = new TranscriptExporter(this.app, () => this.settings);
 		this.history.onBeforeSave = (conversation) =>
 			this.exporter.maybeAutoExport(conversation);

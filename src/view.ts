@@ -19,10 +19,17 @@ import {
 import { ClaudeSession } from "./session";
 import {
 	ConversationPickerModal,
+	DeleteConversationModal,
 	newConversationId,
+	relativeTime,
 	type StoredConversation,
 	type StoredMessage,
 } from "./history";
+import {
+	groupConversations,
+	type ConversationEntry,
+	type ConversationSections,
+} from "./conversation-list";
 import { FileMentionSuggest, LOCAL_USAGE_COMMANDS, SlashCommandSuggest } from "./suggest";
 import {
 	MIN_USAGE_REFRESH_SECONDS,
@@ -99,6 +106,15 @@ const TAB_STATE_KEY = "ai-agent-panel:open-tabs";
  * not ride along with the synced settings onto a laptop with a narrower one.
  */
 const SIDE_WIDTH_KEY = "ai-agent-panel:side-width";
+/** Which of the column's sections are collapsed; per device, like the width. */
+const SIDE_SECTIONS_KEY = "ai-agent-panel:side-sections";
+
+const SECTION_PINNED = "pinned";
+const SECTION_OPEN = "open";
+const SECTION_RECENT = "recent";
+
+/** Right-click equivalent for touch input: hold a row this long. */
+const ROW_LONG_PRESS_MS = 500;
 
 /** Name of the in-process MCP server; tools appear as `mcp__obsidian__…`. */
 const OBSIDIAN_MCP_SERVER = "obsidian";
@@ -317,6 +333,15 @@ export class AgentPanelView extends ItemView {
 	private sideWidthPref = SIDE_WIDTH_DEFAULT_PX;
 	/** What that comes to in this pane; drives --ai-agent-panel-side-width. */
 	private sideWidth = SIDE_WIDTH_DEFAULT_PX;
+	/** Holds the filter field and the +/chevron buttons. */
+	private tabsToolbarEl!: HTMLElement;
+	private tabFilterEl!: HTMLInputElement;
+	/** Title filter for the column; deliberately not persisted (see onOpen). */
+	private tabFilter = "";
+	/** Sections the user collapsed, by SECTION_* key. Persisted per device. */
+	private collapsedSections = new Set<string>();
+	/** Fingerprint of the last column render, to skip no-op rebuilds. */
+	private tabListKey: string | null = null;
 	private messagesContainerEl!: HTMLElement;
 	private inputEl!: HTMLTextAreaElement;
 	private sendButton!: HTMLButtonElement;
@@ -462,13 +487,40 @@ export class AgentPanelView extends ItemView {
 			else if (evt.clientX > rect.right - TAB_DRAG_EDGE_PX)
 				this.tabListEl.scrollLeft += TAB_DRAG_SCROLL_PX;
 		});
-		this.tabMenuBtn = tabs.createEl("button", {
+		// One row of chrome for both layouts. In the top strip it is `display:
+		// contents`, so the buttons stay direct children of the strip and lay
+		// out exactly as they always did; in the side column it becomes the
+		// column's header and the filter field appears inside it.
+		this.tabsToolbarEl = tabs.createDiv({ cls: "ai-agent-panel-tabs-toolbar" });
+		this.tabFilterEl = this.tabsToolbarEl.createEl("input", {
+			cls: "ai-agent-panel-tab-filter",
+			attr: {
+				type: "text",
+				placeholder: "Filter…",
+				"aria-label": "Filter conversations by title",
+			},
+		});
+		this.registerDomEvent(this.tabFilterEl, "input", () => {
+			this.tabFilter = this.tabFilterEl.value;
+			this.renderTabList();
+		});
+		this.registerDomEvent(this.tabFilterEl, "keydown", (evt) => {
+			// Escape clears rather than closing anything - the field is inline,
+			// so there is no popup for Escape to mean "dismiss".
+			if (evt.key !== "Escape") return;
+			evt.preventDefault();
+			evt.stopPropagation();
+			this.tabFilterEl.value = "";
+			this.tabFilter = "";
+			this.renderTabList();
+		});
+		this.tabMenuBtn = this.tabsToolbarEl.createEl("button", {
 			cls: "clickable-icon ai-agent-panel-tab-menu is-hidden",
 			attr: { "aria-label": "All conversation tabs" },
 		});
 		setIcon(this.tabMenuBtn, "chevron-down");
 		this.tabMenuBtn.addEventListener("click", () => this.openTabMenu());
-		const newTabBtn = tabs.createEl("button", {
+		const newTabBtn = this.tabsToolbarEl.createEl("button", {
 			cls: "clickable-icon ai-agent-panel-tab-new",
 			attr: { "aria-label": "New conversation tab" },
 		});
@@ -628,11 +680,17 @@ export class AgentPanelView extends ItemView {
 		this.sideWidthPref = parseStoredSideWidth(
 			this.app.loadLocalStorage(SIDE_WIDTH_KEY)
 		);
+		this.loadSectionState();
 		this.applyTabPosition();
 
 		// Reopen this machine's tabs from the previous session (falls back to
 		// a single fresh tab; switchTab syncs the composer, chips, buttons).
 		await this.restoreTabState();
+
+		// The only full folder scan: from here the store's cache is kept
+		// current by save/delete. Deliberately not awaited - the open tabs are
+		// already on screen, and "Recent" fills in when the scan lands.
+		void this.plugin.history.refresh();
 
 		// The usage poll must stop whenever the strip can't be seen: window
 		// hidden, sidebar collapsed, another tab covering the view, …
@@ -826,6 +884,7 @@ export class AgentPanelView extends ItemView {
 			this.updateTabTitle(tab);
 			if (tab === this.active) this.updateTranscriptLink();
 		}
+		this.renderTabList();
 		this.saveTabState();
 	}
 
@@ -838,7 +897,9 @@ export class AgentPanelView extends ItemView {
 		let mode = settings.defaultPermissionMode;
 		if (mode === "bypassPermissions" && !settings.enableBypassMode) mode = "default";
 
-		const tabEl = this.tabListEl.createDiv({ cls: "ai-agent-panel-tab" });
+		// Detached: renderTabList decides which section it belongs in, and in the
+		// top strip it is appended in tab order there.
+		const tabEl = createDiv({ cls: "ai-agent-panel-tab" });
 		tabEl.createSpan({ cls: "ai-agent-panel-tab-dot" });
 		const labelEl = tabEl.createSpan({
 			cls: "ai-agent-panel-tab-label",
@@ -912,11 +973,13 @@ export class AgentPanelView extends ItemView {
 			this.closeTab(tab);
 		});
 		this.makeTabDraggable(tab);
+		this.makeRowMenu(tabEl, () => ({ tab, id: tab.conversation?.id ?? null }));
 
 		this.renderWelcome(tab);
 		this.tabs.push(tab);
+		// Before switchTab: it scrolls the row into view, which needs it placed.
+		this.renderTabList();
 		this.switchTab(tab);
-		this.updateTabOverflow();
 		return tab;
 	}
 
@@ -942,6 +1005,9 @@ export class AgentPanelView extends ItemView {
 		if (side !== this.tabsOnSide) {
 			this.tabsOnSide = side;
 			this.bodyEl.toggleClass("is-tabs-side", side);
+			// The two layouts are different lists - a flat strip of tabs, or the
+			// sectioned column - so the list is rebuilt, not just restyled.
+			this.renderTabList();
 			// A list that was scrolled on the other axis keeps a stale offset.
 			this.tabListEl.scrollLeft = 0;
 			this.tabListEl.scrollTop = 0;
@@ -1031,6 +1097,329 @@ export class AgentPanelView extends ItemView {
 		this.updateConfigBar();
 	}
 
+	// -----------------------------------------------------------------------
+	// The conversation column
+	// -----------------------------------------------------------------------
+
+	/** Called by the plugin when the history store's cache changes. */
+	onHistoryChanged(): void {
+		this.renderTabList();
+	}
+
+	/**
+	 * Every row the column could draw: the open tabs (including one that has
+	 * not saved a conversation yet) plus everything in history that is not
+	 * already open. The pure grouper turns this into sections.
+	 */
+	private columnEntries(): ConversationEntry[] {
+		const entries: ConversationEntry[] = [];
+		const open = new Set<string>();
+		this.tabs.forEach((tab, index) => {
+			const conversation = tab.conversation;
+			if (conversation) open.add(conversation.id);
+			entries.push({
+				id: conversation?.id ?? null,
+				title: conversation?.title || "New conversation",
+				updatedAt: conversation?.updatedAt ?? Date.now(),
+				openIndex: index,
+				pinned: false,
+				pinnedAt: null,
+			});
+		});
+		for (const meta of this.plugin.history.snapshot()) {
+			if (open.has(meta.id)) continue;
+			entries.push({
+				id: meta.id,
+				title: meta.title,
+				updatedAt: meta.updatedAt,
+				openIndex: null,
+				pinned: false,
+				pinnedAt: null,
+			});
+		}
+		return entries;
+	}
+
+	/**
+	 * What the column looks like right now, as a string. Saves and history
+	 * changes arrive about once a second while a turn runs, and almost none of
+	 * them move a row - comparing this is far cheaper than rebuilding the list
+	 * to find that out.
+	 */
+	private columnKey(sections: ConversationSections | null): string {
+		if (!sections) return `top:${this.tabs.map((tab) => tab.id).join(",")}`;
+		const ids = (entries: ConversationEntry[]) =>
+			entries
+				.map((entry) => `${entry.id ?? `#${entry.openIndex}`}@${entry.updatedAt}`)
+				.join(",");
+		return [
+			"side",
+			this.tabFilter.trim().toLowerCase(),
+			[...this.collapsedSections].sort().join(","),
+			this.plugin.history.isScanned ? "scanned" : "scanning",
+			ids(sections.pinned),
+			// Open rows are drawn from the tabs themselves, so only their
+			// identity and order matter here, not their timestamps.
+			sections.open.map((entry) => entry.id ?? `#${entry.openIndex}`).join(","),
+			sections.recent.map((group) => `${group.label}:${ids(group.entries)}`).join("|"),
+		].join(";");
+	}
+
+	/**
+	 * Draw the tab list. In the top strip that is the open tabs in order; in
+	 * the side column it is the whole conversation list - pinned, open, and
+	 * everything else from history - in one scroller, which is why that layout
+	 * has no need of the "Previous conversations" picker.
+	 *
+	 * Tab elements are moved, never rebuilt: their drag handlers, busy classes
+	 * and tooltips are set up once in addTab and have to survive a re-render.
+	 */
+	private renderTabList(): void {
+		if (!this.tabListEl) return; // onResize can fire before onOpen built the view
+		const sections = this.tabsOnSide
+			? groupConversations(this.columnEntries(), Date.now(), this.tabFilter)
+			: null;
+		const key = this.columnKey(sections);
+		if (key === this.tabListKey) return;
+		this.tabListKey = key;
+
+		// Rebuilding empties the scroller, which would otherwise jump to the
+		// top and lose the row the user just clicked.
+		const scrollTop = this.tabListEl.scrollTop;
+		this.tabListEl.empty();
+		if (sections) this.renderColumnSections(sections);
+		else for (const tab of this.tabs) this.tabListEl.appendChild(tab.tabEl);
+		this.tabListEl.scrollTop = scrollTop;
+		this.updateTabOverflow();
+	}
+
+	private renderColumnSections(sections: ConversationSections): void {
+		// An empty Pinned section is a header with nothing under it, so it is
+		// left out entirely rather than shown as an invitation.
+		if (sections.pinned.length > 0)
+			this.renderSection(SECTION_PINNED, "Pinned", null, (body) => {
+				for (const entry of sections.pinned) this.renderColumnRow(body, entry);
+			});
+
+		this.renderSection(SECTION_OPEN, "Open", sections.open.length, (body) => {
+			body.dataset.section = SECTION_OPEN; // the only drop target for a drag
+			for (const entry of sections.open) this.renderColumnRow(body, entry);
+		});
+
+		this.renderSection(SECTION_RECENT, "Recent", null, (body) => {
+			if (sections.recent.length === 0) {
+				body.createDiv({
+					cls: "ai-agent-panel-column-empty",
+					text: this.emptyRecentText(sections),
+				});
+				return;
+			}
+			for (const group of sections.recent) {
+				body.createDiv({
+					cls: "ai-agent-panel-date-header",
+					text: group.label,
+				});
+				for (const entry of group.entries) this.renderColumnRow(body, entry);
+			}
+		});
+	}
+
+	/** Why "Recent" is empty - not yet read, filtered out, or genuinely nothing. */
+	private emptyRecentText(sections: ConversationSections): string {
+		if (this.tabFilter.trim())
+			return sections.total > 0 ? "No other matches" : "No matches";
+		return this.plugin.history.isScanned ? "No previous conversations" : "Loading…";
+	}
+
+	private renderSection(
+		key: string,
+		label: string,
+		count: number | null,
+		fill: (body: HTMLElement) => void
+	): void {
+		const section = this.tabListEl.createDiv({ cls: "ai-agent-panel-section" });
+		section.toggleClass("is-collapsed", this.collapsedSections.has(key));
+		const header = section.createDiv({ cls: "ai-agent-panel-section-header" });
+		const chevron = header.createSpan({ cls: "ai-agent-panel-section-chevron" });
+		setIcon(chevron, "chevron-down");
+		header.createSpan({ cls: "ai-agent-panel-section-label", text: label });
+		if (count !== null)
+			header.createSpan({
+				cls: "ai-agent-panel-section-count",
+				text: String(count),
+			});
+		header.addEventListener("click", () => this.toggleSection(key));
+		fill(section.createDiv({ cls: "ai-agent-panel-section-body" }));
+	}
+
+	private toggleSection(key: string): void {
+		if (this.collapsedSections.has(key)) this.collapsedSections.delete(key);
+		else this.collapsedSections.add(key);
+		this.app.saveLocalStorage(SIDE_SECTIONS_KEY, [...this.collapsedSections]);
+		this.renderTabList();
+	}
+
+	private loadSectionState(): void {
+		const raw = this.app.loadLocalStorage(SIDE_SECTIONS_KEY);
+		if (!Array.isArray(raw)) return;
+		this.collapsedSections = new Set(
+			raw.filter((key): key is string => typeof key === "string")
+		);
+	}
+
+	/**
+	 * One row. An open conversation is its live tab element, so it keeps the
+	 * active background, the busy dot and the close button wherever it is
+	 * drawn; anything else is a history row, which gets a time instead and
+	 * deliberately no "×" - a button that closes a tab on one row and destroys
+	 * a conversation on the next is a trap.
+	 */
+	private renderColumnRow(body: HTMLElement, entry: ConversationEntry): void {
+		if (entry.openIndex !== null) {
+			const tab = this.tabs[entry.openIndex];
+			if (tab) body.appendChild(tab.tabEl);
+			return;
+		}
+		if (!entry.id) return;
+		const id = entry.id;
+		const row = body.createDiv({ cls: "ai-agent-panel-tab is-recent" });
+		row.createSpan({
+			cls: "ai-agent-panel-tab-label",
+			text: tabLabel(entry.title),
+		});
+		row.createSpan({
+			cls: "ai-agent-panel-tab-time",
+			text: relativeTime(entry.updatedAt),
+		});
+		setTooltip(row, `${entry.title}\nLast active ${relativeTime(entry.updatedAt)}`, {
+			placement: "left",
+		});
+		row.addEventListener("click", () => this.openStoredConversation(id));
+		this.makeRowMenu(row, () => ({ tab: null, id }));
+	}
+
+	/**
+	 * Open a conversation from history. Its row moves out of Recent and into
+	 * Open on the re-render that restoreConversation triggers.
+	 */
+	private openStoredConversation(id: string): void {
+		void this.plugin.history.load(id).then((stored) => {
+			if (stored) this.restoreConversation(stored);
+			else new Notice("Could not load that conversation.");
+		});
+	}
+
+	/**
+	 * Right-click, or a long press on touch, opens the row's menu. It is the
+	 * only route to deleting a conversation, which is why it exists at all:
+	 * the affordance had nowhere else to go that was not dangerously close to
+	 * "close this tab".
+	 */
+	private makeRowMenu(
+		row: HTMLElement,
+		target: () => { tab: ChatTab | null; id: string | null }
+	): void {
+		row.addEventListener("contextmenu", (evt) => {
+			evt.preventDefault();
+			evt.stopPropagation();
+			const { tab, id } = target();
+			this.openConversationMenu(evt.clientX, evt.clientY, tab, id);
+		});
+
+		// Touch has no second button, so a hold stands in for it. Guarded to
+		// touch pointers so a slow mouse click is never mistaken for one.
+		let holdTimer: number | null = null;
+		const cancelHold = () => {
+			if (holdTimer === null) return;
+			window.clearTimeout(holdTimer);
+			holdTimer = null;
+		};
+		row.addEventListener("pointerdown", (evt) => {
+			if (evt.pointerType !== "touch") return;
+			const { clientX, clientY } = evt;
+			holdTimer = window.setTimeout(() => {
+				holdTimer = null;
+				const { tab, id } = target();
+				this.openConversationMenu(clientX, clientY, tab, id);
+			}, ROW_LONG_PRESS_MS);
+		});
+		for (const event of ["pointerup", "pointercancel", "pointermove"] as const)
+			row.addEventListener(event, cancelHold);
+	}
+
+	private openConversationMenu(
+		x: number,
+		y: number,
+		tab: ChatTab | null,
+		id: string | null
+	): void {
+		const menu = new Menu();
+		if (!tab && id)
+			menu.addItem((item) =>
+				item
+					.setTitle("Open")
+					.setIcon("message-square")
+					.onClick(() => this.openStoredConversation(id))
+			);
+		if (id)
+			menu.addItem((item) =>
+				item
+					.setTitle("Export to Markdown")
+					.setIcon("file-down")
+					.onClick(() => void this.exportConversation(id))
+			);
+		if (tab)
+			menu.addItem((item) =>
+				item
+					.setTitle("Close")
+					.setIcon("x")
+					.onClick(() => this.closeTab(tab))
+			);
+		if (id) {
+			menu.addSeparator();
+			menu.addItem((item) =>
+				item
+					.setTitle("Delete")
+					.setIcon("trash-2")
+					.onClick(() => this.confirmDeleteConversation(id))
+			);
+		}
+		menu.showAtPosition({ x, y });
+	}
+
+	private confirmDeleteConversation(id: string): void {
+		const title =
+			this.tabs.find((tab) => tab.conversation?.id === id)?.conversation?.title ??
+			this.plugin.history.snapshot().find((meta) => meta.id === id)?.title ??
+			"This conversation";
+		new DeleteConversationModal(this.app, title, () => {
+			void this.plugin.history.delete(id).then(() => {
+				// Detach any open tab first, so its next save cannot recreate
+				// the file that was just removed.
+				this.detachDeletedConversation(id);
+			});
+		}).open();
+	}
+
+	/** Export one conversation, open or not, from the row menu. */
+	private async exportConversation(id: string): Promise<void> {
+		const conversation =
+			this.tabs.find((tab) => tab.conversation?.id === id)?.conversation ??
+			(await this.plugin.history.load(id));
+		if (!conversation || conversation.messages.length === 0) {
+			new Notice("Nothing to export yet.");
+			return;
+		}
+		try {
+			const path = await this.plugin.exporter.export(conversation);
+			await this.plugin.history.flush(conversation); // persists exportPath
+			this.updateTranscriptLink();
+			new Notice(`Exported to ${path}`);
+		} catch (err) {
+			new Notice(`Export failed: ${err instanceof Error ? err.message : err}`);
+		}
+	}
+
 	/**
 	 * Show the picker chevron and edge fades only while the strip really
 	 * scrolls: tabs first shrink to a minimum size, and overflow past that.
@@ -1056,6 +1445,10 @@ export class AgentPanelView extends ItemView {
 	 */
 	private scrollTabIntoView(tab: ChatTab): void {
 		const list = this.tabListEl;
+		// The row can be off the list entirely - filtered out, or inside a
+		// collapsed section - and a detached element measures as all zeros,
+		// which would scroll the list to a meaningless place.
+		if (!tab.tabEl.offsetParent) return;
 		const listRect = list.getBoundingClientRect();
 		const tabRect = tab.tabEl.getBoundingClientRect();
 		const pad = TAB_REVEAL_PAD_PX;
@@ -1125,30 +1518,38 @@ export class AgentPanelView extends ItemView {
 			el.removeClass("is-dragging");
 			this.draggedTab = null;
 			if (this.tabDropCommitted) {
-				this.tabs.sort(
-					(a, b) =>
-						domIndex(this.tabListEl, a.tabEl) - domIndex(this.tabListEl, b.tabEl)
+				// Rows can live in different section bodies, so positions are
+				// read in document order across the whole list rather than as
+				// indices within one parent.
+				const order = Array.from(
+					this.tabListEl.querySelectorAll(".ai-agent-panel-tab")
 				);
-			} else {
-				// Cancelled (Escape / dropped off the strip): dragover already
-				// moved the element live, so restore the DOM to the array order.
-				for (const t of this.tabs) this.tabListEl.appendChild(t.tabEl);
+				this.tabs.sort((a, b) => order.indexOf(a.tabEl) - order.indexOf(b.tabEl));
 			}
 			this.tabDropCommitted = false;
+			// Either way the DOM is now out of step with the array: on a commit
+			// because the sections need renumbering, on a cancel because
+			// dragover already moved the element. Force the rebuild - the
+			// fingerprint cannot see a DOM-only change.
+			this.tabListKey = null;
+			this.renderTabList();
+			this.saveTabState();
 		});
 		el.addEventListener("dragover", (evt) => {
 			const dragged = this.draggedTab;
 			if (!dragged || dragged === tab) return;
+			const parent = el.parentElement;
+			// Reordering happens within the open tabs only: dropping into
+			// "Recent" would mean nothing, and the pinned order is by pin time.
+			if (!parent || parent !== dragged.tabEl.parentElement) return;
+			if (this.tabsOnSide && parent.dataset.section !== SECTION_OPEN) return;
 			evt.preventDefault();
 			if (evt.dataTransfer) evt.dataTransfer.dropEffect = "move";
 			const rect = el.getBoundingClientRect();
 			const before = this.tabsOnSide
 				? evt.clientY < rect.top + rect.height / 2
 				: evt.clientX < rect.left + rect.width / 2;
-			this.tabListEl.insertBefore(
-				dragged.tabEl,
-				before ? el : el.nextElementSibling
-			);
+			parent.insertBefore(dragged.tabEl, before ? el : el.nextElementSibling);
 		});
 		el.addEventListener("drop", (evt) => {
 			evt.preventDefault();
@@ -1212,17 +1613,14 @@ export class AgentPanelView extends ItemView {
 				this.switchTab(this.tabs[Math.min(index, this.tabs.length - 1)]);
 		}
 		if (this.tabs.length === 0) this.addTab();
+		// The conversation is still in history, so its row moves to "Recent".
+		this.renderTabList();
 		this.updateTabOverflow();
 		this.saveTabState();
 	}
 
 	private updateTabTitle(tab: ChatTab): void {
-		const full = tab.conversation?.title || "New conversation";
-		const label =
-			full.length > MAX_TAB_LABEL_CHARS
-				? full.slice(0, MAX_TAB_LABEL_CHARS - 1) + "…"
-				: full;
-		tab.labelEl.setText(label);
+		tab.labelEl.setText(tabLabel(tab.conversation?.title || "New conversation"));
 		this.refreshTabTooltip(tab);
 		// A longer title can push the strip into overflow.
 		this.updateTabOverflow();
@@ -1318,6 +1716,11 @@ export class AgentPanelView extends ItemView {
 		this.updateTranscriptLink();
 		this.scrollToBottom(tab, true);
 		this.focusInput();
+		// The row leaves "Recent" for "Open" now that a tab owns it, which moves
+		// it up the column - follow it, so the row the user clicked is still
+		// the row they are looking at.
+		this.renderTabList();
+		this.scrollTabIntoView(tab);
 		this.saveTabState();
 	}
 
@@ -1357,6 +1760,7 @@ export class AgentPanelView extends ItemView {
 			);
 			if (activeTab) this.switchTab(activeTab);
 		}
+		this.renderTabList();
 		this.updateTabOverflow();
 		this.saveTabState();
 	}
@@ -4115,8 +4519,11 @@ function formatElapsed(ms: number): string {
 	return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
 }
 
-function domIndex(parent: HTMLElement, child: HTMLElement): number {
-	return Array.prototype.indexOf.call(parent.children, child);
+/** Row label, cut to the width a tab can show. */
+function tabLabel(title: string): string {
+	return title.length > MAX_TAB_LABEL_CHARS
+		? title.slice(0, MAX_TAB_LABEL_CHARS - 1) + "…"
+		: title;
 }
 
 interface UserQuestionOption {

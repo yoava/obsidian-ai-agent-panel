@@ -426,6 +426,54 @@ can be unit-tested and cannot drift apart:
 The layout is re-settled once on drag end rather than per `pointermove`, so a
 threshold crossing cannot flip the layout under the pointer mid-drag.
 
+## The conversation column (src/conversation-list.ts)
+
+In the side layout the column is the complete conversation list - open tabs
+**and** history - so that layout needs no "Previous conversations" picker. One
+scroller holds three sections, and every conversation appears in exactly one:
+*Pinned*, then *Open* (a count in the header), then *Recent*, itself split
+into *Today* / *Yesterday* / *Previous 7 days* / *Older*. Sectioning, sorting,
+date bucketing and the title filter are pure functions in
+`src/conversation-list.ts` (`groupConversations`), tested without a DOM.
+
+`renderTabList` draws whatever that returns. Two rules make it safe to call
+often:
+
+- **Tab elements are moved, never rebuilt.** A `ChatTab`'s element carries its
+  drag handlers, `is-active`/`is-busy` classes and tooltip from `addTab`
+  onwards, so the renderer re-parents it into the right section rather than
+  recreating it. That is also what lets an open conversation keep its close
+  button and busy dot while being drawn in *Pinned*.
+- **A fingerprint guards the rebuild.** `columnKey` renders the section
+  structure as a string; a save that moves nothing (the common case, about
+  once a second while a turn runs) compares equal and does no DOM work.
+
+Rows differ by section on purpose. *Recent* rows are muted, carry a relative
+time, and have **no `×`**: a button that closes a tab in one section and
+destroys a conversation in the next is a trap. Deletion is only in the
+right-click / long-press menu, behind a confirmation
+(`DeleteConversationModal`).
+
+## History cache (src/history.ts)
+
+`HistoryStore` keeps a `Map<id, ConversationMeta>`. The column is on screen
+continuously, so it cannot re-read the folder to redraw: a scan reads and
+JSON-parses *every* conversation file, and a running turn saves about once a
+second.
+
+- `refresh()` is the only folder scan, run on view open (not awaited - open
+  tabs paint first and *Recent* fills in behind them) or when files can have
+  appeared behind the plugin's back, such as a vault sync. Concurrent calls
+  share one in-flight scan.
+- `save()` and `delete()` update the map in place and fire `onChanged`, which
+  `main.ts` fans out to the open views. `load()` fills the map silently -
+  restoring a dozen tabs must not cost a dozen re-renders.
+- A scan takes a while and writes keep happening during it, so entries the
+  cache gained meanwhile win over what the scan read, and ids deleted
+  mid-scan are dropped from its result rather than resurrected.
+- `snapshot()` is the synchronous, IO-free read the renderer uses; `list()`
+  still exists for the picker modal and scans once on first use.
+
 ## Settings storage (src/settings-core.ts)
 
 Settings live in two stores. `data.json` is the synced one - Obsidian Sync
@@ -499,6 +547,7 @@ answer it renders nothing rather than erroring.
 | `src/main.ts` | plugin entry: view/commands/ribbon/settings registration, service wiring |
 | `src/view.ts` | the chat panel UI: tabs, transcript, composer, usage strip |
 | `src/tabs-layout.ts` | side-column clamp + "auto" layout threshold (no Obsidian imports - plain-Node tests) |
+| `src/conversation-list.ts` | column sectioning, sorting, date buckets, title filter (same, pure) |
 | `src/diff.ts` | original line + word diff (no Obsidian imports - plain-Node tests) |
 | `src/edits.ts` | what an Edit/Write/MultiEdit call would do (same, pure) |
 | `src/diffview.ts` | diff DOM and the "changes this conversation" modal |

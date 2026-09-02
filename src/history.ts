@@ -1,5 +1,6 @@
 import {
 	FuzzySuggestModal,
+	Modal,
 	Notice,
 	setIcon,
 	type App,
@@ -109,6 +110,24 @@ export class HistoryStore {
 	private dirReady: Promise<void> | null = null;
 
 	/**
+	 * Metadata for every conversation the plugin knows about.
+	 *
+	 * The conversation column is on screen the whole time a side layout is
+	 * used, so it cannot afford to ask the disk what exists: a folder scan
+	 * reads and JSON-parses every conversation file, and a running turn saves
+	 * about once a second. The map is filled once by a scan and then kept
+	 * current from save() and delete(), which are the only ways this plugin
+	 * changes the folder.
+	 */
+	private metas = new Map<string, ConversationMeta>();
+	/** Whether a full folder scan has happened yet. */
+	private scanned = false;
+	/** In-flight scan, so two views opening together read the folder once. */
+	private scanning: Promise<ConversationMeta[]> | null = null;
+	/** Deleted while a scan was in flight - that scan's snapshot predates them. */
+	private deletedDuringScan = new Set<string>();
+
+	/**
 	 * Runs before each persist and may enrich the conversation (markdown
 	 * auto-export sets exportPath), so what it writes lands in the same save.
 	 */
@@ -117,7 +136,33 @@ export class HistoryStore {
 	/** Runs after a conversation is deleted, so its side data can go too. */
 	onDeleted: ((id: string) => void) | null = null;
 
+	/**
+	 * Runs whenever the known set of conversations changes, so a view can
+	 * redraw its list without going back to disk.
+	 */
+	onChanged: (() => void) | null = null;
+
 	constructor(private app: App, private dir: string) {}
+
+	/** What the cache would record for a conversation. */
+	private static metaOf(conversation: StoredConversation): ConversationMeta {
+		return {
+			id: conversation.id,
+			title: conversation.title,
+			updatedAt: conversation.updatedAt,
+			messageCount: conversation.messages.length,
+		};
+	}
+
+	/** Everything known right now, newest first. No IO - safe to call per render. */
+	snapshot(): ConversationMeta[] {
+		return [...this.metas.values()].sort((a, b) => b.updatedAt - a.updatedAt);
+	}
+
+	/** False until the first scan lands, so a view can hold off its empty state. */
+	get isScanned(): boolean {
+		return this.scanned;
+	}
 
 	/** Debounced save; call after every recorded message. */
 	queueSave(conversation: StoredConversation): void {
@@ -146,9 +191,28 @@ export class HistoryStore {
 				this.pathFor(conversation.id),
 				JSON.stringify(conversation)
 			);
+			this.remember(conversation);
 		} catch (err) {
 			console.error("AI Agent Panel: failed to save conversation", err);
 		}
+	}
+
+	/**
+	 * Fold a just-written conversation into the cache. Announced only when
+	 * something a list would draw actually moved - a save that changes nothing
+	 * visible should not cost a re-render.
+	 */
+	private remember(conversation: StoredConversation): void {
+		const meta = HistoryStore.metaOf(conversation);
+		const previous = this.metas.get(meta.id);
+		this.metas.set(meta.id, meta);
+		if (
+			!previous ||
+			previous.title !== meta.title ||
+			previous.updatedAt !== meta.updatedAt ||
+			previous.messageCount !== meta.messageCount
+		)
+			this.onChanged?.();
 	}
 
 	/** Flush a pending debounced save immediately (e.g. on view close). */
@@ -162,31 +226,60 @@ export class HistoryStore {
 		await this.save(conversation);
 	}
 
+	/** Everything, scanning the folder the first time it is asked. */
 	async list(): Promise<ConversationMeta[]> {
+		if (!this.scanned) await this.refresh();
+		return this.snapshot();
+	}
+
+	/**
+	 * Re-read the folder. Only worth doing when files can have appeared behind
+	 * the plugin's back - a view opening, or a vault sync landing new files -
+	 * since every change this plugin makes goes through save() or delete() and
+	 * updates the cache in place.
+	 */
+	refresh(): Promise<ConversationMeta[]> {
+		return (this.scanning ??= this.scan().finally(() => {
+			this.scanning = null;
+		}));
+	}
+
+	private async scan(): Promise<ConversationMeta[]> {
 		const adapter = this.app.vault.adapter;
-		if (!(await adapter.exists(this.dir))) return [];
-		const listing = await adapter.list(this.dir);
-		const metas: ConversationMeta[] = [];
-		for (const file of listing.files) {
-			if (!file.endsWith(".json")) continue;
-			const conversation = await this.readFile(file);
-			if (!conversation) continue;
-			// The file name is authoritative for the id (readFile pins it), so
-			// load()/delete() always resolve back to this same file.
-			metas.push({
-				id: conversation.id,
-				title: conversation.title,
-				updatedAt: conversation.updatedAt,
-				messageCount: conversation.messages.length,
-			});
+		const found = new Map<string, ConversationMeta>();
+		if (await adapter.exists(this.dir)) {
+			const listing = await adapter.list(this.dir);
+			for (const file of listing.files) {
+				if (!file.endsWith(".json")) continue;
+				const conversation = await this.readFile(file);
+				if (!conversation) continue;
+				// The file name is authoritative for the id (readFile pins it), so
+				// load()/delete() always resolve back to this same file.
+				found.set(conversation.id, HistoryStore.metaOf(conversation));
+			}
 		}
-		metas.sort((a, b) => b.updatedAt - a.updatedAt);
-		return metas;
+		// A scan takes a while, and saves and deletes keep happening while it
+		// runs. Both are newer than anything it read, so they win over it.
+		for (const [id, meta] of this.metas) {
+			const scannedMeta = found.get(id);
+			if (!scannedMeta || scannedMeta.updatedAt < meta.updatedAt) found.set(id, meta);
+		}
+		for (const id of this.deletedDuringScan) found.delete(id);
+		this.deletedDuringScan.clear();
+		this.metas = found;
+		this.scanned = true;
+		this.onChanged?.();
+		return this.snapshot();
 	}
 
 	async load(id: string): Promise<StoredConversation | null> {
 		if (!isSafeConversationId(id)) return null;
-		return this.readFile(this.pathFor(id));
+		const conversation = await this.readFile(this.pathFor(id));
+		// Opening a conversation is not a change, so this fills the cache
+		// silently - restoring a dozen tabs must not fire a dozen re-renders.
+		if (conversation)
+			this.metas.set(conversation.id, HistoryStore.metaOf(conversation));
+		return conversation;
 	}
 
 	async delete(id: string): Promise<void> {
@@ -200,7 +293,10 @@ export class HistoryStore {
 		} catch (err) {
 			console.error("AI Agent Panel: failed to delete conversation", err);
 		}
+		this.metas.delete(id);
+		if (this.scanning) this.deletedDuringScan.add(id);
 		this.onDeleted?.(id);
+		this.onChanged?.();
 	}
 
 	private pathFor(id: string): string {
@@ -244,7 +340,7 @@ export class HistoryStore {
 
 // ---------------------------------------------------------------------------
 
-function relativeTime(timestamp: number): string {
+export function relativeTime(timestamp: number): string {
 	const seconds = Math.max(0, (Date.now() - timestamp) / 1000);
 	if (seconds < 60) return "just now";
 	const minutes = seconds / 60;
@@ -254,6 +350,45 @@ function relativeTime(timestamp: number): string {
 	const days = hours / 24;
 	if (days < 30) return `${Math.floor(days)}d ago`;
 	return new Date(timestamp).toLocaleDateString();
+}
+
+/**
+ * Deleting a conversation removes its file and its checkpoints for good, and
+ * unlike closing a tab there is nothing to undo it with - so it asks first,
+ * wherever it is triggered from.
+ */
+export class DeleteConversationModal extends Modal {
+	constructor(app: App, private title: string, private onConfirm: () => void) {
+		super(app);
+	}
+
+	onOpen(): void {
+		const { contentEl } = this;
+		contentEl.createEl("h3", { text: "Delete conversation" });
+		contentEl.createEl("p", {
+			text:
+				`"${this.title}" and everything said in it will be removed from ` +
+				"this vault, along with the file checkpoints that let its turns be " +
+				"undone. Any transcript already exported stays where it is.",
+		});
+		const buttons = contentEl.createDiv({ cls: "ai-agent-panel-permission-buttons" });
+		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => {
+			this.close();
+		});
+		const confirm = buttons.createEl("button", {
+			cls: "mod-warning",
+			text: "Delete",
+		});
+		confirm.addEventListener("click", () => {
+			this.close();
+			this.onConfirm();
+		});
+		confirm.focus();
+	}
+
+	onClose(): void {
+		this.contentEl.empty();
+	}
 }
 
 export class ConversationPickerModal extends FuzzySuggestModal<ConversationMeta> {

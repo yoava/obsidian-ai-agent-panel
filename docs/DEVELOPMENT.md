@@ -47,6 +47,7 @@ Obsidian-free modules into `tests/.build/` and the specs import from there:
 | `tests/bash.test.mjs` | `src/bash.ts` - shell invocation shape, capture, timeout, output caps |
 | `tests/checkpoints.test.mjs` | `src/checkpoints.ts` - snapshot semantics, pruning, restore plans, id safety |
 | `tests/tabs-layout.test.mjs` | `src/tabs-layout.ts` - side-column clamp, the "auto" threshold and its hysteresis |
+| `tests/conversation-list.test.mjs` | `src/conversation-list.ts` - column sections, sort orders, date buckets, filter |
 | `tests/mcp.test.mjs` | `src/mcp/server.ts` + `src/mcp/query.ts` - the handshake as a real CLI performs it, and the search grammar |
 | `tests/protocol.test.mjs` | `src/protocol/client.ts` end to end against `tests/fake-cli.mjs` |
 
