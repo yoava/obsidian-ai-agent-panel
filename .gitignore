@@ -1,0 +1,35 @@
+# claude
+.claude/settings.json
+.claude/settings.local.json
+.claude/hooks/
+
+graphify-out/
+
+# Dependencies
+node_modules/
+.venv/
+
+# Build output (published via GitHub releases, not the repo)
+main.js
+*.js.map
+
+# Plugin runtime data - contains user settings, never commit
+data.json
+
+# Secrets / environment
+.env
+.env.*
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editor state
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# test build output
+tests/.build/
