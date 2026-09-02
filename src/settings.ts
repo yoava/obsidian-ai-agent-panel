@@ -7,12 +7,7 @@ import {
 	TFolder,
 } from "obsidian";
 import { detectClaudeCli } from "./cli";
-import {
-	newProfileId,
-	type ChatPermissionMode,
-	type CliProfile,
-	type TabPosition,
-} from "./settings-core";
+import { newProfileId, type ChatPermissionMode, type TabPosition } from "./settings-core";
 import type AgentPanelPlugin from "./main";
 
 export {

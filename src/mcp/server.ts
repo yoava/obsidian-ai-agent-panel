@@ -50,7 +50,6 @@ const FALLBACK_PROTOCOL_VERSION = "2025-06-18";
 
 const METHOD_NOT_FOUND = -32601;
 const INVALID_PARAMS = -32602;
-const INTERNAL_ERROR = -32603;
 
 export function textResult(text: string): McpToolResult {
 	return { content: [{ type: "text", text }] };

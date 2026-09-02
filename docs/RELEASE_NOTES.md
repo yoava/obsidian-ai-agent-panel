@@ -28,6 +28,13 @@ This release is the community-directory review pass.
   `eslint-plugin-obsidianmd` - the same rule set the Obsidian community-plugin
   review applies to a submitted release - and CI runs it on every push and pull
   request, so a finding cannot regress silently.
+- **Frontmatter reads no longer widen to `any`.** Obsidian types a note's
+  frontmatter as an untyped bag, so the vault tools' tag and property handling
+  was unchecked at compile time; it is `unknown` at the boundary now and
+  validated where it is used. Behaviour is unchanged - the runtime checks were
+  already there.
+- **Dead type-level code removed**: four type assertions that asserted nothing
+  and three unused imports/constants.
 - **Device-local storage reads are typed `unknown`.** Obsidian declares
   `loadLocalStorage` as returning `any`, so a stale or hand-edited value used
   to enter the plugin unchecked. `src/local-store.ts` narrows the type at the

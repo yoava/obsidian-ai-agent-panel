@@ -90,7 +90,7 @@ export class UsageService {
 			.then((snap) => {
 				this.snapshot = snap;
 				this.lastError = null;
-				return snap as UsageSnapshot | null;
+				return snap;
 			})
 			.catch((err) => {
 				this.lastError = err instanceof Error ? err.message : String(err);

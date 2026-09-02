@@ -40,7 +40,7 @@ import {
 } from "./settings";
 import { editTargetPath, isEditTool, planEdit, vaultRelativePath } from "./edits";
 import { formatShellResultForChat, runShellCommand, type ShellResult } from "./bash";
-import { McpServer, type JsonRpcMessage } from "./mcp/server";
+import { McpServer } from "./mcp/server";
 import { createVaultTools } from "./mcp/vault-tools";
 import {
 	changeTotals,
@@ -74,7 +74,6 @@ import type {
 	ContextUsage,
 	PermissionRequest,
 	PermissionResult,
-	PermissionMode,
 	ResultMessage,
 	StreamEventMessage,
 	StreamMessage,
@@ -2358,7 +2357,7 @@ export class AgentPanelView extends ItemView {
 			throw new Error(`Unknown in-process MCP server: ${serverName}`);
 		if (message === null || typeof message !== "object")
 			throw new Error("mcp_message carried no JSON-RPC message");
-		return this.mcpServer().handle(message as JsonRpcMessage);
+		return this.mcpServer().handle(message);
 	}
 
 	private handleSessionEnded(tab: ChatTab, error?: string): void {
@@ -2675,7 +2674,7 @@ export class AgentPanelView extends ItemView {
 		if (extra.subagent_type) thread.subagentType = extra.subagent_type;
 		if (extra.task_description) thread.description = extra.task_description;
 		if (msg.message.model) thread.models.add(msg.message.model);
-		const usage = msg.message.usage as Record<string, unknown> | undefined;
+		const usage = msg.message.usage;
 		if (usage) {
 			// Cache reads dominate and are not "work done" - count what the agent
 			// actually spent, matching how the CLI reports a subagent's totals.
@@ -2687,7 +2686,7 @@ export class AgentPanelView extends ItemView {
 
 		const content = msg.message.content;
 		const blocks = typeof content === "string" ? [{ type: "text", text: content }] : content;
-		for (const block of blocks as ContentBlock[]) {
+		for (const block of blocks) {
 			if (block.type === "text") {
 				const text = (block as { text: string }).text;
 				if (!text.trim()) continue;
