@@ -849,7 +849,7 @@ export class AgentPanelView extends ItemView {
 			this.updateTranscriptLink();
 			new Notice(`Exported to ${path}`);
 		} catch (err) {
-			new Notice(`Export failed: ${err instanceof Error ? err.message : err}`);
+			new Notice(`Export failed: ${err instanceof Error ? err.message : String(err)}`);
 		}
 	}
 
@@ -1580,7 +1580,7 @@ export class AgentPanelView extends ItemView {
 			this.updateTranscriptLink();
 			new Notice(`Exported to ${path}`);
 		} catch (err) {
-			new Notice(`Export failed: ${err instanceof Error ? err.message : err}`);
+			new Notice(`Export failed: ${err instanceof Error ? err.message : String(err)}`);
 		}
 	}
 
@@ -3892,7 +3892,7 @@ export class AgentPanelView extends ItemView {
 		// The render is async: a failure must not eat the reply (the streamed
 		// plain text was just emptied away), and the follow-scroll has to wait
 		// until the rendered Markdown has actually grown the element.
-		this.renderMarkdown(text, el)
+		void this.renderMarkdown(text, el)
 			.catch(() => el.setText(text))
 			.then(() => this.scrollToBottom(tab));
 		addCopyButton(el, () => text);
@@ -4554,7 +4554,7 @@ export class AgentPanelView extends ItemView {
 		try {
 			await tab.session?.setPermissionMode(cliPermissionMode(mode));
 		} catch (err) {
-			new Notice(`Could not switch mode: ${err instanceof Error ? err.message : err}`);
+			new Notice(`Could not switch mode: ${err instanceof Error ? err.message : String(err)}`);
 		}
 	}
 
@@ -4565,7 +4565,7 @@ export class AgentPanelView extends ItemView {
 			await tab.session?.setModel(model);
 			return true;
 		} catch (err) {
-			new Notice(`Could not switch model: ${err instanceof Error ? err.message : err}`);
+			new Notice(`Could not switch model: ${err instanceof Error ? err.message : String(err)}`);
 			return false;
 		}
 	}

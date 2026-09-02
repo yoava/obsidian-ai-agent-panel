@@ -28,6 +28,13 @@ This release is the community-directory review pass.
   `eslint-plugin-obsidianmd` - the same rule set the Obsidian community-plugin
   review applies to a submitted release - and CI runs it on every push and pull
   request, so a finding cannot regress silently.
+- **A permission card can no longer be titled `[object Object]`.** A
+  `can_use_tool` request whose `tool_name` is not a string is now labelled
+  *unknown* rather than stringified into the card's title.
+- **An in-process MCP callback keeps its receiver.** The protocol client called
+  the registered handler through a local variable, so a callback written as a
+  class method would have run with no `this`. Nothing in the plugin was written
+  that way, so no behaviour changes today.
 - **Frontmatter reads no longer widen to `any`.** Obsidian types a note's
   frontmatter as an untyped bag, so the vault tools' tag and property handling
   was unchecked at compile time; it is `unknown` at the boundary now and
