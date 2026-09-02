@@ -28,6 +28,15 @@ This release is the community-directory review pass.
   `eslint-plugin-obsidianmd` - the same rule set the Obsidian community-plugin
   review applies to a submitted release - and CI runs it on every push and pull
   request, so a finding cannot regress silently.
+- **The plugin's settings are in Obsidian's settings search.** On Obsidian 1.13
+  and later the tab is built from the declarative settings API
+  (`getSettingDefinitions()`), so searching *Settings* for "usage", "WSL" or
+  "transcript" finds these rows instead of only the app's own. The tab looks and
+  behaves exactly as before; older Obsidian releases keep the imperative
+  rendering, and both are generated from one description of the tab, so they
+  cannot drift apart.
+- **The usage sliders lost their hover tooltip** - Obsidian now shows a slider's
+  value inline, next to the slider, all the time.
 - **UI text follows Obsidian's sentence case.** The diff's *Rendered* toggle,
   and the *Default*, *Auto-detect* and vault-instructions placeholders in
   settings, are capitalized the way the rest of Obsidian's interface is. Names
@@ -58,6 +67,13 @@ This release is the community-directory review pass.
   to enter the plugin unchecked. `src/local-store.ts` narrows the type at the
   boundary, which makes the compiler insist every caller validates what it
   read.
+- **Two lint warnings are deliberately accepted.** `PluginSettingTab.display()`
+  is deprecated as of Obsidian 1.13, and the settings tab still calls it - as
+  the documented fallback for the 1.8.7-to-1.12 range this plugin still
+  supports. Obsidian's own typings say to keep `display()` for exactly that,
+  and `obsidianmd/settings-tab/require-display` requires it while
+  `minAppVersion` is below 1.13.0. The warnings go away if and when the floor
+  moves to 1.13.
 - **One fewer build dependency.** `builtin-modules` is replaced by Node's own
   `import { builtinModules } from "node:module"`. The built `main.js` is
   byte-identical either way, verified before and after.

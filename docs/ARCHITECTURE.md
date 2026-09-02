@@ -528,6 +528,35 @@ key that data.json still carries (older plugin version, or a unit freshly
 made local elsewhere) seeds a device that has no local value of its own,
 then drops out of data.json on the next save.
 
+## The settings tab (src/settings.ts)
+
+Obsidian renders a settings tab two different ways. From 1.13 it builds the tab
+from `getSettingDefinitions()` - which is also what puts a plugin's settings
+into the settings search - and does **not** call `display()`; before 1.13,
+`display()` is the only renderer. The plugin's floor is 1.8.7, so it has to do
+both.
+
+Rather than write the tab twice, `AgentPanelSettingTab` describes it once as a
+list of `PanelGroup`s of `PanelRow`s (name, description, sync unit, visibility,
+and either a `build` closure or a key-bound `control`). `getSettingDefinitions()`
+maps that list to Obsidian's definitions and `display()` walks the same list
+imperatively, so the two renderings cannot drift and every name and description
+is written in one place. `renderRow` is shared by both.
+
+Most rows are `build` closures rather than declarative `control`s, because
+nearly every row carries a per-row cloud badge and a definition has nowhere to
+put one - `SettingDefinitionGroup.extraButtons` exists only on a group header.
+That costs nothing that matters: a `render:` row is still indexed for search by
+its name and description. The three rows with no badge and a single plain field
+(*Note name pattern*, *Date format*, *Default CLI profile*) are declarative
+`control`s, bound by key through `getControlValue`/`setControlValue`; `BOUND_KEYS`
+is the closed list of fields they may address.
+
+`requireApiVersion("1.13.0")` gates the two post-render calls: `update()` after a
+structural change (a profile added, a badge flipped) and `refreshDomState()` after
+one that only shows or hides rows (the export toggle). Before 1.13 both fall back
+to `display()`.
+
 ## Model picker (src/models.ts)
 
 The picker stores CLI **aliases** (`opus`, `sonnet[1m]`, …), which the CLI
