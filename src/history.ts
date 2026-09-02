@@ -270,18 +270,26 @@ export class HistoryStore {
 	}
 
 	private async scan(): Promise<ConversationMeta[]> {
-		const adapter = this.app.vault.adapter;
 		const found = new Map<string, ConversationMeta>();
-		if (await adapter.exists(this.dir)) {
-			const listing = await adapter.list(this.dir);
-			for (const file of listing.files) {
-				if (!file.endsWith(".json")) continue;
-				const conversation = await this.readFile(file);
-				if (!conversation) continue;
-				// The file name is authoritative for the id (readFile pins it), so
-				// load()/delete() always resolve back to this same file.
-				found.set(conversation.id, HistoryStore.metaOf(conversation));
+		try {
+			const adapter = this.app.vault.adapter;
+			if (await adapter.exists(this.dir)) {
+				const listing = await adapter.list(this.dir);
+				for (const file of listing.files) {
+					if (!file.endsWith(".json")) continue;
+					const conversation = await this.readFile(file);
+					if (!conversation) continue;
+					// The file name is authoritative for the id (readFile pins it),
+					// so load()/delete() always resolve back to this same file.
+					found.set(conversation.id, HistoryStore.metaOf(conversation));
+				}
 			}
+		} catch (err) {
+			// A folder that cannot be listed must not leave the column saying
+			// "Loading…" for the rest of the session, or reject into the void
+			// of the caller's `void refresh()`. Fall through with whatever
+			// load() and save() have already put in the cache.
+			console.error("AI Agent Panel: failed to list conversations", err);
 		}
 		// A scan takes a while, and saves and deletes keep happening while it
 		// runs. Both are newer than anything it read, so they win over it.
@@ -317,6 +325,17 @@ export class HistoryStore {
 			await this.app.vault.adapter.remove(this.pathFor(id));
 		} catch (err) {
 			console.error("AI Agent Panel: failed to delete conversation", err);
+			// A file that was already gone is a success as far as the caller is
+			// concerned. One that is still there is not: dropping it from the
+			// cache anyway would take the row off the column now and have the
+			// next scan bring the conversation back as a duplicate.
+			const survived = await this.app.vault.adapter
+				.exists(this.pathFor(id))
+				.catch(() => false);
+			if (survived) {
+				new Notice("Could not delete that conversation.");
+				return;
+			}
 		}
 		this.metas.delete(id);
 		if (this.scanning) this.deletedDuringScan.add(id);

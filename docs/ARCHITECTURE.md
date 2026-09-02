@@ -473,6 +473,13 @@ second.
   mid-scan are dropped from its result rather than resurrected.
 - `snapshot()` is the synchronous, IO-free read the renderer uses; `list()`
   still exists for the picker modal and scans once on first use.
+- A scan that cannot read the folder still completes, keeping whatever the
+  cache holds: the view calls `refresh()` as `void`, and nothing calls it
+  again, so a rejection would strand the column on "Loading…" for the session.
+- `delete()` only forgets a conversation once the file is actually gone. An
+  `remove()` that fails while the file survives keeps the cache entry and says
+  so, because dropping it would take the row off the column now and have the
+  next scan bring the conversation back as a duplicate.
 
 ### Pinning
 

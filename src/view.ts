@@ -1242,10 +1242,15 @@ export class AgentPanelView extends ItemView {
 			return `top:${this.stripOrder()
 				.map((tab) => `${tab.id}${tab.conversation?.pinned ? "!" : ""}`)
 				.join(",")}`;
-		const ids = (entries: ConversationEntry[]) =>
-			entries
-				.map((entry) => `${entry.id ?? `#${entry.openIndex}`}@${entry.updatedAt}`)
-				.join(",");
+		// An open row is drawn from its live tab element, so only its identity
+		// and position matter; its timestamp moves on every save and would
+		// rebuild the list once a second for nothing. A history row also shows
+		// a relative time, so for those the timestamp is part of the key.
+		const rowKey = (entry: ConversationEntry) =>
+			entry.openIndex !== null
+				? `${entry.id ?? "new"}#${entry.openIndex}`
+				: `${entry.id}@${entry.updatedAt}`;
+		const ids = (entries: ConversationEntry[]) => entries.map(rowKey).join(",");
 		return [
 			"side",
 			// Recent rows carry a relative time. Nothing else in the key moves
@@ -1256,9 +1261,7 @@ export class AgentPanelView extends ItemView {
 			[...this.collapsedSections].sort().join(","),
 			this.plugin.history.isScanned ? "scanned" : "scanning",
 			ids(sections.pinned),
-			// Open rows are drawn from the tabs themselves, so only their
-			// identity and order matter here, not their timestamps.
-			sections.open.map((entry) => entry.id ?? `#${entry.openIndex}`).join(","),
+			ids(sections.open),
 			sections.recent.map((group) => `${group.label}:${ids(group.entries)}`).join("|"),
 		].join(";");
 	}
@@ -1636,8 +1639,9 @@ export class AgentPanelView extends ItemView {
 		});
 		el.addEventListener("dragend", () => {
 			el.removeClass("is-dragging");
+			const dragged = this.draggedTab;
 			this.draggedTab = null;
-			if (this.tabDropCommitted) {
+			if (this.tabDropCommitted && dragged) {
 				// Rows can live in different section bodies, so positions are
 				// read in document order across the whole list rather than as
 				// indices within one parent. History rows match the selector
@@ -1645,14 +1649,21 @@ export class AgentPanelView extends ItemView {
 				const rank = new Map<Element, number>();
 				this.tabListEl
 					.querySelectorAll(".ai-agent-panel-tab")
-					.forEach((el, index) => rank.set(el, index));
-				// A tab the filter is hiding is not in the list at all. Those
-				// keep the slots they already had - resequencing them by a rank
-				// they do not have would herd them all to the front.
-				const shown = this.tabs.filter((t) => rank.has(t.tabEl));
-				shown.sort((a, b) => rank.get(a.tabEl)! - rank.get(b.tabEl)!);
+					.forEach((row, index) => rank.set(row, index));
+				// Only the run the drag happened in can have changed order:
+				// dragover refuses a drop across the pinned boundary, and a tab
+				// the filter hides is not in the list to have a rank at all.
+				// Every other tab keeps the slot it already had - resequencing
+				// the whole array to document order would bake the pinned-first
+				// display order into it, so unpinning would no longer put a tab
+				// back where it was, and hidden tabs would herd to the front.
+				const pinned = (t: ChatTab) => t.conversation?.pinned === true;
+				const movable = (t: ChatTab) =>
+					rank.has(t.tabEl) && pinned(t) === pinned(dragged);
+				const moved = this.tabs.filter(movable);
+				moved.sort((a, b) => rank.get(a.tabEl)! - rank.get(b.tabEl)!);
 				let next = 0;
-				this.tabs = this.tabs.map((t) => (rank.has(t.tabEl) ? shown[next++] : t));
+				this.tabs = this.tabs.map((t) => (movable(t) ? moved[next++] : t));
 			}
 			this.tabDropCommitted = false;
 			// Either way the DOM is now out of step with the array: on a commit
