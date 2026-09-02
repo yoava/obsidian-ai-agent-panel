@@ -144,6 +144,20 @@
   in that job. The trailing comment records which version each SHA was, and
   Dependabot proposes the bumps (`.github/dependabot.yml`) so a pin is only
   ever moved by a reviewed pull request, never silently.
+- **Release assets carry a signed provenance attestation.** `release.yml`
+  attests `main.js` and `styles.css` with
+  `actions/attest-build-provenance`, so each release asset has a Sigstore-signed
+  statement naming the workflow, repository, and commit that produced it. Anyone
+  can check that the `main.js` in a release really came from this repository's
+  release workflow, rather than being uploaded by hand:
+
+  ```sh
+  gh attestation verify main.js --repo yoava/obsidian-ai-agent-panel
+  ```
+
+  This is what makes the reproducible build useful to a third party: the build
+  is byte-for-byte repeatable from source, and the attestation ties the
+  published bytes to the run that produced them.
 - Tool inputs/results shown in the UI are length-capped before rendering.
 
 ## Residual considerations

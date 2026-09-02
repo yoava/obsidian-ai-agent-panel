@@ -108,7 +108,13 @@ spends real tokens.
 2. Update `docs/RELEASE_NOTES.md`.
 3. Tag and push: `git push && git push --tags`.
 4. The `release.yml` workflow builds and attaches `main.js`, `manifest.json`,
-   and `styles.css` to a draft GitHub release - review and publish it.
+   and `styles.css` to a draft GitHub release - review and publish it. It also
+   attests `main.js` and `styles.css` with `actions/attest-build-provenance`,
+   so each asset carries a signed statement of the run that built it:
+
+   ```sh
+   gh attestation verify main.js --repo yoava/obsidian-ai-agent-panel
+   ```
 
 For Obsidian community-plugin submission requirements, see the
 [developer docs](https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin).

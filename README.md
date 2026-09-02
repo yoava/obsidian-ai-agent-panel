@@ -137,6 +137,18 @@ Then copy `manifest.json`, `main.js`, and `styles.css` into `<your vault>/.obsid
 
 Install the [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin and add this repository (`yoava/obsidian-ai-agent-panel`). BRAT installs release builds and keeps them updated.
 
+### Verifying a release
+
+`main.js` and `styles.css` are built by the release workflow and carry a signed
+build-provenance attestation, so you can confirm a downloaded asset came from
+this repository rather than from someone's laptop:
+
+```bash
+gh attestation verify main.js --repo yoava/obsidian-ai-agent-panel
+```
+
+The build is also reproducible: `npm ci && npm run build` at the release tag produces a byte-identical `main.js`.
+
 ## Usage
 
 1. Open the panel: click the chat-bubble icon in the ribbon, or run **AI Agent Panel: Open chat**.

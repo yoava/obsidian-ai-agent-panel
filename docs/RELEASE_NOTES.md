@@ -14,6 +14,10 @@ This release is the community-directory review pass.
   your vault's "deleted files" setting. The plugin is desktop-only and needs
   the Claude Code CLI installed anyway, so this is not a meaningful extra
   requirement.
+- **Release assets are attested.** `main.js` and `styles.css` now ship with a
+  signed build-provenance attestation, so you can check that the file you
+  installed came from this repository's release workflow:
+  `gh attestation verify main.js --repo yoava/obsidian-ai-agent-panel`.
 
 ### Development
 
