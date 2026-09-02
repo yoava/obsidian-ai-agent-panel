@@ -1,12 +1,17 @@
 # Release notes
 
-## Unreleased
+## 0.3.3
 
 - **Optional funding link.** `manifest.json` now carries a `fundingUrl`, so
   Obsidian shows a heart next to the plugin in the plugin list, and the
   repository has a sponsor button. The plugin stays free and MIT-licensed, no
   feature is gated behind it, and the link costs nothing at runtime - Obsidian
   renders it, and nothing is fetched unless you click it.
+- **Author link.** `manifest.json` also carries an `authorUrl`, so the author
+  name in the plugin list links to the maintainer's GitHub profile.
+
+Nothing else changed: the plugin code is identical to 0.3.2, and `main.js` and
+`styles.css` are byte-for-byte the files that release shipped.
 
 ## 0.3.2 - first public release
 
