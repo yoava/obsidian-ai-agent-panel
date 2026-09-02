@@ -12,6 +12,7 @@
 npm ci
 npm run dev     # esbuild watch mode → main.js with inline sourcemaps
 npm run build   # tsc type-check + production build
+npm run lint    # eslint + eslint-plugin-obsidianmd (the directory reviewer's own rules)
 ```
 
 The build bundles `src/main.ts` into a single CommonJS `main.js`. Node
@@ -19,11 +20,25 @@ builtins, `obsidian`, and `electron` stay external; there are **no runtime
 dependencies**.
 
 `tsc` only type-checks (`-noEmit`) - esbuild produces the bundle - so a
-TypeScript upgrade cannot change the shipped output. Note that
-`tsconfig.json` names `"types": ["node"]` explicitly: TypeScript 7 stopped
-including `@types/*` implicitly, and without that line every `process` and
-`node:*` reference fails to resolve. `@types/node` deliberately tracks the
-major that CI runs on (Node 22), not the newest published.
+TypeScript version change cannot change the shipped output. Note that
+`tsconfig.json` names `"types": ["node"]` explicitly: without that line every
+`process` and `node:*` reference fails to resolve under a TypeScript that does
+not include `@types/*` implicitly. `@types/node` deliberately tracks the major
+that CI runs on (Node 22), not the newest published.
+
+## Linting
+
+`npm run lint` runs [`eslint-plugin-obsidianmd`](https://github.com/obsidianmd/eslint-plugin-obsidianmd),
+the same rule set the community-directory review runs against a submitted
+release, so directory findings are reproducible locally and CI fails on a
+regression. `eslint.config.mjs` ignores the build output, the bundled test
+build, and `graphify-out/`.
+
+The devDependency is pinned to `typescript@^5.9` **for the linter's sake**:
+typescript-eslint's type-aware rules crash under TypeScript 7
+(`TypeError: Cannot read properties of undefined (reading 'Intrinsic')` inside
+`ts-api-utils`). Since `tsc` is only a type-checker here, this has no effect on
+`main.js` - the released bundle still reproduces byte-for-byte.
 
 ## Testing in a vault
 

@@ -1,5 +1,20 @@
 # Release notes
 
+## Unreleased
+
+Nothing user-visible yet; this release is the community-directory review pass.
+
+### Development
+
+- **The directory reviewer's linter now runs here.** `npm run lint` runs
+  `eslint-plugin-obsidianmd` - the same rule set the Obsidian community-plugin
+  review applies to a submitted release - and CI runs it on every push and pull
+  request, so a finding cannot regress silently.
+- **TypeScript moved to 5.9** for the linter's benefit: typescript-eslint's
+  type-aware rules crash under TypeScript 7. `tsc` only type-checks here
+  (esbuild does the bundling), so the shipped `main.js` is unaffected and still
+  reproduces byte-for-byte.
+
 ## 0.3.3
 
 - **Optional funding link.** `manifest.json` now carries a `fundingUrl`, so
