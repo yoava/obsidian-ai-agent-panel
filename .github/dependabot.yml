@@ -26,6 +26,12 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
+    # Update the lockfile only, never the ranges in package.json. Dependabot
+    # otherwise normalises "obsidian": "latest" to "*" whenever it rewrites the
+    # manifest for some other package - equivalent today, but not the spec that
+    # was written on purpose. The cost is that majors are no longer proposed at
+    # all, since those need a manifest change; take those deliberately.
+    versioning-strategy: lockfile-only
     groups:
       dev-dependencies:
         patterns: ["*"]
