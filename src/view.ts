@@ -901,6 +901,7 @@ export class AgentPanelView extends ItemView {
 		// top strip it is appended in tab order there.
 		const tabEl = createDiv({ cls: "ai-agent-panel-tab" });
 		tabEl.createSpan({ cls: "ai-agent-panel-tab-dot" });
+		this.createPinToggle(tabEl, () => tab.conversation?.id ?? null);
 		const labelEl = tabEl.createSpan({
 			cls: "ai-agent-panel-tab-label",
 			text: "New conversation",
@@ -1107,6 +1108,72 @@ export class AgentPanelView extends ItemView {
 	}
 
 	/**
+	 * The pin glyph before a row's label. CSS reveals it on hover in the
+	 * column and keeps it visible once pinned; in the top strip it only ever
+	 * shows for a pinned tab, where it is the marker explaining why that tab
+	 * sits at the front.
+	 */
+	private createPinToggle(row: HTMLElement, id: () => string | null): void {
+		const pin = row.createSpan({ cls: "ai-agent-panel-tab-pin" });
+		setIcon(pin, "pin");
+		pin.addEventListener("click", (evt) => {
+			// The row underneath switches tabs or opens a conversation.
+			evt.preventDefault();
+			evt.stopPropagation();
+			const conversationId = id();
+			if (conversationId)
+				void this.togglePin(conversationId, !this.isPinned(conversationId));
+		});
+	}
+
+	private isPinned(id: string): boolean {
+		const open = this.tabs.find((tab) => tab.conversation?.id === id)?.conversation;
+		if (open) return open.pinned === true;
+		return this.plugin.history.meta(id)?.pinned === true;
+	}
+
+	/**
+	 * Pin or unpin, whether or not the conversation is open - pinning one from
+	 * history deliberately does not open it, since the point is to keep it to
+	 * hand rather than to start work on it now.
+	 */
+	private async togglePin(id: string, pinned: boolean): Promise<void> {
+		const open = this.tabs.find((tab) => tab.conversation?.id === id)?.conversation;
+		const conversation = open ?? (await this.plugin.history.load(id));
+		if (!conversation) {
+			new Notice("Could not load that conversation.");
+			return;
+		}
+		conversation.pinned = pinned || undefined;
+		conversation.pinnedAt = pinned ? Date.now() : undefined;
+		// touch: false - pinning is not activity, so it must not restamp the
+		// conversation as having been used today.
+		await this.plugin.history.save(conversation, { touch: false });
+		// A conversation with nothing in it yet is not written at all, so the
+		// save above may have announced nothing. Redraw either way; the flag is
+		// on the object and persists with the first real message.
+		this.renderTabList();
+	}
+
+	/**
+	 * Tab order for the top strip: pinned first, oldest pin first, then
+	 * everything else in the user's drag order. Sorting a copy leaves the tabs
+	 * array as the drag order it is - the sort is stable, so unpinned tabs keep
+	 * exactly the positions they were dragged into.
+	 */
+	private stripOrder(): ChatTab[] {
+		const pinTime = (tab: ChatTab) =>
+			tab.conversation?.pinned ? tab.conversation.pinnedAt ?? 0 : null;
+		return [...this.tabs].sort((a, b) => {
+			const left = pinTime(a);
+			const right = pinTime(b);
+			if (left === null) return right === null ? 0 : 1;
+			if (right === null) return -1;
+			return left - right;
+		});
+	}
+
+	/**
 	 * Every row the column could draw: the open tabs (including one that has
 	 * not saved a conversation yet) plus everything in history that is not
 	 * already open. The pure grouper turns this into sections.
@@ -1122,8 +1189,8 @@ export class AgentPanelView extends ItemView {
 				title: conversation?.title || "New conversation",
 				updatedAt: conversation?.updatedAt ?? Date.now(),
 				openIndex: index,
-				pinned: false,
-				pinnedAt: null,
+				pinned: conversation?.pinned === true,
+				pinnedAt: conversation?.pinnedAt ?? null,
 			});
 		});
 		for (const meta of this.plugin.history.snapshot()) {
@@ -1133,8 +1200,8 @@ export class AgentPanelView extends ItemView {
 				title: meta.title,
 				updatedAt: meta.updatedAt,
 				openIndex: null,
-				pinned: false,
-				pinnedAt: null,
+				pinned: meta.pinned === true,
+				pinnedAt: meta.pinnedAt ?? null,
 			});
 		}
 		return entries;
@@ -1147,7 +1214,12 @@ export class AgentPanelView extends ItemView {
 	 * to find that out.
 	 */
 	private columnKey(sections: ConversationSections | null): string {
-		if (!sections) return `top:${this.tabs.map((tab) => tab.id).join(",")}`;
+		// The strip's own order depends on which tabs are pinned, so that has to
+		// be part of the key or a pin would not redraw it.
+		if (!sections)
+			return `top:${this.stripOrder()
+				.map((tab) => `${tab.id}${tab.conversation?.pinned ? "!" : ""}`)
+				.join(",")}`;
 		const ids = (entries: ConversationEntry[]) =>
 			entries
 				.map((entry) => `${entry.id ?? `#${entry.openIndex}`}@${entry.updatedAt}`)
@@ -1188,7 +1260,11 @@ export class AgentPanelView extends ItemView {
 		const scrollTop = this.tabListEl.scrollTop;
 		this.tabListEl.empty();
 		if (sections) this.renderColumnSections(sections);
-		else for (const tab of this.tabs) this.tabListEl.appendChild(tab.tabEl);
+		else
+			for (const tab of this.stripOrder()) {
+				tab.tabEl.toggleClass("is-pinned", tab.conversation?.pinned === true);
+				this.tabListEl.appendChild(tab.tabEl);
+			}
 		this.tabListEl.scrollTop = scrollTop;
 		this.updateTabOverflow();
 	}
@@ -1277,12 +1353,20 @@ export class AgentPanelView extends ItemView {
 	private renderColumnRow(body: HTMLElement, entry: ConversationEntry): void {
 		if (entry.openIndex !== null) {
 			const tab = this.tabs[entry.openIndex];
-			if (tab) body.appendChild(tab.tabEl);
+			// An open conversation renders as its live tab element wherever it
+			// lands, so pinning one costs it nothing: it keeps the active
+			// background, the busy dot and its close button inside "Pinned".
+			if (tab) {
+				tab.tabEl.toggleClass("is-pinned", entry.pinned);
+				body.appendChild(tab.tabEl);
+			}
 			return;
 		}
 		if (!entry.id) return;
 		const id = entry.id;
 		const row = body.createDiv({ cls: "ai-agent-panel-tab is-recent" });
+		row.toggleClass("is-pinned", entry.pinned);
+		this.createPinToggle(row, () => id);
 		row.createSpan({
 			cls: "ai-agent-panel-tab-label",
 			text: tabLabel(entry.title),
@@ -1361,13 +1445,21 @@ export class AgentPanelView extends ItemView {
 					.setIcon("message-square")
 					.onClick(() => this.openStoredConversation(id))
 			);
-		if (id)
+		if (id) {
+			const pinned = this.isPinned(id);
+			menu.addItem((item) =>
+				item
+					.setTitle(pinned ? "Unpin" : "Pin")
+					.setIcon(pinned ? "pin-off" : "pin")
+					.onClick(() => void this.togglePin(id, !pinned))
+			);
 			menu.addItem((item) =>
 				item
 					.setTitle("Export to Markdown")
 					.setIcon("file-down")
 					.onClick(() => void this.exportConversation(id))
 			);
+		}
 		if (tab)
 			menu.addItem((item) =>
 				item
@@ -1543,6 +1635,13 @@ export class AgentPanelView extends ItemView {
 			// "Recent" would mean nothing, and the pinned order is by pin time.
 			if (!parent || parent !== dragged.tabEl.parentElement) return;
 			if (this.tabsOnSide && parent.dataset.section !== SECTION_OPEN) return;
+			// In the strip both runs share one parent, so the pinned front has
+			// to be kept separate here: its order is by pin time, not by drag.
+			if (
+				(dragged.conversation?.pinned === true) !==
+				(tab.conversation?.pinned === true)
+			)
+				return;
 			evt.preventDefault();
 			if (evt.dataTransfer) evt.dataTransfer.dropEffect = "move";
 			const rect = el.getBoundingClientRect();

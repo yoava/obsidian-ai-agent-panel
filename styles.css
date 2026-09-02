@@ -239,6 +239,35 @@
 	animation: none;
 }
 
+/* Pin glyph, before the label. Hidden by default: in the top strip it appears
+   only once pinned, where it is the marker explaining why that tab jumped to
+   the front - the strip has no room to offer every tab a second button. */
+.ai-agent-panel-tab-pin {
+	display: none;
+	align-items: center;
+	color: var(--text-faint);
+	flex-shrink: 0;
+}
+
+.ai-agent-panel-tab-pin svg {
+	width: 12px;
+	height: 12px;
+}
+
+.ai-agent-panel-tab.is-pinned .ai-agent-panel-tab-pin {
+	display: flex;
+	color: var(--text-accent);
+}
+
+/* The column has the width to make it an affordance as well as a marker. */
+.is-tabs-side .ai-agent-panel-tab:hover .ai-agent-panel-tab-pin {
+	display: flex;
+}
+
+.ai-agent-panel-tab-pin:hover {
+	color: var(--text-normal);
+}
+
 .ai-agent-panel-tab-close {
 	display: flex;
 	border-radius: 50%;

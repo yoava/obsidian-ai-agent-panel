@@ -80,6 +80,15 @@ export interface StoredConversation {
 	permissionMode?: ChatPermissionMode;
 	/** Vault path of the exported Markdown note, once one exists. */
 	exportPath?: string;
+	/**
+	 * Kept at the top of the conversation column. A property of the
+	 * conversation rather than of this device's layout, so it travels with the
+	 * file and syncs with the vault. Absent already means "not pinned", which
+	 * is why this needed no version bump.
+	 */
+	pinned?: boolean;
+	/** When it was pinned; orders the Pinned section, oldest pin first. */
+	pinnedAt?: number;
 	messages: StoredMessage[];
 }
 
@@ -88,6 +97,8 @@ export interface ConversationMeta {
 	title: string;
 	updatedAt: number;
 	messageCount: number;
+	pinned?: boolean;
+	pinnedAt?: number;
 }
 
 const SAVE_DEBOUNCE_MS = 1000;
@@ -151,7 +162,14 @@ export class HistoryStore {
 			title: conversation.title,
 			updatedAt: conversation.updatedAt,
 			messageCount: conversation.messages.length,
+			pinned: conversation.pinned,
+			pinnedAt: conversation.pinnedAt,
 		};
+	}
+
+	/** Cached metadata for one conversation, if it is known. No IO. */
+	meta(id: string): ConversationMeta | undefined {
+		return this.metas.get(id);
 	}
 
 	/** Everything known right now, newest first. No IO - safe to call per render. */
@@ -177,9 +195,14 @@ export class HistoryStore {
 		);
 	}
 
-	async save(conversation: StoredConversation): Promise<void> {
+	async save(
+		conversation: StoredConversation,
+		options: { touch?: boolean } = {}
+	): Promise<void> {
 		if (conversation.messages.length === 0) return;
-		conversation.updatedAt = Date.now();
+		// Pinning is not activity. Without this, unpinning a months-old
+		// conversation would drop it into "Recent" under today's date.
+		if (options.touch !== false) conversation.updatedAt = Date.now();
 		try {
 			await this.onBeforeSave?.(conversation);
 		} catch (err) {
@@ -210,7 +233,9 @@ export class HistoryStore {
 			!previous ||
 			previous.title !== meta.title ||
 			previous.updatedAt !== meta.updatedAt ||
-			previous.messageCount !== meta.messageCount
+			previous.messageCount !== meta.messageCount ||
+			previous.pinned !== meta.pinned ||
+			previous.pinnedAt !== meta.pinnedAt
 		)
 			this.onChanged?.();
 	}

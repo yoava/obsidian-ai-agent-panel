@@ -474,6 +474,30 @@ second.
 - `snapshot()` is the synchronous, IO-free read the renderer uses; `list()`
   still exists for the picker modal and scans once on first use.
 
+### Pinning
+
+`StoredConversation` carries `pinned?: boolean` and `pinnedAt?: number`, both
+surfaced on `ConversationMeta`. They live in the conversation file rather than
+in the device-local layout state next to the column width, because pinning is
+a judgement about the conversation, not about this screen - so it travels with
+the file and syncs with the vault. No version bump was needed: an absent field
+already means "not pinned", which is exactly what every existing file says.
+
+Two consequences worth keeping straight:
+
+- `save()` takes `{ touch: false }` for a pin toggle. Every other save stamps
+  `updatedAt`, and pinning is not activity - without it, unpinning a
+  months-old conversation would drop it into *Recent* under today's date.
+- `remember()` compares `pinned`/`pinnedAt` as well as title and timestamps,
+  or a pin toggle - which by design changes nothing else - would update the
+  cache without telling anyone to redraw.
+
+In the top strip, `stripOrder()` sorts a *copy* of the tabs array so pinned
+tabs lead: the array itself stays the drag order, and the sort is stable, so
+unpinned tabs keep the positions they were dragged into. Dragging across the
+pinned/unpinned boundary is refused, since the pinned run is ordered by pin
+time rather than by hand.
+
 ## Settings storage (src/settings-core.ts)
 
 Settings live in two stores. `data.json` is the synced one - Obsidian Sync

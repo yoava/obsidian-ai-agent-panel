@@ -37,6 +37,15 @@ and a vault on the local file system.
   and its fuzzy search). Right-click or long-press a row for *Open*, *Export
   to Markdown*, *Close* and *Delete* - deletion asks first and lives only
   here, so `×` can keep meaning "close the tab" and nothing else.
+- **Pinned conversations.** Pin from a row's context menu or the pin that
+  appears on hover. Pinned rows lead the column in their own section, oldest
+  pin first so it stays stable as more are added, and a pinned conversation
+  appears *only* there - open or not - so every conversation is still drawn
+  exactly once, close button and busy dot included. The top strip sorts
+  pinned tabs to the front and marks them with a pin glyph. The flag lives in
+  the conversation file rather than in device-local layout state, so it
+  travels with the conversation and syncs with the vault; pinning one from
+  history does not open it.
 - **Conversation history**, saved locally and reopenable, resuming the CLI
   session where it left off.
 - **Undo a turn or branch off one.** Every finished turn offers *Restore
