@@ -131,7 +131,8 @@
   `release.yml` runs with `contents: write` and produces the `main.js` users
   install, so a third party who moved a `v4` tag could otherwise have run code
   in that job. The trailing comment records which version each SHA was, and
-  the pins are reviewed when an action is deliberately upgraded.
+  Dependabot proposes the bumps (`.github/dependabot.yml`) so a pin is only
+  ever moved by a reviewed pull request, never silently.
 - Tool inputs/results shown in the UI are length-capped before rendering.
 
 ## Residual considerations

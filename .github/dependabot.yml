@@ -1,0 +1,35 @@
+version: 2
+
+updates:
+  # Workflow actions are pinned to commit SHAs (see docs/SECURITY.md), which is
+  # only safe if something keeps the pins current. Dependabot rewrites both the
+  # SHA and the trailing version comment.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci
+    open-pull-requests-limit: 3
+
+  # Dev-only: the plugin ships zero runtime dependencies, so nothing here
+  # reaches an installed vault - it is the build toolchain that rots. Grouped
+  # and monthly, so this is one pull request to review rather than six.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      dev-dependencies:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+    open-pull-requests-limit: 3
+    ignore:
+      # Deliberately tracks "latest": the API typings follow the Obsidian app,
+      # not semver, and a pinned range would silently fall behind the app the
+      # plugin is compiled against.
+      - dependency-name: obsidian
