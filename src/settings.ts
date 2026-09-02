@@ -140,7 +140,7 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 				)
 				.addText((text) =>
 					text
-						.setPlaceholder("default")
+						.setPlaceholder("Default")
 						.setValue(this.plugin.settings.model)
 						.onChange(async (value) => {
 							this.plugin.settings.model = value.trim();
@@ -302,7 +302,7 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 			)
 			.addTextArea((text) => {
 				text
-					.setPlaceholder("e.g. Notes live in Areas/, use wiki-links, keep headings in Title Case…")
+					.setPlaceholder("E.g. Notes live in areas/, use wiki-links, keep headings in title case…")
 					.setValue(this.plugin.settings.vaultInstructions)
 					.onChange(async (value) => {
 						this.plugin.settings.vaultInstructions = value;
@@ -509,7 +509,7 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 				)
 				.addText((text) =>
 					text
-						.setPlaceholder("auto-detect")
+						.setPlaceholder("Auto-detect")
 						.setValue(profile.cliPath)
 						.onChange(async (value) => {
 							profile.cliPath = value.trim();

@@ -240,7 +240,7 @@ Per-conversation change tracking keeps the **first** pre-image and the **latest*
 post-image per path, so the header's "N files +x -y" link and its modal always
 show the net change since the conversation began - not the last edit alone.
 
-Every edit diff also carries a **rendered** toggle: the changed region (context
+Every edit diff also carries a **Rendered** toggle: the changed region (context
 rows included, collapsed stretches excluded) is reconstructed as before/after
 Markdown and drawn through the view's `MarkdownRenderer`. A vault is made of
 Markdown, so a raw diff of a table or a `**bold**` run is not always the clearest

@@ -28,6 +28,13 @@ This release is the community-directory review pass.
   `eslint-plugin-obsidianmd` - the same rule set the Obsidian community-plugin
   review applies to a submitted release - and CI runs it on every push and pull
   request, so a finding cannot regress silently.
+- **UI text follows Obsidian's sentence case.** The diff's *Rendered* toggle,
+  and the *Default*, *Auto-detect* and vault-instructions placeholders in
+  settings, are capitalized the way the rest of Obsidian's interface is. Names
+  and literal values are deliberately left alone - "AI Agent Panel", "Claude
+  Code CLI", "Run via WSL", and the placeholders that repeat a setting's real
+  default (`5m`, `YYYY-MM-DD`, `Agent Chats`) would all be wrong in sentence
+  case; the exceptions are listed in `eslint.config.mjs`.
 - **A permission card can no longer be titled `[object Object]`.** A
   `can_use_tool` request whose `tool_name` is not a string is now labelled
   *unknown* rather than stringified into the card's title.

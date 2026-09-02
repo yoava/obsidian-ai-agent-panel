@@ -101,7 +101,7 @@ function addRenderedToggle(
 ): void {
 	const button = head.createEl("button", {
 		cls: "ai-agent-panel-diff-toggle",
-		text: "rendered",
+		text: "Rendered",
 	});
 	const icon = button.createSpan();
 	setIcon(icon, "eye");
