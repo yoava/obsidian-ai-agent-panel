@@ -133,7 +133,10 @@
   history file names) are checked against the generated id shape before any
   read/write/delete, and each loaded record's id is pinned to its file name.
   This blocks a tampered or synced history/settings file from steering a
-  write or delete outside the plugin's folders.
+  write or delete outside the plugin's folders. Device-local values are read
+  back through `src/local-store.ts`, which types them `unknown` rather than
+  Obsidian's `any`, so the compiler makes every caller narrow a stored value
+  before using it.
 - Zero runtime npm dependencies. CI audits the tree that ships
   (`npm audit --omit=dev`); the full tree, dev dependencies included, was also
   clean at release time. A dev-only advisory affects the build, not the

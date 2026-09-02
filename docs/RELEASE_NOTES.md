@@ -28,6 +28,11 @@ This release is the community-directory review pass.
   `eslint-plugin-obsidianmd` - the same rule set the Obsidian community-plugin
   review applies to a submitted release - and CI runs it on every push and pull
   request, so a finding cannot regress silently.
+- **Device-local storage reads are typed `unknown`.** Obsidian declares
+  `loadLocalStorage` as returning `any`, so a stale or hand-edited value used
+  to enter the plugin unchecked. `src/local-store.ts` narrows the type at the
+  boundary, which makes the compiler insist every caller validates what it
+  read.
 - **TypeScript moved to 5.9** for the linter's benefit: typescript-eslint's
   type-aware rules crash under TypeScript 7. `tsc` only type-checks here
   (esbuild does the bundling), so the shipped `main.js` is unaffected and still

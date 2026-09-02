@@ -58,6 +58,7 @@ import {
 } from "./tabs-layout";
 import { describeModel, describeModelId, modelOptions, parseCliModels } from "./models";
 import { AGENT_ICON } from "./icon";
+import { loadLocalRecord, loadLocalValue } from "./local-store";
 import {
 	creditsMarkdown,
 	formatRemaining,
@@ -682,9 +683,7 @@ export class AgentPanelView extends ItemView {
 		});
 		this.renderUsageBar();
 		this.updateUsageScheduling();
-		this.sideWidthPref = parseStoredSideWidth(
-			this.app.loadLocalStorage(SIDE_WIDTH_KEY)
-		);
+		this.sideWidthPref = parseStoredSideWidth(loadLocalValue(this.app, SIDE_WIDTH_KEY));
 		this.loadSectionState();
 		this.applyTabPosition();
 
@@ -1408,10 +1407,10 @@ export class AgentPanelView extends ItemView {
 	}
 
 	private loadSectionState(): void {
-		const raw = this.app.loadLocalStorage(SIDE_SECTIONS_KEY);
+		const raw = loadLocalValue(this.app, SIDE_SECTIONS_KEY);
 		if (!Array.isArray(raw)) return;
 		this.collapsedSections = new Set(
-			raw.filter((key): key is string => typeof key === "string")
+			raw.filter((key: unknown): key is string => typeof key === "string")
 		);
 	}
 
@@ -1930,10 +1929,7 @@ export class AgentPanelView extends ItemView {
 	}
 
 	private async restoreTabState(): Promise<void> {
-		const raw = this.app.loadLocalStorage(TAB_STATE_KEY) as {
-			ids?: unknown;
-			activeId?: unknown;
-		} | null;
+		const raw = loadLocalRecord(this.app, TAB_STATE_KEY);
 		const ids = Array.isArray(raw?.ids)
 			? raw.ids.filter((id): id is string => typeof id === "string")
 			: [];

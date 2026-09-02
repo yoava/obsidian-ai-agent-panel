@@ -606,3 +606,4 @@ answer it renders nothing rather than erroring.
 | `src/suggest.ts` | `@` file-mention and `/` slash-command autocompletes |
 | `src/icon.ts` | the plugin's vendor-neutral ribbon icon (chat bubble with a terminal prompt) |
 | `src/timers.ts` | `setTimer`/`clearTimer` - window-scoped timers with a fallback for the plain-Node test bundle |
+| `src/local-store.ts` | device-local storage reads, typed `unknown` instead of Obsidian's `any` |

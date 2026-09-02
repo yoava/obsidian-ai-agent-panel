@@ -4,6 +4,7 @@ import { detectClaudeCli, type DetectedCli } from "./cli";
 import { TranscriptExporter } from "./export";
 import { HistoryStore } from "./history";
 import { AGENT_ICON, registerAgentIcon } from "./icon";
+import { loadLocalValue } from "./local-store";
 import { isCredibleResolution, isLearnableModel, type CliModel } from "./models";
 import { UsageService } from "./usage";
 import {
@@ -241,8 +242,8 @@ export default class AgentPanelPlugin extends Plugin {
 		// value still in data.json only seeds a device that has none of its own.
 		mergeLocalSettings(
 			merged,
-			this.app.loadLocalStorage(LOCAL_SETTINGS_KEY) ??
-				this.app.loadLocalStorage(LEGACY_LOCAL_SETTINGS_KEY)
+			loadLocalValue(this.app, LOCAL_SETTINGS_KEY) ??
+				loadLocalValue(this.app, LEGACY_LOCAL_SETTINGS_KEY)
 		);
 		this.settings = normalizeSettings(merged);
 		// Drop learned resolutions that predate the credibility check - e.g.
