@@ -1,8 +1,10 @@
 # Release notes
 
-## Unreleased
+## 0.3.4
 
-This release is the community-directory review pass.
+The community-directory review pass. No features change; what changes is that
+the plugin now says truthfully what it needs, proves where its release assets
+came from, and stops a few things that were wrong but silent.
 
 - **Obsidian 1.8.7 is now the minimum.** The panel has been calling
   `app.loadLocalStorage` / `app.saveLocalStorage` (1.8.7),
@@ -21,13 +23,13 @@ This release is the community-directory review pass.
 - **Timers are scoped to the window that scheduled them**, as Obsidian asks, so
   a debounced save or a process kill-timer belonging to a popout window stops
   when that window closes instead of firing into a closed document.
-
-### Development
-
-- **The directory reviewer's linter now runs here.** `npm run lint` runs
-  `eslint-plugin-obsidianmd` - the same rule set the Obsidian community-plugin
-  review applies to a submitted release - and CI runs it on every push and pull
-  request, so a finding cannot regress silently.
+- **The plugin's settings are in Obsidian's settings search.** On Obsidian 1.13
+  and later the tab is built from the declarative settings API
+  (`getSettingDefinitions()`), so searching *Settings* for "usage", "WSL" or
+  "transcript" finds these rows instead of only the app's own. The tab looks and
+  behaves exactly as before; older Obsidian releases keep the imperative
+  rendering, and both are generated from one description of the tab, so they
+  cannot drift apart.
 - **The stylesheet stops reaching outside the plugin.** The rule that hides
   elements was a bare `.is-hidden { display: none !important }`, which applied
   to *any* element in the app carrying that state class, not only this
@@ -36,13 +38,6 @@ This release is the community-directory review pass.
 - **A plain underline stands in** where a renderer does not take the
   `text-decoration: underline dotted` shorthand, so the transcript and changed-
   file links keep their underline either way.
-- **The plugin's settings are in Obsidian's settings search.** On Obsidian 1.13
-  and later the tab is built from the declarative settings API
-  (`getSettingDefinitions()`), so searching *Settings* for "usage", "WSL" or
-  "transcript" finds these rows instead of only the app's own. The tab looks and
-  behaves exactly as before; older Obsidian releases keep the imperative
-  rendering, and both are generated from one description of the tab, so they
-  cannot drift apart.
 - **The usage sliders lost their hover tooltip** - Obsidian now shows a slider's
   value inline, next to the slider, all the time.
 - **UI text follows Obsidian's sentence case.** The diff's *Rendered* toggle,
@@ -55,6 +50,20 @@ This release is the community-directory review pass.
 - **A permission card can no longer be titled `[object Object]`.** A
   `can_use_tool` request whose `tool_name` is not a string is now labelled
   *unknown* rather than stringified into the card's title.
+- **What the plugin can do, stated up front.** `README.md` and
+  `docs/SECURITY.md` now open with the four capabilities a plugin review flags
+  in this one - it starts a process, reads a few paths outside the vault to find
+  the CLI, lists the vault's files, and writes to the clipboard - each with the
+  reason it is there and where it stops, plus the four things the plugin does
+  not do. One of them is narrower than it looked: the clipboard is only ever
+  written, never read.
+
+### Development
+
+- **The directory reviewer's linter now runs here.** `npm run lint` runs
+  `eslint-plugin-obsidianmd` - the same rule set the Obsidian community-plugin
+  review applies to a submitted release - and CI runs it on every push and pull
+  request, so a finding cannot regress silently.
 - **An in-process MCP callback keeps its receiver.** The protocol client called
   the registered handler through a local variable, so a callback written as a
   class method would have run with no `this`. Nothing in the plugin was written

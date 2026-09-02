@@ -103,10 +103,12 @@ spends real tokens.
 
 ## Release process
 
-1. Update `package.json` version, then `npm version <patch|minor|major>` -
-   the `version` script syncs `manifest.json` and `versions.json`.
-2. Update `docs/RELEASE_NOTES.md`.
-3. Tag and push: `git push && git push --tags`.
+1. Title the *Unreleased* section of `docs/RELEASE_NOTES.md` with the version
+   about to be cut, and commit it - `npm version` refuses a dirty tree, so the
+   notes have to land first, and this way the tagged commit carries its own.
+2. `npm version <patch|minor|major>` - the `version` script syncs
+   `manifest.json` and `versions.json`, commits, and creates the bare tag.
+3. Push: `git push && git push --tags`.
 4. The `release.yml` workflow builds and attaches `main.js`, `manifest.json`,
    and `styles.css` to a draft GitHub release - review and publish it. It also
    attests `main.js` and `styles.css` with `actions/attest-build-provenance`,
