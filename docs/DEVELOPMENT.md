@@ -91,6 +91,23 @@ spends real tokens.
 For Obsidian community-plugin submission requirements, see the
 [developer docs](https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin).
 
+## Knowledge graph (graphify)
+
+The graphify skill is checked in under `.claude/skills/graphify/`, so any agent
+working in this repo picks it up without a separate install. It builds a
+queryable graph of the codebase:
+
+```sh
+graphify .                      # full build - writes graphify-out/
+graphify update .               # incremental refresh after code changes (AST only, no API calls)
+graphify query "<question>"     # scoped subgraph instead of grepping the tree
+```
+
+`graphify-out/` is generated and gitignored - build it locally rather than
+expecting it in a clone. `.gitattributes` declares a `merge=graphify` driver
+for `graphify-out/graph.json`, which only matters if that directory is ever
+tracked.
+
 ## Conventions
 
 - Tabs for indentation (Obsidian sample-plugin convention).
