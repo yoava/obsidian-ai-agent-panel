@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/yoava/obsidian-ai-agent-panel/security/advisories/new
+    about: Report privately. Please do not open a public issue for a vulnerability.
+  - name: Question about Claude Code itself
+    url: https://code.claude.com/docs
+    about: This plugin is unofficial and does not handle CLI login, billing or model behaviour.
