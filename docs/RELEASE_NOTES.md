@@ -51,6 +51,9 @@ This release is the community-directory review pass.
   to enter the plugin unchecked. `src/local-store.ts` narrows the type at the
   boundary, which makes the compiler insist every caller validates what it
   read.
+- **One fewer build dependency.** `builtin-modules` is replaced by Node's own
+  `import { builtinModules } from "node:module"`. The built `main.js` is
+  byte-identical either way, verified before and after.
 - **TypeScript moved to 5.9** for the linter's benefit: typescript-eslint's
   type-aware rules crash under TypeScript 7. `tsc` only type-checks here
   (esbuild does the bundling), so the shipped `main.js` is unaffected and still
