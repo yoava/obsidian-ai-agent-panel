@@ -106,7 +106,9 @@ graphify query "<question>"     # scoped subgraph instead of grepping the tree
 `graphify-out/` is generated and gitignored - build it locally rather than
 expecting it in a clone. `.gitattributes` declares a `merge=graphify` driver
 for `graphify-out/graph.json`, which only matters if that directory is ever
-tracked.
+tracked. Nothing needs configuring to work on this repo: the driver is not
+defined in any shipped config, and git falls back to its normal merge when an
+attribute names a driver the clone does not have.
 
 ## Conventions
 
