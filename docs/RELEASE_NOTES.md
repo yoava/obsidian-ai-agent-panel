@@ -2,7 +2,18 @@
 
 ## Unreleased
 
-Nothing user-visible yet; this release is the community-directory review pass.
+This release is the community-directory review pass.
+
+- **Obsidian 1.8.7 is now the minimum.** The panel has been calling
+  `app.loadLocalStorage` / `app.saveLocalStorage` (1.8.7),
+  `workspace.revealLeaf` (1.7.2) and `fileManager.trashFile` (1.6.6) while
+  declaring 1.5.0, so on an older Obsidian those calls were simply missing.
+  The declaration now matches what the code actually needs. The APIs
+  themselves stay: `loadLocalStorage`/`saveLocalStorage` are what Obsidian's
+  guidelines ask for over raw `localStorage`, and `trashFile` is what honours
+  your vault's "deleted files" setting. The plugin is desktop-only and needs
+  the Claude Code CLI installed anyway, so this is not a meaningful extra
+  requirement.
 
 ### Development
 

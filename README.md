@@ -74,7 +74,7 @@ plugin, including the cases where you should install one of the others.
 
 ## Requirements
 
-- Obsidian **desktop** 1.5+ (the plugin spawns a local process; mobile is not supported).
+- Obsidian **desktop** 1.8.7+ (the plugin spawns a local process; mobile is not supported).
 - [Claude Code](https://code.claude.com) **2.x** installed and logged in (`claude` must work in your terminal).
 - A vault on the local file system.
 
