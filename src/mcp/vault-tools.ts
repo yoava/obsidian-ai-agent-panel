@@ -43,8 +43,10 @@ function noteFacts(app: App, file: TFile): NoteFacts {
 	const cache = app.metadataCache.getFileCache(file);
 	const tags = new Set<string>();
 	for (const tag of cache?.tags ?? []) tags.add(tag.tag.replace(/^#/, "").toLowerCase());
-	// Frontmatter tags are indexed separately from inline ones.
-	const frontmatterTags = cache?.frontmatter?.tags ?? cache?.frontmatter?.tag;
+	// Frontmatter tags are indexed separately from inline ones. FrontMatterCache
+	// is an `any` bag, so say `unknown` here and let the loop below do the
+	// checking: `tags:` is a list by convention, not by rule.
+	const frontmatterTags: unknown = cache?.frontmatter?.tags ?? cache?.frontmatter?.tag;
 	for (const tag of Array.isArray(frontmatterTags) ? frontmatterTags : [frontmatterTags])
 		if (typeof tag === "string") tags.add(tag.replace(/^#/, "").toLowerCase());
 	return {
@@ -228,7 +230,7 @@ export function createVaultTools(app: App): McpTool[] {
 				const changes = patch as Record<string, unknown>;
 				const removed: string[] = [];
 				const set: string[] = [];
-				await app.fileManager.processFrontMatter(file, (frontmatter) => {
+				await app.fileManager.processFrontMatter(file, (frontmatter: Record<string, unknown>) => {
 					for (const [key, value] of Object.entries(changes)) {
 						if (value === null) {
 							delete frontmatter[key];
