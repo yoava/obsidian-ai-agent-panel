@@ -446,7 +446,10 @@ export class ClaudeClient {
 		const request = env.request as Record<string, unknown>;
 		const permissionRequest: PermissionRequest = {
 			requestId: env.request_id,
-			toolName: String(request.tool_name ?? "unknown"),
+			// Anything but a string is the CLI speaking a protocol we don't know;
+			// String() would turn an object into "[object Object]" and show that
+			// as the tool name on the permission card.
+			toolName: typeof request.tool_name === "string" ? request.tool_name : "unknown",
 			input: (request.input as Record<string, unknown>) ?? {},
 			suggestions: request.permission_suggestions as unknown[] | undefined,
 			title: request.title as string | undefined,
