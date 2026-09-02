@@ -18,6 +18,13 @@ The build bundles `src/main.ts` into a single CommonJS `main.js`. Node
 builtins, `obsidian`, and `electron` stay external; there are **no runtime
 dependencies**.
 
+`tsc` only type-checks (`-noEmit`) - esbuild produces the bundle - so a
+TypeScript upgrade cannot change the shipped output. Note that
+`tsconfig.json` names `"types": ["node"]` explicitly: TypeScript 7 stopped
+including `@types/*` implicitly, and without that line every `process` and
+`node:*` reference fails to resolve. `@types/node` deliberately tracks the
+major that CI runs on (Node 22), not the newest published.
+
 ## Testing in a vault
 
 Copy (or symlink) the plugin into a vault and enable it:
