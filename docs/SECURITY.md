@@ -15,7 +15,10 @@
   trade-off is that plan usage is only available while a session is running -
   by design, since nothing here will start a CLI process just to draw a strip.
   Anthropic marks `get_usage` experimental, so a CLI that does not answer it
-  simply shows no usage rather than erroring.
+  simply shows no usage rather than erroring. The `fundingUrl` in
+  `manifest.json` is not an exception to this: Obsidian renders it as a link in
+  the plugin list, and nothing is fetched unless you click it, which hands the
+  URL to your browser like any other external link.
 - **No credentials of the plugin's own.** The plugin never stores API keys or
   tokens. Its `data.json` holds only plugin settings (model alias, mode
   defaults, vault instructions, export/usage preferences); device-local

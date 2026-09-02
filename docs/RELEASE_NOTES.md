@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased
+
+- **Optional funding link.** `manifest.json` now carries a `fundingUrl`, so
+  Obsidian shows a heart next to the plugin in the plugin list, and the
+  repository has a sponsor button. The plugin stays free and MIT-licensed, no
+  feature is gated behind it, and the link costs nothing at runtime - Obsidian
+  renders it, and nothing is fetched unless you click it.
+
 ## 0.3.2 - first public release
 
 AI Agent Panel puts an AI coding agent in an Obsidian sidebar, with the vault
