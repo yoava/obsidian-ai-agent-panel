@@ -1,7 +1,7 @@
 {
 	"id": "ai-agent-panel",
 	"name": "AI Agent Panel",
-	"version": "0.3.2",
+	"version": "0.3.3",
 	"minAppVersion": "1.5.0",
 	"description": "Chat with an AI coding agent inside your vault. Unofficial; works with Anthropic's Claude Code CLI, which you install and log in to yourself.",
 	"author": "Yoav Aharoni",
