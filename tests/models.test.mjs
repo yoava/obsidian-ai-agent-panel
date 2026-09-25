@@ -79,6 +79,25 @@ test("learned entries label themselves from the resolved id", () => {
 	assert.match(byValue[""].description ?? "", /everyday/);
 });
 
+test("a CLI 2.1.282 list labels Opus 5.5 and Fable 5.1 by version", () => {
+	// Trimmed from a real CLI 2.1.282 initialize response.
+	const options = modelOptions(
+		undefined,
+		parseCliModels([
+			{ value: "default", resolvedModel: "claude-opus-5-5", displayName: "Default (recommended)" },
+			{ value: "opus", resolvedModel: "claude-opus-5-5", displayName: "Opus 5.5" },
+			{ value: "claude-fable-5-1", resolvedModel: "claude-fable-5-1", displayName: "Fable 5.1" },
+			{ value: "opus[1m]", resolvedModel: "claude-opus-5-5[1m]", displayName: "Opus (1M context)" },
+		])
+	);
+	const byValue = Object.fromEntries(options.map((o) => [o.value, o]));
+	assert.equal(byValue[""].label, "Default model (Opus 5.5)");
+	assert.equal(byValue["opus"].short, "Opus 5.5");
+	assert.equal(byValue["claude-fable-5-1"].label, "Fable 5.1");
+	assert.equal(byValue["opus[1m]"].label, "Opus 5.5 (1M context)");
+	assert.equal(byValue["opus[1m]"].short, "Opus 5.5 1M");
+});
+
 test("without a learned list the static entries still apply", () => {
 	const options = modelOptions();
 	assert.ok(options.some((o) => o.value === "opus"));

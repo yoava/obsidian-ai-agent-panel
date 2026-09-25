@@ -68,9 +68,9 @@ export function parseCliModels(raw: unknown): CliModel[] | null {
 
 export const MODEL_OPTIONS: ModelOption[] = [
 	{ value: "", label: "Default model", short: "Default" },
-	{ value: "fable", label: "Fable 5", short: "Fable 5" },
-	{ value: "opus", label: "Opus 5", short: "Opus 5" },
-	{ value: "opus[1m]", label: "Opus 5 (1M context)", short: "Opus 5 1M" },
+	{ value: "fable", label: "Fable 5.1", short: "Fable 5.1" },
+	{ value: "opus", label: "Opus 5.5", short: "Opus 5.5" },
+	{ value: "opus[1m]", label: "Opus 5.5 (1M context)", short: "Opus 5.5 1M" },
 	{ value: "sonnet", label: "Sonnet 5", short: "Sonnet 5" },
 	{ value: "sonnet[1m]", label: "Sonnet 5 (1M context)", short: "Sonnet 5 1M" },
 	{ value: "haiku", label: "Haiku 4.5", short: "Haiku 4.5" },

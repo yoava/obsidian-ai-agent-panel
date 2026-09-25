@@ -576,7 +576,7 @@ are learned rather than hard-coded:
   literals in `MODEL_OPTIONS` only cover the first run, before any session has
   reported a list.
 - **Labels**: every session's `system/init` reports the id the alias resolved
-  to (`opus` → `claude-opus-5`), which `rememberModelResolution` caches in
+  to (`opus` → `claude-opus-5-5`), which `rememberModelResolution` caches in
   `settings.resolvedModels` and `describeModelId` formats for display
   (`claude-haiku-4-5-20251001` → "Haiku 4.5"). `opusplan` keeps its
   hand-written label, since the single reported id describes only its

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Opus 5.5 and Fable 5.1 by name from the first run.** The model picker
+  already takes its entries and labels from your CLI, so Opus 5.5 appeared on
+  its own once a session had started; the labels shown before that first
+  session now name the current versions too. Verified against Claude Code
+  2.1.282.
 - **Build tooling updated** to ESLint 10 and the latest in-range dev
   dependencies. TypeScript stays on 5.9: typescript-eslint does not support
   TypeScript 7, and on 6.0 its type-aware rules report false errors.
