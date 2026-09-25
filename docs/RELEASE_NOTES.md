@@ -1,5 +1,11 @@
 # Release notes
 
+## Unreleased
+
+- **Build tooling updated** to ESLint 10 and the latest in-range dev
+  dependencies. TypeScript stays on 5.9: typescript-eslint does not support
+  TypeScript 7, and on 6.0 its type-aware rules report false errors.
+
 ## 0.3.4
 
 The community-directory review pass. No features change; what changes is that
