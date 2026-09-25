@@ -571,7 +571,9 @@ are learned rather than hard-coded:
   CLI profile in `settings.cliModels` (device-local - it describes this
   machine's install), and `modelOptions` builds the picker from it, so a model
   the CLI would reject with "not a recognized model id" never appears. The
-  entries' effort lists grey out unsupported effort levels, and should
+  entries' effort lists grey out unsupported effort levels (and their union,
+  `effortLevels`, is the effort menu, so a new level needs no plugin change
+  either), and should
   `set_model` still be rejected, the view rolls the selection back. The
   literals in `MODEL_OPTIONS` only cover the first run, before any session has
   reported a list.

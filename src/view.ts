@@ -56,7 +56,14 @@ import {
 	sideLayoutThreshold,
 	SIDE_WIDTH_DEFAULT_PX,
 } from "./tabs-layout";
-import { describeModel, describeModelId, modelOptions, parseCliModels } from "./models";
+import {
+	describeModel,
+	describeModelId,
+	effortLabel,
+	effortLevels,
+	modelOptions,
+	parseCliModels,
+} from "./models";
 import { AGENT_ICON } from "./icon";
 import { loadLocalRecord, loadLocalValue } from "./local-store";
 import {
@@ -128,15 +135,6 @@ const INPUT_PLACEHOLDER =
 	"Ask Claude about your vault… (@ mentions a file, / runs a command, Enter sends)";
 const BUSY_PLACEHOLDER = "Claude is working - Enter queues another message…";
 const WAITING_PLACEHOLDER = "Claude is waiting for your response above…";
-
-const EFFORT_OPTIONS: Array<{ value: string; label: string }> = [
-	{ value: "", label: "Default" },
-	{ value: "low", label: "Low" },
-	{ value: "medium", label: "Medium" },
-	{ value: "high", label: "High" },
-	{ value: "xhigh", label: "Extra high" },
-	{ value: "max", label: "Max" },
-];
 
 const MODE_OPTIONS: Array<{
 	value: ChatPermissionMode;
@@ -1824,10 +1822,7 @@ export class AgentPanelView extends ItemView {
 			this.plugin.cliModelsFor(tab.selectedProfileId)
 		);
 		const setup: string[] = [model.label];
-		if (tab.selectedEffort) {
-			const effort = EFFORT_OPTIONS.find((e) => e.value === tab.selectedEffort);
-			setup.push(`${effort?.label ?? tab.selectedEffort} effort`);
-		}
+		if (tab.selectedEffort) setup.push(`${effortLabel(tab.selectedEffort)} effort`);
 		const mode = MODE_OPTIONS.find((m) => m.value === tab.selectedMode);
 		setup.push(mode?.short ?? tab.selectedMode);
 		lines.push(setup.join(" · "));
@@ -4392,13 +4387,8 @@ export class AgentPanelView extends ItemView {
 		);
 		this.fillSegment(this.modelSegmentEl, AGENT_ICON, model.short, `Model: ${model.label}`);
 
-		const effort = EFFORT_OPTIONS.find((e) => e.value === tab.selectedEffort);
-		this.fillSegment(
-			this.effortSegmentEl,
-			"gauge",
-			effort?.label ?? tab.selectedEffort,
-			`Reasoning effort: ${effort?.label ?? tab.selectedEffort}`
-		);
+		const effort = effortLabel(tab.selectedEffort);
+		this.fillSegment(this.effortSegmentEl, "gauge", effort, `Reasoning effort: ${effort}`);
 
 		const mode = MODE_OPTIONS.find((m) => m.value === tab.selectedMode);
 		this.fillSegment(
@@ -4475,26 +4465,23 @@ export class AgentPanelView extends ItemView {
 		if (!tab) return;
 		// Grey out effort levels the selected model does not accept, per the
 		// CLI's own report ("CLI default" always stays available).
-		const cli = this.plugin
-			.cliModelsFor(tab.selectedProfileId)
-			?.find((m) => m.value === tab.selectedModel);
+		const cliModels = this.plugin.cliModelsFor(tab.selectedProfileId);
+		const cli = cliModels?.find((m) => m.value === tab.selectedModel);
 		const levels = cli ? cli.supportedEffortLevels ?? [] : null;
 		const menu = new Menu();
-		for (const option of EFFORT_OPTIONS)
+		for (const value of ["", ...effortLevels(cliModels)])
 			menu.addItem((item) =>
 				item
-					.setTitle(option.label)
-					.setChecked(option.value === tab.selectedEffort)
-					.setDisabled(
-						!!option.value && levels !== null && !levels.includes(option.value)
-					)
+					.setTitle(effortLabel(value))
+					.setChecked(value === tab.selectedEffort)
+					.setDisabled(!!value && levels !== null && !levels.includes(value))
 					.onClick(() => {
-						if (option.value === tab.selectedEffort) return;
-						tab.selectedEffort = option.value;
-						this.plugin.settings.lastEffort = option.value;
+						if (value === tab.selectedEffort) return;
+						tab.selectedEffort = value;
+						this.plugin.settings.lastEffort = value;
 						void this.plugin.saveSettings();
 						this.updateConfigBar();
-						this.applyEffort(tab, option.value || undefined);
+						this.applyEffort(tab, value || undefined);
 					})
 			);
 		menu.showAtMouseEvent(evt);

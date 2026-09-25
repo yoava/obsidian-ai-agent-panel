@@ -12,6 +12,7 @@ import {
 	type SettingGroupItem,
 } from "obsidian";
 import { detectClaudeCli } from "./cli";
+import { effortLabel, effortLevels } from "./models";
 import {
 	newProfileId,
 	type ChatPermissionMode,
@@ -390,11 +391,11 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 								dropdown
 									.addOptions({
 										"": "CLI default",
-										low: "Low",
-										medium: "Medium",
-										high: "High",
-										xhigh: "Extra high",
-										max: "Max",
+										...Object.fromEntries(
+											effortLevels(
+												Object.values(settings.cliModels ?? {}).flat()
+											).map((level) => [level, effortLabel(level)])
+										),
 									})
 									.setValue(settings.effort)
 									.onChange(async (value) => {

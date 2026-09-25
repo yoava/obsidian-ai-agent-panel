@@ -189,6 +189,40 @@ export function describeModel(
 	return describeModelId(value) ?? { label: value, short: value };
 }
 
+/** Effort levels known by name, in order; the CLI may report others. */
+const EFFORT_LABELS: Record<string, string> = {
+	low: "Low",
+	medium: "Medium",
+	high: "High",
+	xhigh: "Extra high",
+	max: "Max",
+};
+
+/** Display name of an effort level; "" is the CLI's own default. */
+export function effortLabel(level: string): string {
+	if (!level) return "Default";
+	return EFFORT_LABELS[level] ?? capitalize(level);
+}
+
+/**
+ * Effort levels to offer: every level any reported model accepts, in the
+ * CLI's order, so a level a newer CLI introduces is offered without a plugin
+ * update. The known levels cover the first run, before any list is reported.
+ */
+export function effortLevels(cliModels?: CliModel[] | null): string[] {
+	const levels: string[] = [];
+	for (const model of cliModels ?? []) {
+		// Insert unseen levels after their predecessor in this model's list.
+		let insertAt = 0;
+		for (const level of model.supportedEffortLevels ?? []) {
+			const at = levels.indexOf(level);
+			if (at >= 0) insertAt = at + 1;
+			else levels.splice(insertAt++, 0, level);
+		}
+	}
+	return levels.length ? levels : Object.keys(EFFORT_LABELS);
+}
+
 /**
  * The picker's entries with current labels applied. A CLI-reported list wins
  * outright - it is exactly what this CLI + account accept - with the account

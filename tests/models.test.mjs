@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
 	describeModel,
+	effortLabel,
+	effortLevels,
 	modelOptions,
 	parseCliModels,
 } from "./.build/models.mjs";
@@ -117,4 +119,19 @@ test("describeModel prefers the learned list, then falls back", () => {
 		describeModel("opus", { opus: "claude-opus-5" }, null).label,
 		"Opus 5"
 	);
+});
+
+test("effort levels come from the CLI's lists, in its order", () => {
+	assert.deepEqual(effortLevels(null), ["low", "medium", "high", "xhigh", "max"]);
+	// Levels only some models accept, and one this plugin has never seen, slot
+	// in after their predecessor rather than at the end.
+	const levels = effortLevels([
+		{ value: "claude-sonnet-4-6", supportedEffortLevels: ["low", "medium", "high", "max"] },
+		{ value: "haiku" },
+		{ value: "opus", supportedEffortLevels: ["low", "medium", "high", "xhigh", "ultra", "max"] },
+	]);
+	assert.deepEqual(levels, ["low", "medium", "high", "xhigh", "ultra", "max"]);
+	assert.equal(effortLabel("xhigh"), "Extra high");
+	assert.equal(effortLabel("ultra"), "Ultra");
+	assert.equal(effortLabel(""), "Default");
 });

@@ -7,6 +7,9 @@
   its own once a session had started; the labels shown before that first
   session now name the current versions too. Verified against Claude Code
   2.1.282.
+- **Effort levels come from your CLI too.** The effort menu and the default
+  effort setting offer every level the CLI reports for your models, so a level
+  a future Claude Code adds shows up without a plugin update.
 - **Build tooling updated** to ESLint 10 and the latest in-range dev
   dependencies. TypeScript stays on 5.9: typescript-eslint does not support
   TypeScript 7, and on 6.0 its type-aware rules report false errors.
