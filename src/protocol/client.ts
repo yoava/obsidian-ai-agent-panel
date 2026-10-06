@@ -45,6 +45,8 @@ export interface ClaudeClientOptions {
 	sdkMcpServers?: string[];
 	/** Permit switching into bypassPermissions at runtime. */
 	allowBypassPermissions?: boolean;
+	/** The CLI profile's own arguments (see profileLaunchArgs), appended last. */
+	extraArgs?: string[];
 	env?: Record<string, string>;
 }
 
@@ -83,16 +85,47 @@ export interface CliSpawnSpec {
 	shell: boolean;
 }
 
+/** True when the CLI is a Windows batch shim, which only runs through cmd.exe. */
+export function isCmdShim(cliPath: string, platform: NodeJS.Platform = process.platform): boolean {
+	return platform === "win32" && /\.(cmd|bat)$/i.test(cliPath);
+}
+
+/**
+ * Characters cmd.exe acts on even in an argument the spawn quotes - `%` (and
+ * `!`, under delayed expansion) expand inside quotes, and a stray `"` ends the
+ * quoting that guards the rest.
+ */
+export const CMD_UNSAFE = /["%!&|<>^\r\n]/;
+
+/** One argument in the quoting Windows programs parse - the same rules Node's spawn uses. */
+function windowsQuote(arg: string): string {
+	if (arg && !/[\s"]/.test(arg)) return arg;
+	return `"${arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, "$1$1")}"`;
+}
+
+/**
+ * The CLI path as one word of an `sh -c` script, still expanding a leading
+ * `~/` and `$VARIABLES` the way a configured path would in a terminal.
+ */
+function shellPath(cliPath: string): string {
+	const tilde = cliPath.startsWith("~/") ? "~/" : "";
+	return `${tilde}"${cliPath.slice(tilde.length).replace(/["\\`]/g, "\\$&")}"`;
+}
+
 /**
  * How the CLI process is launched. Pure, so tests can assert the shape.
+ *
+ * WSL: `wsl.exe -- …` would hand the rest of its command line to the distro's
+ * default shell to re-parse - bash, zsh and fish each reading a quoted
+ * argument differently. `--exec` skips that shell: a login `sh` (the one
+ * detection uses, so the same PATH) runs the CLI with the arguments as its
+ * positional parameters, which no shell ever parses.
  *
  * On Windows an npm install provides `claude.cmd`, a batch shim, and Node
  * (since its CVE-2024-27980 hardening) throws EINVAL when spawning .cmd/.bat
  * without a shell. Those run through cmd.exe via `shell: true`, where Node
- * joins command and args verbatim - so anything that may contain whitespace
- * (the path; defensively every arg) is quoted here. The args carry no
- * model-controlled text: fixed flags, the configured model/effort, and a
- * session uuid.
+ * joins command and args verbatim - so the path and every arg are quoted here,
+ * and an argument cmd.exe would still interpret is refused rather than passed.
  */
 export function cliSpawnSpec(
 	options: Pick<ClaudeClientOptions, "cliPath" | "cwd" | "useWsl">,
@@ -103,15 +136,29 @@ export function cliSpawnSpec(
 		// wsl.exe translates the Windows --cd path into the distro's mount.
 		return {
 			command: "wsl.exe",
-			args: ["--cd", options.cwd, "--", options.cliPath, ...args],
+			args: [
+				"--cd",
+				options.cwd,
+				"--exec",
+				"sh",
+				"-lc",
+				`exec ${shellPath(options.cliPath)} "$@"`,
+				"sh",
+				...args,
+			],
 			shell: false,
 		};
 	}
-	if (platform === "win32" && /\.(cmd|bat)$/i.test(options.cliPath)) {
-		const quote = (s: string) => (/\s/.test(s) ? `"${s}"` : s);
+	if (isCmdShim(options.cliPath, platform)) {
+		const unsafe = args.find((arg) => CMD_UNSAFE.test(arg));
+		if (unsafe !== undefined)
+			throw new Error(
+				`Cannot pass ${unsafe} to ${options.cliPath}: cmd.exe would interpret it. ` +
+					"Remove it from the profile's additional arguments, or install Claude Code's native build."
+			);
 		return {
-			command: quote(options.cliPath),
-			args: args.map(quote),
+			command: windowsQuote(options.cliPath),
+			args: args.map(windowsQuote),
 			cwd: options.cwd,
 			shell: true,
 		};
@@ -173,6 +220,7 @@ export class ClaudeClient {
 		if (resumeSessionId) args.push("--resume", resumeSessionId);
 		// Only meaningful alongside --resume; the CLI rejects it on its own.
 		if (forkSession && resumeSessionId) args.push("--fork-session");
+		if (this.options.extraArgs) args.push(...this.options.extraArgs);
 
 		const spec = cliSpawnSpec(this.options, args);
 

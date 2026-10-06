@@ -12,11 +12,14 @@ import {
 	type SettingGroupItem,
 } from "obsidian";
 import { detectClaudeCli } from "./cli";
+import { profileLaunchArgs, sandboxAvailable } from "./cli-args";
 import { effortLabel, effortLevels } from "./models";
 import {
+	newProfile,
 	newProfileId,
 	type ChatPermissionMode,
 	type CliProfile,
+	type LaunchToggle,
 	type TabPosition,
 } from "./settings-core";
 import type AgentPanelPlugin from "./main";
@@ -184,6 +187,15 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 				items: group.rows.map((row) => this.definitionFor(row)),
 			};
 		});
+	}
+
+	/**
+	 * Launch options apply to open chats when the tab closes rather than per
+	 * keystroke, since each change restarts the chats' CLI processes.
+	 */
+	hide(): void {
+		super.hide();
+		this.plugin.applyLaunchSettings();
 	}
 
 	/** Pre-1.13 fallback. Not called once getSettingDefinitions() has items. */
@@ -813,12 +825,9 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 						const first = settings.cliProfiles[0];
 						if (settings.cliProfiles.length === 1 && first.name === "Default")
 							first.name = first.useWsl ? "WSL" : "Default";
-						settings.cliProfiles.push({
-							id: newProfileId(),
-							name: `Profile ${settings.cliProfiles.length + 1}`,
-							cliPath: "",
-							useWsl: false,
-						});
+						settings.cliProfiles.push(
+							newProfile(newProfileId(), `Profile ${settings.cliProfiles.length + 1}`)
+						);
 						await this.plugin.saveSettings();
 						// A second profile makes the composer's Profile control appear.
 						this.plugin.applyViewSettings();
@@ -833,6 +842,9 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 
 	/** The path (with its Detect button) and, on Windows, the WSL toggle. */
 	private profileRows(profile: CliProfile): PanelRow[] {
+		// Set by the arguments row; the path, WSL and sandbox rows all change
+		// what the arguments may contain, so each re-checks them.
+		const argsCheck = { show: () => {} };
 		const rows: PanelRow[] = [
 			{
 				kind: "build",
@@ -848,6 +860,7 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 								.setValue(profile.cliPath)
 								.onChange(async (value) => {
 									profile.cliPath = value.trim();
+									argsCheck.show();
 									await this.plugin.saveSettings();
 								})
 						)
@@ -887,13 +900,98 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 					setting.addToggle((toggle) =>
 						toggle.setValue(profile.useWsl).onChange(async (value) => {
 							profile.useWsl = value;
+							argsCheck.show();
 							await this.plugin.saveSettings();
+							this.refreshVisibility(); // the sandbox row exists only in WSL here
 						})
 					);
 				},
 			});
 		}
 
+		rows.push(...this.launchRows(profile, argsCheck));
 		return rows;
+	}
+
+	/** Claude in Chrome, the sandbox, and free-form arguments for one profile. */
+	private launchRows(profile: CliProfile, argsCheck: { show: () => void }): PanelRow[] {
+		const toggleOptions = {
+			"": "Claude Code default",
+			on: "On",
+			off: "Off",
+		};
+		return [
+			{
+				kind: "build",
+				name: "Claude in Chrome",
+				desc:
+					"Lets Claude open tabs, click, type, and read pages in your browser " +
+					"through the Claude in Chrome extension, signed in as you. Needs the " +
+					"extension and a claude.ai login; not available in WSL. Claude Code " +
+					'default follows the CLI\'s own "Enabled by default" choice in /chrome.',
+				build: (setting) => {
+					setting.addDropdown((dropdown) =>
+						dropdown
+							.addOptions(toggleOptions)
+							.setValue(profile.chrome)
+							.onChange(async (value) => {
+								profile.chrome = value as LaunchToggle;
+								await this.plugin.saveSettings();
+							})
+					);
+				},
+			},
+			{
+				kind: "build",
+				name: "Sandbox",
+				desc:
+					"Runs Claude's shell commands inside the OS sandbox, which limits the " +
+					"files and hosts they can reach - and runs sandboxed commands without " +
+					"asking. Not available on native Windows; on Linux and WSL it needs " +
+					"bubblewrap and socat. Claude Code default follows sandbox.enabled in " +
+					"your Claude Code settings.",
+				visible: () => sandboxAvailable(profile.useWsl),
+				build: (setting) => {
+					setting.addDropdown((dropdown) =>
+						dropdown
+							.addOptions(toggleOptions)
+							.setValue(profile.sandbox)
+							.onChange(async (value) => {
+								profile.sandbox = value as LaunchToggle;
+								argsCheck.show();
+								await this.plugin.saveSettings();
+							})
+					);
+				},
+			},
+			{
+				kind: "build",
+				name: "Additional arguments",
+				desc:
+					"Passed to every launch of this profile, e.g. --add-dir /path/to/projects. " +
+					"Quote values containing spaces. No shell reads them, so ~ and " +
+					"$VARIABLES are passed as typed.",
+				build: (setting) => {
+					const errorEl = setting.descEl.createDiv({ cls: "ai-agent-panel-settings-error" });
+					argsCheck.show = () => {
+						const { error } = profileLaunchArgs(profile, profile);
+						errorEl.setText(error ?? "");
+						errorEl.toggleClass("ai-agent-panel-hidden", !error);
+					};
+					argsCheck.show();
+					setting.addText((text) => {
+						text
+							.setPlaceholder("None")
+							.setValue(profile.extraArgs)
+							.onChange(async (value) => {
+								profile.extraArgs = value.trim();
+								argsCheck.show();
+								await this.plugin.saveSettings();
+							});
+						text.inputEl.addClass("ai-agent-panel-settings-args");
+					});
+				},
+			},
+		];
 	}
 }

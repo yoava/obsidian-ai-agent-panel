@@ -166,6 +166,11 @@ export default class AgentPanelPlugin extends Plugin {
 		for (const view of this.chatViews()) view.onViewSettingsChanged();
 	}
 
+	/** Hand changed profile launch options (Chrome, sandbox, arguments) to open chats. */
+	applyLaunchSettings(): void {
+		for (const view of this.chatViews()) void view.onLaunchSettingsChanged();
+	}
+
 	/** All open chat views (usually one, in the right sidebar). */
 	chatViews(): AgentPanelView[] {
 		return this.app.workspace

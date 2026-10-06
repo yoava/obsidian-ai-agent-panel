@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
+
+- **Claude in Chrome.** A CLI profile can turn Claude Code's browser
+  integration on, so Claude opens pages, clicks, types and reads them in your
+  Chrome or Edge, signed in as you. Needs the Claude in Chrome extension and a
+  claude.ai login; Claude Code does not support it in WSL.
+- **Sandbox.** A profile can switch Claude Code's Bash sandbox on or off for
+  the conversations it runs. On macOS, Linux and WSL2 only - native Windows
+  has no sandbox, so the setting is hidden there.
+- **Additional CLI arguments.** Each profile takes extra arguments for every
+  launch, e.g. `--add-dir /path/to/projects`. Quote values with spaces; no
+  shell is involved, so `~` and `$VARIABLES` are passed as typed. Flags the
+  panel sets itself (`--model`, `--resume`, the stream-JSON flags, …) are
+  refused with a message saying why, in settings as you type and in the chat.
+- **Both toggles default to *Claude Code default***, which passes nothing and
+  leaves the choice to your Claude Code settings (`/chrome`'s *Enabled by
+  default*, `sandbox.enabled`) - existing profiles behave exactly as before.
+- **Changes reach open conversations** when you close settings: each restarts
+  its CLI after the current turn and resumes where it was.
+- **WSL launches keep your default shell out of the arguments.** `wsl.exe --`
+  hands its command line to the distro's default shell to re-parse, so an
+  argument containing `;`, `$` or a quote would have been read by bash, zsh
+  or fish - each differently. The CLI now starts through `wsl.exe --exec` and
+  a login `sh` that receives the arguments as parameters, so they arrive
+  exactly as given. On a Windows npm install (`claude.cmd`), an argument
+  cmd.exe would interpret is refused instead of passed, and empty arguments
+  and paths ending in a backslash survive the trip.
+
 ### Development
 
 - **TypeScript 6.0.** typescript-eslint 8.71 supports it and its type-aware

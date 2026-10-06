@@ -65,13 +65,30 @@ claude --output-format stream-json --input-format stream-json --verbose \
        --replay-user-messages \
        [--model X] [--effort E] [--permission-mode Y] \
        [--resume SESSION_ID [--fork-session]] \
-       [--allow-dangerously-skip-permissions]
+       [--allow-dangerously-skip-permissions] \
+       [PROFILE ARGS…]
 ```
 
+`PROFILE ARGS` come from the conversation's CLI profile via `profileLaunchArgs`
+(src/cli-args.ts): `--chrome` / `--no-chrome`, then
+`--settings '{"sandbox":{"enabled":…}}'` (skipped on native Windows, which has
+no sandbox), then the profile's *Additional arguments*, split by
+`parseCliArgs`. A profile toggle left at *Claude Code default* adds nothing.
+Flags the panel sets itself are refused rather than passed twice, and the
+error is shown in settings as you type and in the chat if a launch is
+attempted.
+
 With **Run via WSL** enabled (Windows), the same command is wrapped as
-`wsl.exe --cd <vault> -- <cliPath> …`. On native Windows, a `.cmd`/`.bat` CLI
-path (npm's shim) runs through cmd.exe instead (`shell: true`, path and args
-quoted), because Node refuses to spawn batch files directly (CVE-2024-27980).
+`wsl.exe --cd <vault> --exec sh -lc 'exec "<cliPath>" "$@"' sh …`. With `--`
+instead of `--exec`, `wsl.exe` would hand the line to the distro's default
+shell to re-parse, and bash, zsh and fish read quotes differently; here a
+login `sh` - the one detection uses, so the same PATH - runs the CLI with the
+arguments as positional parameters, which no shell parses. The CLI path is
+double-quoted in the script (a leading `~/` left outside), so `~/…` and
+`$HOME/…` paths still expand. On native Windows, a `.cmd`/`.bat` CLI path (npm's shim) runs
+through cmd.exe instead (`shell: true`, path and args quoted), because Node
+refuses to spawn batch files directly (CVE-2024-27980); an argument cmd.exe
+would still interpret (`"`, `%`, `&`, `|`, `<`, `>`, `^`, newlines) is refused.
 `cliSpawnSpec` (src/protocol/client.ts) is the one place that decides this
 launch shape, and it is pinned by tests.
 
@@ -86,7 +103,7 @@ spawn on the side where the CLI was actually found (WSL is probed first when
 the toggle is already on).
 
 **CLI profiles** (`src/settings-core.ts`): the CLI location is a list of named
-`{cliPath, useWsl}` profiles rather than one pair of fields - most vaults have
+`{cliPath, useWsl, chrome, sandbox, extraArgs}` profiles rather than one pair of fields - most vaults have
 exactly one (the pre-profile settings migrate into it), in which case the
 settings UI looks unchanged. `AgentPanelPlugin.resolveCli(profile)` performs
 the detection above per profile (cached per profile id), each conversation tab carries
@@ -384,6 +401,13 @@ recognised as stale and swallowed, so no error surfaces), and immediately warms
 up a replacement with `--resume`, rather than leaving the cost of the respawn
 for the user's next send.
 
+**Profile launch options** use the same swap. Closing the settings tab
+(`AgentPanelSettingTab.hide`) calls `AgentPanelView.onLaunchSettingsChanged`,
+which recomputes each open conversation's profile arguments and hands them to
+`ClaudeSession.setExtraArgs`; a session whose arguments changed respawns once
+idle. Applying on close rather than per change keeps typing in the arguments
+field from restarting processes on every keystroke.
+
 ## Conversation history & transcript export
 
 The CLI's `--resume` restores context server-side but never replays past
@@ -628,6 +652,7 @@ answer it renders nothing rather than erroring.
 | `src/protocol/client.ts` | stdio transport + control protocol (no Obsidian imports - testable in plain Node) |
 | `src/protocol/types.ts` | original type definitions for the wire protocol |
 | `src/cli.ts` | `claude` executable discovery |
+| `src/cli-args.ts` | a profile's launch arguments: Chrome, sandbox, additional arguments (no Obsidian imports - plain-Node tests) |
 | `src/settings-core.ts` | settings model, defaults, migration, CLI-profile helpers (no Obsidian imports - plain-Node tests) |
 | `src/settings.ts` | the settings tab UI, duration parsing |
 | `src/models.ts` | model picker entries and their self-updating labels |

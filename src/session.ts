@@ -47,7 +47,9 @@ export class ClaudeSession {
 
 	constructor(
 		private config: SessionConfig,
-		private readonly events: SessionEvents
+		private readonly events: SessionEvents,
+		/** The CLI profile this session was launched from. */
+		readonly profileId: string
 	) {}
 
 	get busy(): boolean {
@@ -64,6 +66,11 @@ export class ClaudeSession {
 
 	get spawnedModel(): string | undefined {
 		return this.spawnModel;
+	}
+
+	/** Where this session's CLI runs; a respawn always reuses it. */
+	get launchTarget(): { cliPath: string; useWsl: boolean } {
+		return { cliPath: this.config.cliPath, useWsl: this.config.useWsl === true };
 	}
 
 	/**
@@ -113,7 +120,11 @@ export class ClaudeSession {
 	 */
 	warmUp(): void {
 		if (this.disposed) return;
-		this.ensureClient();
+		try {
+			this.ensureClient();
+		} catch (err) {
+			this.events.onEnded(err instanceof Error ? err.message : String(err));
+		}
 	}
 
 	private ensureClient(): ClaudeClient {
@@ -152,7 +163,14 @@ export class ClaudeSession {
 		);
 		this.client = client;
 		this.spawnModel = this.config.model;
-		client.start();
+		try {
+			client.start();
+		} catch (err) {
+			// A client that never started must not stay current, or every later
+			// send would be written to a process that does not exist.
+			this.client = null;
+			throw err;
+		}
 		return client;
 	}
 
@@ -197,6 +215,19 @@ export class ClaudeSession {
 	setEffort(effort: string | undefined): void {
 		if (this.config.effort === effort) return;
 		this.config = { ...this.config, effort };
+		this.respawn();
+	}
+
+	/** The profile's launch arguments are spawn-time too; same swap as setEffort. */
+	setExtraArgs(extraArgs: string[]): void {
+		const current = this.config.extraArgs ?? [];
+		if (current.length === extraArgs.length && current.every((arg, i) => arg === extraArgs[i]))
+			return;
+		this.config = { ...this.config, extraArgs };
+		this.respawn();
+	}
+
+	private respawn(): void {
 		if (!this.client) return;
 		if (this.busyState) this.restartWhenIdle = true;
 		else this.restartClient();

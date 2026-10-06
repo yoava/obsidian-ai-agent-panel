@@ -40,6 +40,7 @@ import {
 } from "./settings";
 import { editTargetPath, isEditTool, planEdit, vaultRelativePath } from "./edits";
 import { formatShellResultForChat, runShellCommand, type ShellResult } from "./bash";
+import { profileLaunchArgs } from "./cli-args";
 import { McpServer } from "./mcp/server";
 import { createVaultTools } from "./mcp/vault-tools";
 import {
@@ -2286,6 +2287,14 @@ export class AgentPanelView extends ItemView {
 			);
 			return false;
 		}
+		const launch = profileLaunchArgs(profile, cli);
+		if (launch.error) {
+			this.renderError(
+				tab,
+				`${launch.error}\n\nFix the "${profile.name || "Unnamed"}" profile in Settings → AI Agent Panel.`
+			);
+			return false;
+		}
 		tab.session = new ClaudeSession(
 			{
 				cliPath: cli.cliPath,
@@ -2304,6 +2313,7 @@ export class AgentPanelView extends ItemView {
 				// on, and the rewind controls key off those uuids.
 				replayUserMessages: true,
 				sdkMcpServers: settings.enableObsidianMcp ? [OBSIDIAN_MCP_SERVER] : undefined,
+				extraArgs: launch.args,
 			},
 			{
 				onStreamMessage: (msg) => this.handleStreamMessage(tab, msg),
@@ -2318,9 +2328,33 @@ export class AgentPanelView extends ItemView {
 					const models = parseCliModels((info as { models?: unknown }).models);
 					if (models) void this.plugin.rememberCliModels(profile.id, models);
 				},
-			}
+			},
+			profile.id
 		);
 		return true;
+	}
+
+	/**
+	 * A profile's launch options changed in settings. Open conversations on it
+	 * swap their CLI process once idle, the way an effort change does. A session
+	 * whose CLI moved (a new path, WSL toggled) keeps its process, as a profile
+	 * switch does - arguments built for the new CLI could not launch the old
+	 * one. So does one the profile can no longer launch; the error surfaces
+	 * when the next conversation starts.
+	 */
+	async onLaunchSettingsChanged(): Promise<void> {
+		for (const tab of this.tabs) {
+			const session = tab.session;
+			const profile = session && profileById(this.plugin.settings, session.profileId);
+			if (!profile) continue;
+			const cli = await this.plugin.resolveCli(profile);
+			if (!cli || tab.session !== session) continue;
+			const current = session.launchTarget;
+			const useWsl = cli.useWsl && process.platform === "win32";
+			if (current.cliPath !== cli.cliPath || current.useWsl !== useWsl) continue;
+			const launch = profileLaunchArgs(profile, cli);
+			if (!launch.error) session.setExtraArgs(launch.args);
+		}
 	}
 
 	/**

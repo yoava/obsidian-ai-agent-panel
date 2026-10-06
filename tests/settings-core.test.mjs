@@ -28,6 +28,9 @@ test("legacy cliPath/useWsl migrate into a single profile", () => {
 		name: "Default",
 		cliPath: "/usr/local/bin/claude",
 		useWsl: true,
+		chrome: "",
+		sandbox: "",
+		extraArgs: "",
 	});
 	assert.equal(settings.defaultProfileId, "default");
 	assert.ok(!("cliPath" in settings));
@@ -44,8 +47,16 @@ test("a fresh install gets one auto-detect profile", () => {
 
 test("existing profile arrays pass through untouched", () => {
 	const profiles = [
-		{ id: "a", name: "WSL", cliPath: "claude", useWsl: true },
-		{ id: "b", name: "Windows", cliPath: "C:\\claude.exe", useWsl: false },
+		{ id: "a", name: "WSL", cliPath: "claude", useWsl: true, chrome: "", sandbox: "on", extraArgs: "" },
+		{
+			id: "b",
+			name: "Windows",
+			cliPath: "C:\\claude.exe",
+			useWsl: false,
+			chrome: "on",
+			sandbox: "",
+			extraArgs: "--debug",
+		},
 	];
 	const settings = load({
 		cliProfiles: profiles,
@@ -64,9 +75,23 @@ test("normalize repairs malformed profiles and a dangling default id", () => {
 		defaultProfileId: "gone",
 	});
 	assert.deepEqual(settings.cliProfiles, [
-		{ id: "ok", name: "", cliPath: "", useWsl: false },
+		{ id: "ok", name: "", cliPath: "", useWsl: false, chrome: "", sandbox: "", extraArgs: "" },
 	]);
 	assert.equal(settings.defaultProfileId, "ok");
+});
+
+test("profiles from before the launch options default them to the CLI's own", () => {
+	const settings = load({
+		cliProfiles: [
+			{ id: "old", name: "Old", cliPath: "", useWsl: false },
+			{ id: "bad", name: "Bad", chrome: true, sandbox: "yes", extraArgs: 3 },
+		],
+	});
+	for (const profile of settings.cliProfiles) {
+		assert.equal(profile.chrome, "");
+		assert.equal(profile.sandbox, "");
+		assert.equal(profile.extraArgs, "");
+	}
 });
 
 test("normalize never aliases DEFAULT_SETTINGS' profile array", () => {

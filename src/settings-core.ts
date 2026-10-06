@@ -26,6 +26,9 @@ export function cliPermissionMode(mode: ChatPermissionMode): PermissionMode {
  */
 export type TabPosition = "top" | "side" | "auto";
 
+/** A launch option the profile can force on or off; "" leaves it to the CLI's own config. */
+export type LaunchToggle = "" | "on" | "off";
+
 /** One way to launch the Claude Code CLI (e.g. a Windows install vs. WSL). */
 export interface CliProfile {
 	/** Stable id referenced by chats and the default-profile setting. */
@@ -36,6 +39,25 @@ export interface CliProfile {
 	cliPath: string;
 	/** Windows only: run the CLI inside WSL. */
 	useWsl: boolean;
+	/** Claude in Chrome: `--chrome` / `--no-chrome`. */
+	chrome: LaunchToggle;
+	/** The Bash sandbox: `sandbox.enabled` via `--settings`. */
+	sandbox: LaunchToggle;
+	/** Further command-line arguments, as typed; split by parseCliArgs. */
+	extraArgs: string;
+}
+
+/** A profile with every launch option left at the CLI's own default. */
+export function newProfile(
+	id: string,
+	name: string,
+	fields: Partial<Omit<CliProfile, "id" | "name">> = {}
+): CliProfile {
+	return { id, name, cliPath: "", useWsl: false, chrome: "", sandbox: "", extraArgs: "", ...fields };
+}
+
+function launchToggle(value: unknown): LaunchToggle {
+	return value === "on" || value === "off" ? value : "";
 }
 
 export interface AgentPanelSettings {
@@ -149,7 +171,7 @@ export function migrateRawSettings(
 		const cliPath = typeof raw.cliPath === "string" ? raw.cliPath : "";
 		const useWsl = raw.useWsl === true;
 		if (cliPath || useWsl) {
-			raw.cliProfiles = [{ id: "default", name: "Default", cliPath, useWsl }];
+			raw.cliProfiles = [newProfile("default", "Default", { cliPath, useWsl })];
 		}
 	}
 	delete raw.cliPath;
@@ -166,14 +188,16 @@ export function migrateRawSettings(
 export function normalizeSettings(settings: AgentPanelSettings): AgentPanelSettings {
 	const profiles = (Array.isArray(settings.cliProfiles) ? settings.cliProfiles : [])
 		.filter((p): p is CliProfile => !!p && typeof p === "object" && typeof p.id === "string")
-		.map((p) => ({
-			id: p.id,
-			name: typeof p.name === "string" ? p.name : "",
-			cliPath: typeof p.cliPath === "string" ? p.cliPath : "",
-			useWsl: p.useWsl === true,
-		}));
-	if (profiles.length === 0)
-		profiles.push({ id: "default", name: "Default", cliPath: "", useWsl: false });
+		.map((p) =>
+			newProfile(p.id, typeof p.name === "string" ? p.name : "", {
+				cliPath: typeof p.cliPath === "string" ? p.cliPath : "",
+				useWsl: p.useWsl === true,
+				chrome: launchToggle(p.chrome),
+				sandbox: launchToggle(p.sandbox),
+				extraArgs: typeof p.extraArgs === "string" ? p.extraArgs : "",
+			})
+		);
+	if (profiles.length === 0) profiles.push(newProfile("default", "Default"));
 	settings.cliProfiles = profiles;
 	if (!profiles.some((p) => p.id === settings.defaultProfileId))
 		settings.defaultProfileId = profiles[0].id;
@@ -299,7 +323,8 @@ export function mergeLocalSettings(
 export function defaultProfile(settings: AgentPanelSettings): CliProfile {
 	return (
 		settings.cliProfiles.find((p) => p.id === settings.defaultProfileId) ??
-		settings.cliProfiles[0] ?? { id: "default", name: "Default", cliPath: "", useWsl: false }
+		settings.cliProfiles[0] ??
+		newProfile("default", "Default")
 	);
 }
 

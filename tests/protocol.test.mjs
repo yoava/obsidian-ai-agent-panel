@@ -101,6 +101,16 @@ test("optional spawn flags appear only when configured", async () => {
 	assert.equal(flags.includes("--allow-dangerously-skip-permissions"), false);
 });
 
+test("profile arguments are appended after the panel's own", async () => {
+	const { messages } = await run({
+		scenario: "basic",
+		options: { model: "sonnet", extraArgs: ["--chrome", "--add-dir", "/a b"] },
+	});
+	const flags = probes(messages, "argv")[0].argv;
+	assert.deepEqual(flags.slice(-3), ["--chrome", "--add-dir", "/a b"]);
+	assert.ok(flags.indexOf("--model") < flags.indexOf("--chrome"));
+});
+
 test("default permission mode is not passed as a flag", async () => {
 	const { messages } = await run({
 		scenario: "basic",
@@ -389,14 +399,57 @@ test("cliSpawnSpec spawns .exe and posix binaries directly", () => {
 	}
 });
 
-test("cliSpawnSpec leaves the WSL wrapping unchanged", () => {
+// wsl.exe -- would hand the line to the distro's default shell to re-parse,
+// and bash, zsh and fish each read quotes differently. --exec runs a login sh
+// with the arguments as positional parameters instead, so no shell parses
+// them. Checked against a real wsl.exe with ;, $, backticks, quotes, a
+// trailing backslash, tabs and newlines.
+test("cliSpawnSpec runs WSL through --exec with the args out of any shell's reach", () => {
 	const spec = cliSpawnSpec(
-		{ cliPath: "claude", cwd: "C:\\vault", useWsl: true },
-		["--verbose"],
+		{ cliPath: "claude", cwd: "C:\\My Vault", useWsl: true },
+		["--verbose", "--settings", '{"sandbox":{"enabled":true}}', "it's $HOME"],
 		"win32"
 	);
 	assert.equal(spec.command, "wsl.exe");
-	assert.deepEqual(spec.args, ["--cd", "C:\\vault", "--", "claude", "--verbose"]);
+	assert.deepEqual(spec.args, [
+		"--cd",
+		"C:\\My Vault",
+		"--exec",
+		"sh",
+		"-lc",
+		'exec "claude" "$@"',
+		"sh",
+		"--verbose",
+		"--settings",
+		'{"sandbox":{"enabled":true}}',
+		"it's $HOME",
+	]);
 	assert.equal(spec.shell, false);
 	assert.equal(spec.cwd, undefined);
+});
+
+test("cliSpawnSpec keeps a WSL CLI path one word that still expands ~ and $VARS", () => {
+	const script = (cliPath) =>
+		cliSpawnSpec({ cliPath, cwd: "C:\\v", useWsl: true }, [], "win32").args[5];
+	assert.equal(script("~/.local/bin/claude"), 'exec ~/".local/bin/claude" "$@"');
+	assert.equal(script("$HOME/my tools/claude"), 'exec "$HOME/my tools/claude" "$@"');
+	assert.equal(script('/odd"`\\path'), 'exec "/odd\\"\\`\\\\path" "$@"');
+});
+
+test("cliSpawnSpec refuses to pass cmd.exe metacharacters to a .cmd shim", () => {
+	for (const arg of ["a&b", '{"a":1}', "%PATH%", "!x!", "a|b"])
+		assert.throws(
+			() => cliSpawnSpec({ cliPath: "C:\\npm\\claude.cmd", cwd: "C:\\v" }, [arg], "win32"),
+			/cmd\.exe would interpret it/,
+			arg
+		);
+});
+
+test("cliSpawnSpec keeps empty args and trailing backslashes intact through a .cmd shim", () => {
+	const spec = cliSpawnSpec(
+		{ cliPath: "C:\\npm\\claude.cmd", cwd: "C:\\v" },
+		["--system-prompt", "", "--add-dir", "C:\\My Notes\\", "--debug"],
+		"win32"
+	);
+	assert.deepEqual(spec.args, ["--system-prompt", '""', "--add-dir", '"C:\\My Notes\\\\"', "--debug"]);
 });

@@ -7,7 +7,7 @@ coding agent. Stated plainly so nothing about them is a surprise:
 
 | Capability | Where | Why |
 | --- | --- | --- |
-| Process execution | `node:child_process` in `src/protocol/client.ts`, `src/cli.ts`, `src/bash.ts` | Launching and talking to the `claude` CLI, detecting where it is installed, and running the `!` command you typed. `shell: false` with array arguments everywhere the platform allows; the two exceptions are documented under *Hardening choices* below. |
+| Process execution | `node:child_process` in `src/protocol/client.ts`, `src/cli.ts`, `src/bash.ts` | Launching and talking to the `claude` CLI, detecting where it is installed, and running the `!` command you typed. `shell: false` with array arguments everywhere the platform allows; the three exceptions are documented under *Hardening choices* below. |
 | Filesystem access outside the vault | `node:fs`'s `existsSync` in `src/cli.ts` | Probing a short list of standard CLI install paths under your home directory. Read-only, and the only paths tested are ones the plugin composes itself. The plugin writes nothing outside the vault; the *agent* can, with your approval, exactly as it could from a terminal. |
 | Vault enumeration | `getFiles` / `getMarkdownFiles` / `getAllLoadedFiles` in `src/suggest.ts`, `src/view.ts`, `src/settings.ts`, `src/mcp/vault-tools.ts` | `@`-mention completion, the transcript-folder suggester, and `obsidian_search`'s tag/property queries. These read Obsidian's index - paths, tags, frontmatter - not note bodies. |
 | Clipboard | `navigator.clipboard.writeText` in `src/view.ts` | The copy buttons on messages and tool results. **Write only.** The plugin calls no clipboard read API; pasted images reach it through a `paste` event the user triggered, which carries its own data. |
@@ -71,6 +71,28 @@ and every one of these except the clipboard depends on it.
   tool call (file edits, shell commands, web access) requires explicit
   approval in the chat. "Always allow" persists a scoped rule through Claude
   Code's own permission-rule mechanism.
+- **Profile launch options pass nothing unless you set them.** Each CLI
+  profile's *Claude in Chrome* and *Sandbox* default to *Claude Code default*,
+  where the panel adds no flag and your Claude Code settings decide.
+  - *Claude in Chrome* on: Claude can act in your browser with your logged-in
+    sessions. Which sites it may use is governed by the extension's own
+    per-site permissions; Claude Code's permission rules still apply to the
+    browser tools.
+  - *Sandbox* on: Claude Code runs shell commands inside an OS-enforced
+    boundary (files and hosts per your Claude Code settings) and, by its
+    default `sandbox.autoAllowBashIfSandboxed`, runs sandboxed commands
+    without a permission card. Fewer cards, inside a boundary - not a
+    weaker setting. Native Windows has no sandbox, so the option is not
+    offered there.
+  - *Additional arguments* are passed as typed. Flags the panel sets itself
+    (`--model`, `--resume`, `--permission-mode`, the stream-JSON and
+    `--dangerously-skip-permissions` flags, …) are refused, so the chat's
+    controls stay truthful. Anything else - including flags that widen what
+    Claude may do, such as `--allowedTools` or a `--settings` that grants
+    permissions - is your call, exactly as on a command line.
+  The profiles live in the *Claude Code CLI* settings group, which is
+  device-local by default, so a synced `data.json` does not carry them to
+  another device unless you choose to sync that group.
 - **Bypass mode is double-gated.** `bypassPermissions` is hidden unless
   enabled in settings (with a warning), and only then selectable per
   conversation.
@@ -127,13 +149,26 @@ and every one of these except the clipboard depends on it.
   platform allows - no shell string interpolation, no injection surface. The
   WSL CLI-detection probe (`wsl.exe -- sh -lc "command -v claude"`) uses a
   fixed command line with no interpolated input.
-  Two places involve a shell:
+  Three places involve a shell:
   - On native Windows, npm installs the CLI as a `claude.cmd` batch shim,
     which Node refuses to spawn shell-less (its CVE-2024-27980 hardening) -
     that one launch goes through `cmd.exe`, with a command line the plugin
     builds entirely itself: the quoted shim path plus fixed flags, the
-    configured model/effort and a session id. Nothing model-controlled is in
-    it. The exact shape is asserted in `tests/protocol.test.mjs`.
+    configured model/effort, a session id, and the profile's arguments. An
+    argument containing anything cmd.exe would act on (`"`, `%`, `&`, `|`,
+    `<`, `>`, `^`, a line break) is refused, not escaped. Nothing
+    model-controlled is in it. The exact shape is asserted in
+    `tests/protocol.test.mjs`.
+  - **Run via WSL**: the CLI starts as
+    `wsl.exe --cd <vault> --exec sh -lc 'exec "<cli>" "$@"' sh <args…>`.
+    `--exec` keeps the distro's default shell out of it - with `--`, that
+    shell would re-parse the whole line, and bash, zsh and fish each read
+    quotes differently - and the arguments reach `sh` as positional
+    parameters, which it never parses. Checked against a real `wsl.exe` with
+    arguments containing `;`, `$`, backticks, quotes, trailing backslashes,
+    tabs and newlines. Only the CLI path is shell text, so a configured `~/…`
+    path still expands; it comes from your settings or from detection, never
+    from the model.
   - The `!` shell escape, where the user's command is passed as a **single
     argv element** (`/bin/sh -c <command>`), never concatenated into a larger
     command line - so the shell sees exactly the text that was typed and

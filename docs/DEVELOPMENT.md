@@ -80,6 +80,7 @@ Obsidian-free modules into `tests/.build/` and the specs import from there:
 | `tests/conversation-list.test.mjs` | `src/conversation-list.ts` - column sections, sort orders, date buckets, filter |
 | `tests/mcp.test.mjs` | `src/mcp/server.ts` + `src/mcp/query.ts` - the handshake as a real CLI performs it, and the search grammar |
 | `tests/protocol.test.mjs` | `src/protocol/client.ts` end to end against `tests/fake-cli.mjs` |
+| `tests/cli-args.test.mjs` | `src/cli-args.ts` - argument parsing, refused flags, Chrome/sandbox flags, the `.cmd` guard |
 
 `tests/fake-cli.mjs` is a stand-in for the `claude` binary that speaks just
 enough of the stream-JSON protocol to exercise the client - spawn flags, NDJSON
