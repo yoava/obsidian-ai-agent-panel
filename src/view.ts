@@ -2195,13 +2195,19 @@ export class AgentPanelView extends ItemView {
 
 	/**
 	 * A command the panel answers itself. The usage family goes to the usage
-	 * service; the rest become a report
+	 * service, /clear opens a new conversation, and the rest become a report
 	 * card built from the CLI's control replies - live, with buttons, here;
 	 * recorded as Markdown, so restore, export and copy show it too.
 	 */
 	private runPanelCommand(tab: ChatTab, text: string, name: string, args: string): void {
 		if (name === "usage" || name === "usage-credits" || name === "extra-usage") {
 			this.runLocalUsageCommand(tab, text, name);
+			return;
+		}
+		if (name === "clear") {
+			// The CLI's own /clear would start a new session under this
+			// transcript, which would then resume the empty one.
+			if (tab.conversation || tab.session) this.newConversation();
 			return;
 		}
 		this.renderUserMessage(tab, text, null, false);

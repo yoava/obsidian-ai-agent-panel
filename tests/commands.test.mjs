@@ -57,6 +57,7 @@ const MCP = {
 
 test("parsePanelCommand matches only panel commands, with arguments", () => {
 	assert.deepEqual(parsePanelCommand("/context"), { name: "context", args: "" });
+	assert.deepEqual(parsePanelCommand("/clear"), { name: "clear", args: "" });
 	assert.deepEqual(parsePanelCommand("  /MCP reconnect  my server "), {
 		name: "mcp",
 		args: "reconnect  my server",

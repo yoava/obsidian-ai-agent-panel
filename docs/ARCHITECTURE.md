@@ -656,7 +656,9 @@ answer it renders nothing rather than erroring.
 ## Panel commands
 
 `/context`, `/mcp`, `/status`, `/memory`, `/hooks`, `/permissions`, `/skills`,
-`/chrome`, `/sandbox`, `/cost` and `/help` never reach the CLI as a turn.
+`/chrome`, `/sandbox`, `/cost` and `/help` never reach the CLI as a turn, and
+neither does `/clear`, which opens a new conversation - the CLI's own would
+start a new session under the transcript on screen.
 `handleSend` matches them with `parsePanelCommand` (`src/commands.ts`), and
 `buildReport` sends the read-only control request behind each one
 (`get_context_usage`, `mcp_status`, `get_status`, `get_memory_dialog`,

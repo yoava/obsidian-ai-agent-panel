@@ -50,6 +50,10 @@ Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
 - **`/` autocomplete shows what each command does.** Descriptions and
   argument hints come from Claude Code itself once a conversation has
   started.
+- **Fixed: `/clear` left the transcript resuming an empty session.** Sent to
+  Claude Code, it started a new session under the conversation on screen,
+  which from then on resumed that empty session. `/clear` now opens a new
+  conversation, as *New conversation* does; the old one stays in history.
 - **Fixed: `/usage` run while Claude was working was saved out of order.**
   The turn's reply is saved when the turn ends, so the usage card landed
   before it in a reopened or exported transcript. A command run mid-turn now

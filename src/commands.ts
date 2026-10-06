@@ -20,6 +20,7 @@ export interface PanelCommand {
 /** Commands answered here (or by the usage service); they never reach the model. */
 export const PANEL_COMMANDS: readonly PanelCommand[] = [
 	{ name: "chrome", description: "Show Claude in Chrome status" },
+	{ name: "clear", description: "Start a new conversation; this one stays in history" },
 	{ name: "context", description: "Show what is using the context window" },
 	{ name: "cost", description: "Show this conversation's token use and cost" },
 	{ name: "extra-usage", description: "Show extra-usage credit status" },
