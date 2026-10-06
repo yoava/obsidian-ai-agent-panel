@@ -1,6 +1,6 @@
 # Release notes
 
-## Unreleased
+## 0.5.0
 
 Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
 
@@ -21,6 +21,7 @@ Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
 - **Both toggles default to *Claude Code default***, which passes nothing and
   leaves the choice to your Claude Code settings (`/chrome`'s *Enabled by
   default*, `sandbox.enabled`) - existing profiles behave exactly as before.
+  The flags are verified against Claude Code 2.1.292, natively and in WSL.
 - **Changes reach open conversations** when you close settings: each restarts
   its CLI after the current turn and resumes where it was.
 - **WSL launches keep your default shell out of the arguments.** `wsl.exe --`
