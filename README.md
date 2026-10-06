@@ -237,8 +237,9 @@ npm run build  # type-check + production build
 ## Support
 
 The plugin is free and MIT-licensed, and it stays that way. If it saves you
-time, you can [buy me a coffee](https://buymeacoffee.com/yoava) - entirely
-optional, and no feature is ever gated behind it.
+time, you can [sponsor on GitHub](https://github.com/sponsors/yoava) or
+[buy me a coffee](https://buymeacoffee.com/yoava) - entirely optional, and no
+feature is ever gated behind it.
 
 ## License
 

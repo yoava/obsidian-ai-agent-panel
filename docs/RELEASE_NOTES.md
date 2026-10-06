@@ -35,6 +35,8 @@ Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
   quotes.** `!echo '$HOME'` printed your home directory instead of `$HOME`,
   because the distro's default shell read the command before `sh` did. It now
   runs through `wsl.exe --exec` too, so it behaves as in a terminal.
+- **GitHub Sponsors** joins Buy Me a Coffee as a funding link in Obsidian's
+  plugin list. Optional, as before; nothing is gated behind it.
 
 ### Development
 
