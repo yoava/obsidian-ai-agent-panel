@@ -170,9 +170,11 @@ and every one of these except the clipboard depends on it.
     path still expands; it comes from your settings or from detection, never
     from the model.
   - The `!` shell escape, where the user's command is passed as a **single
-    argv element** (`/bin/sh -c <command>`), never concatenated into a larger
-    command line - so the shell sees exactly the text that was typed and
-    nothing is re-parsed. Asserted in `tests/bash.test.mjs`.
+    argv element** (`/bin/sh -c <command>`; under WSL
+    `wsl.exe --exec sh -lc <command>`, so the distro's default shell does not
+    re-parse it first), never concatenated into a larger command line - so
+    the shell sees exactly the text that was typed and nothing is re-parsed.
+    Asserted in `tests/bash.test.mjs`.
 - No `innerHTML` / `outerHTML` / `eval` / dynamic `Function`. Model output is
   rendered via Obsidian's `MarkdownRenderer`, which strips scripts and
   dangerous HTML; everything else enters the DOM as text nodes.

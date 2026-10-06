@@ -34,7 +34,7 @@ test("WSL mode wraps the command the same way the CLI is launched", () => {
 		useWsl: true,
 	});
 	assert.equal(inv.command, "wsl.exe");
-	assert.deepEqual(inv.args, ["--cd", "C:/vault", "--", "sh", "-lc", "ls"]);
+	assert.deepEqual(inv.args, ["--cd", "C:/vault", "--exec", "sh", "-lc", "ls"]);
 	// wsl.exe translates --cd itself, so no host cwd is set.
 	assert.equal(inv.cwd, undefined);
 });

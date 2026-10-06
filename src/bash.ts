@@ -61,7 +61,9 @@ export function shellInvocation(command: string, options: ShellOptions): Invocat
 		return {
 			command: "wsl.exe",
 			// wsl.exe translates the Windows --cd path into the distro's mount.
-			args: ["--cd", options.cwd, "--", "sh", "-lc", command],
+			// --exec, not --: with -- the distro's default shell re-parses the
+			// whole line first, expanding `$x` inside the user's single quotes.
+			args: ["--cd", options.cwd, "--exec", "sh", "-lc", command],
 		};
 	if (platform === "win32")
 		return {

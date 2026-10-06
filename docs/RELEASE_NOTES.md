@@ -31,6 +31,10 @@ Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
   exactly as given. On a Windows npm install (`claude.cmd`), an argument
   cmd.exe would interpret is refused instead of passed, and empty arguments
   and paths ending in a backslash survive the trip.
+- **Fixed: the `!` escape under WSL expanded `$variables` inside single
+  quotes.** `!echo '$HOME'` printed your home directory instead of `$HOME`,
+  because the distro's default shell read the command before `sh` did. It now
+  runs through `wsl.exe --exec` too, so it behaves as in a terminal.
 
 ### Development
 
