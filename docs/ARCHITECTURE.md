@@ -653,6 +653,40 @@ running: there is deliberately no path that starts a CLI process just to draw
 the strip. Anthropic marks `get_usage` experimental, so a CLI that does not
 answer it renders nothing rather than erroring.
 
+## Panel commands
+
+`/context`, `/mcp`, `/status`, `/memory`, `/hooks`, `/permissions`, `/skills`,
+`/chrome`, `/sandbox`, `/cost` and `/help` never reach the CLI as a turn.
+`handleSend` matches them with `parsePanelCommand` (`src/commands.ts`), and
+`buildReport` sends the read-only control request behind each one
+(`get_context_usage`, `mcp_status`, `get_status`, `get_memory_dialog`,
+`get_hooks_listing`, `list_permission_rules`, `get_skills_dialog`,
+`get_chrome_dialog`, `get_sandbox_dialog`) through `ClaudeSession.control`,
+which spawns the CLI when the tab has none running - a spawn without a turn
+costs no tokens. `/cost` uses the panel's own totals plus `get_session_cost`
+only when a CLI is already running; `/help` needs no CLI.
+
+The builders in `src/commands.ts` (Obsidian-free, tested against captured
+replies) turn each reply into a `CommandReport`: title, lead line, an optional
+context meter, sections of tables or label/value pairs, notes and links. The
+view draws it with `renderReport` (`src/report-view.ts`) and records
+`reportMarkdown(report)` as an assistant message, so restore, export and copy
+show the same tables. Row buttons (the `/mcp` card's Reconnect / Enable /
+Disable) exist only on the live card: each sends its `mcp_reconnect` or
+`mcp_toggle` request, then the card rebuilds and the recorded Markdown is
+replaced. The panel's own `obsidian` server gets no buttons and is skipped by
+`/mcp … all`; its setting switches it. A command run mid-turn is drawn but
+not recorded, as the turn's text is recorded only when the turn ends. A tab whose CLI only a panel command
+started has no transcript to keep, so switching its profile disposes that
+session rather than pinning the old CLI. The replies are undocumented
+control-protocol payloads, so every
+field is checked; a reply missing the essential one, or a CLI that does not
+know the request, yields a card saying so.
+
+The initialize reply's `commands` (name, description, argument hint) feed the
+`/` autocomplete and `/help`; `system/init`'s names-only `slash_commands` is
+the fallback for CLIs that send no such list.
+
 ## File map
 
 | file | role |
@@ -681,6 +715,8 @@ answer it renders nothing rather than erroring.
 | `src/export.ts` | Markdown transcript exporter (patterned note names) |
 | `src/usage.ts` | plan-usage service, formatting, and detail modal |
 | `src/suggest.ts` | `@` file-mention and `/` slash-command autocompletes |
+| `src/commands.ts` | the panel's own slash commands: parsing, control replies → reports, report Markdown (no Obsidian imports - plain-Node tests) |
+| `src/report-view.ts` | draws a command report as a transcript card |
 | `src/icon.ts` | the plugin's vendor-neutral ribbon icon (chat bubble with a terminal prompt) |
 | `src/timers.ts` | `setTimer`/`clearTimer` - window-scoped timers with a fallback for the plain-Node test bundle |
 | `src/local-store.ts` | device-local storage reads, typed `unknown` instead of Obsidian's `any` |

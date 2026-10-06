@@ -6,6 +6,7 @@ import { HistoryStore } from "./history";
 import { AGENT_ICON, registerAgentIcon } from "./icon";
 import { loadLocalValue } from "./local-store";
 import { isCredibleResolution, isLearnableModel, type CliModel } from "./models";
+import type { SlashCommand } from "./suggest";
 import { UsageService } from "./usage";
 import {
 	AgentPanelSettingTab,
@@ -33,8 +34,10 @@ export default class AgentPanelPlugin extends Plugin {
 	declare checkpoints: CheckpointStore;
 	/** Auto-detect results, per profile id - detection is slow and stable. */
 	private detectedCli = new Map<string, DetectedCli>();
-	/** Last slash-command list a CLI session reported; seeds new views' "/" autocomplete. */
-	slashCommands: string[] | null = null;
+	/** Last command list a CLI session reported; seeds "/" autocomplete and /help. */
+	cliCommands: SlashCommand[] | null = null;
+	/** cliCommands came from an initialize reply, not system/init's bare names. */
+	cliCommandsDescribed = false;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();

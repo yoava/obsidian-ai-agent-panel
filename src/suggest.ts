@@ -6,6 +6,7 @@ import {
 	type App,
 	type TAbstractFile,
 } from "obsidian";
+import { PANEL_COMMANDS } from "./commands";
 
 const MAX_FILE_RESULTS = 8;
 
@@ -223,32 +224,17 @@ export class FileMentionSuggest extends TextareaSuggest<TAbstractFile> {
 export interface SlashCommand {
 	name: string;
 	description?: string;
+	argumentHint?: string;
 }
 
 /**
- * Commands the plugin answers itself (see the view's local-command handling)
- * - they never reach the CLI or the model, so they cost nothing.
- */
-export const LOCAL_USAGE_COMMANDS = ["usage", "usage-credits", "extra-usage"] as const;
-
-/**
- * Built-in commands the CLI supports over stream-JSON, shown until the
- * session's init message reports the real list. Also decorates CLI-reported
- * names with descriptions.
+ * CLI commands shown until a session reports the real list (names without a
+ * description of their own borrow these).
  */
 const BUILTIN_DESCRIPTIONS: Record<string, string> = {
-	compact: "Summarize the conversation to free up context",
-	context: "Show what is using up the context window",
-	cost: "Show total cost and duration of this session",
+	compact: "Free up context by summarizing the conversation so far",
 	init: "Create a CLAUDE.md with codebase documentation",
-	"pr-comments": "Fetch comments from a GitHub pull request",
-	"release-notes": "Show Claude Code release notes",
-	review: "Review a GitHub pull request",
 	"security-review": "Security review of pending changes",
-	todos: "List current todo items",
-	usage: "Show plan usage limits (answered by the plugin - no tokens)",
-	"usage-credits": "Show extra-usage credit status (answered by the plugin)",
-	"extra-usage": "Show extra-usage credit status (answered by the plugin)",
 };
 
 /**
@@ -257,18 +243,13 @@ const BUILTIN_DESCRIPTIONS: Record<string, string> = {
  * whatever the CLI reports (custom commands and skills included).
  */
 export class SlashCommandSuggest extends TextareaSuggest<SlashCommand> {
-	private commands: SlashCommand[] = Object.entries(BUILTIN_DESCRIPTIONS).map(
-		([name, description]) => ({ name, description })
+	private commands = withPanelCommands(
+		Object.entries(BUILTIN_DESCRIPTIONS).map(([name, description]) => ({ name, description }))
 	);
 
-	/**
-	 * Replace the list with the CLI-reported one (from the init message),
-	 * keeping the plugin-answered usage commands in the list.
-	 */
-	setCommands(names: string[]): void {
-		this.commands = [...new Set([...names, ...LOCAL_USAGE_COMMANDS])]
-			.map((name) => ({ name, description: BUILTIN_DESCRIPTIONS[name] }))
-			.sort((a, b) => a.name.localeCompare(b.name));
+	/** Replace the CLI part of the list with what a session reported. */
+	setCommands(commands: SlashCommand[]): void {
+		this.commands = withPanelCommands(commands);
 		if (this.isOpen) this.update();
 	}
 
@@ -303,7 +284,24 @@ export class SlashCommandSuggest extends TextareaSuggest<SlashCommand> {
 		const name = el.createSpan({ cls: "ai-agent-panel-suggest-name" });
 		name.createSpan({ cls: "ai-agent-panel-suggest-slash", text: "/" });
 		name.appendText(cmd.name);
+		if (cmd.argumentHint)
+			name.createSpan({ cls: "ai-agent-panel-suggest-hint", text: ` ${cmd.argumentHint}` });
 		if (cmd.description)
 			el.createSpan({ cls: "ai-agent-panel-suggest-detail", text: cmd.description });
 	}
+}
+
+/**
+ * The CLI's commands plus the panel's own, sorted. The panel's description
+ * wins: a name both have (/context, /usage) is answered by the panel.
+ */
+function withPanelCommands(cli: SlashCommand[]): SlashCommand[] {
+	const byName = new Map<string, SlashCommand>();
+	for (const cmd of cli)
+		byName.set(cmd.name, {
+			...cmd,
+			description: cmd.description ?? BUILTIN_DESCRIPTIONS[cmd.name],
+		});
+	for (const cmd of PANEL_COMMANDS) byName.set(cmd.name, { ...cmd });
+	return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
 }

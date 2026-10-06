@@ -29,6 +29,9 @@ and every one of these except the clipboard depends on it.
   the macOS Keychain, never holds an access token, and opens no socket. The
   trade-off is that plan usage is only available while a session is running -
   by design, since nothing here will start a CLI process just to draw a strip.
+  The panel's info commands (`/context`, `/mcp`, `/status`, …) use the same
+  pipe and read-only control requests; unlike the usage strip they start the
+  CLI if the conversation has none running, because you asked for them.
   Anthropic marks `get_usage` experimental, so a CLI that does not answer it
   simply shows no usage rather than erroring. The `fundingUrl` in
   `manifest.json` is not an exception to this: Obsidian renders it as a link in
@@ -93,6 +96,15 @@ and every one of these except the clipboard depends on it.
   The profiles live in the *Claude Code CLI* settings group, which is
   device-local by default, so a synced `data.json` does not carry them to
   another device unless you choose to sync that group.
+- **Command cards are saved like the rest of the transcript.** `/status`
+  shows your account's email and organization and `/memory` and `/hooks`
+  show paths and hook commands; a card is stored in the conversation history
+  and, with export on, in the exported note. `/mcp`'s Enable and Disable
+  buttons, and `/mcp enable|disable <server>|all`, change which MCP servers
+  Claude Code loads, and Claude Code records that in its own configuration
+  exactly as `/mcp` in a terminal does; Reconnect only reconnects. The panel's
+  own `obsidian` server is left out - its setting is the switch. Nothing else
+  a card offers changes state.
 - **Bypass mode is double-gated.** `bypassPermissions` is hidden unless
   enabled in settings (with a warning), and only then selectable per
   conversation.

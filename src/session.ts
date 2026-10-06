@@ -181,6 +181,18 @@ export class ClaudeSession {
 		return client;
 	}
 
+	/**
+	 * A control request outside any turn, for the panel's own slash commands.
+	 * Spawns the CLI when it is not running; that costs no tokens.
+	 */
+	async control(
+		request: { subtype: string; [key: string]: unknown },
+		timeoutMs?: number
+	): Promise<unknown> {
+		if (this.disposed) throw new Error("Session disposed");
+		return this.ensureClient().controlRequest(request, timeoutMs);
+	}
+
 	async interrupt(): Promise<void> {
 		if (this.client?.running) await this.client.interrupt();
 	}

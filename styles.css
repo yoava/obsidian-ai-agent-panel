@@ -677,6 +677,132 @@
 	overflow-y: auto;
 }
 
+/* Tables in replies and command reports (/context, /mcp, …). One style for
+   the live card and the Markdown a restored transcript renders. ---------------- */
+
+/* Block display lets a table too wide for the pane scroll instead of
+   squeezing its columns. */
+.ai-agent-panel-msg-assistant table {
+	display: block;
+	max-width: 100%;
+	overflow-x: auto;
+	border-collapse: collapse;
+	margin: var(--size-2-2) 0;
+	font-size: var(--font-ui-small);
+}
+
+/* break-word, not the message's "anywhere": words keep their width, so a
+   narrow pane scrolls the table rather than splitting names mid-letter. */
+.ai-agent-panel-msg-assistant th,
+.ai-agent-panel-msg-assistant td {
+	border: 1px solid var(--background-modifier-border);
+	padding: var(--size-2-1) var(--size-4-2);
+	text-align: left;
+	vertical-align: top;
+	overflow-wrap: break-word;
+}
+
+.ai-agent-panel-msg-assistant th {
+	font-weight: var(--font-semibold);
+	background-color: var(--background-secondary);
+}
+
+.ai-agent-panel-report > p {
+	margin: var(--size-2-2) 0;
+}
+
+.ai-agent-panel-report > p:first-child {
+	margin-top: 0;
+}
+
+.ai-agent-panel-report-dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	margin-right: var(--size-2-2);
+	background-color: var(--text-faint);
+}
+
+.ai-agent-panel-report-dot.is-ok {
+	background-color: var(--color-green);
+}
+
+.ai-agent-panel-report-dot.is-warn {
+	background-color: var(--color-orange);
+}
+
+.ai-agent-panel-report-dot.is-error {
+	background-color: var(--color-red);
+}
+
+.ai-agent-panel-report-actions {
+	white-space: nowrap;
+}
+
+.ai-agent-panel-report-actions button,
+.ai-agent-panel-report-more {
+	font-size: var(--font-ui-smaller);
+	padding: 0 var(--size-4-2);
+	height: auto;
+	min-height: 1.8em;
+}
+
+.ai-agent-panel-report-actions button + button {
+	margin-left: var(--size-2-2);
+}
+
+.ai-agent-panel-report-meter {
+	display: flex;
+	height: 10px;
+	margin: var(--size-2-3) 0 var(--size-2-2);
+	border-radius: 5px;
+	overflow: hidden;
+	background-color: var(--background-modifier-border);
+}
+
+.ai-agent-panel-report-segment {
+	height: 100%;
+	min-width: 2px;
+}
+
+.ai-agent-panel-report-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-2-1) var(--size-4-3);
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.ai-agent-panel-report-swatch {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	margin-right: var(--size-2-2);
+	border-radius: 2px;
+}
+
+.ai-agent-panel-report .is-c0 { background-color: var(--color-blue); }
+.ai-agent-panel-report .is-c1 { background-color: var(--color-purple); }
+.ai-agent-panel-report .is-c2 { background-color: var(--color-orange); }
+.ai-agent-panel-report .is-c3 { background-color: var(--color-green); }
+.ai-agent-panel-report .is-c4 { background-color: var(--color-cyan); }
+.ai-agent-panel-report .is-c5 { background-color: var(--color-pink); }
+
+/* Held back (the autocompact buffer): not used, not free either. */
+.ai-agent-panel-report .is-reserved {
+	background: repeating-linear-gradient(
+		45deg,
+		var(--text-faint) 0 2px,
+		transparent 2px 5px
+	);
+}
+
+.ai-agent-panel-report-note {
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
 /* Tool cards ---------------------------------------------------------------- */
 
 .ai-agent-panel-tool {
@@ -1608,6 +1734,10 @@
 
 .ai-agent-panel-suggest-slash {
 	color: var(--text-muted);
+}
+
+.ai-agent-panel-suggest-hint {
+	color: var(--text-faint);
 }
 
 .ai-agent-panel-suggest-detail {

@@ -36,6 +36,20 @@ Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
   quotes.** `!echo '$HOME'` printed your home directory instead of `$HOME`,
   because the distro's default shell read the command before `sh` did. It now
   runs through `wsl.exe --exec` too, so it behaves as in a terminal.
+- **Claude Code's info commands, answered in the panel.** `/context`,
+  `/mcp`, `/status`, `/memory`, `/hooks`, `/permissions`, `/skills`,
+  `/chrome`, `/sandbox`, `/cost` and `/help` now render as cards in the chat
+  instead of reaching Claude Code as a prompt - where most of them came back
+  as plain text, a pointer to the terminal, or "isn't available in this
+  environment". `/context` draws the window as a bar by category; `/mcp`
+  lists every server with its status and has Reconnect / Enable / Disable
+  buttons (or type `/mcp disable <server>`). The data comes from Claude
+  Code's own control requests - no turn, no tokens - and starts the CLI if
+  the conversation has none running yet. Verified against Claude Code
+  2.1.292.
+- **`/` autocomplete shows what each command does.** Descriptions and
+  argument hints come from Claude Code itself once a conversation has
+  started.
 - **Fixed: the permission control showed *Ask* while Claude Code ran in
   another mode.** With `permissions.defaultMode` set in your Claude Code
   settings, the CLI started in that mode but the control under the composer

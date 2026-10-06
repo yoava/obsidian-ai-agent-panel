@@ -319,6 +319,17 @@ export class ClaudeClient {
 		};
 	}
 
+	/**
+	 * Any other control request - the read-only ones behind the panel's own
+	 * slash commands (src/commands.ts). The reply is untyped; callers check it.
+	 */
+	controlRequest(
+		request: { subtype: string; [key: string]: unknown },
+		timeoutMs = 30_000
+	): Promise<unknown> {
+		return this.request(request, timeoutMs);
+	}
+
 	/** Cancel one background task. Unknown or already-stopped ids succeed. */
 	async stopTask(taskId: string): Promise<void> {
 		await this.request({ subtype: "stop_task", task_id: taskId }, 15_000);

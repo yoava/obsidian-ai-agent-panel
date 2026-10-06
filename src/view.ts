@@ -30,7 +30,28 @@ import {
 	type ConversationEntry,
 	type ConversationSections,
 } from "./conversation-list";
-import { FileMentionSuggest, LOCAL_USAGE_COMMANDS, SlashCommandSuggest } from "./suggest";
+import { FileMentionSuggest, SlashCommandSuggest } from "./suggest";
+import {
+	chromeReport,
+	contextReport,
+	costReport,
+	formatTokens,
+	helpReport,
+	hooksReport,
+	mcpActionRequests,
+	mcpReport,
+	memoryReport,
+	parseCliCommands,
+	parsePanelCommand,
+	permissionsReport,
+	reportMarkdown,
+	sandboxReport,
+	skillsReport,
+	statusReport,
+	type CommandReport,
+	type ReportAction,
+} from "./commands";
+import { renderReport } from "./report-view";
 import {
 	MIN_USAGE_REFRESH_SECONDS,
 	cliPermissionMode,
@@ -40,7 +61,7 @@ import {
 } from "./settings";
 import { editTargetPath, isEditTool, planEdit, vaultRelativePath } from "./edits";
 import { formatShellResultForChat, runShellCommand, type ShellResult } from "./bash";
-import { profileLaunchArgs } from "./cli-args";
+import { profileLaunchArgs, sandboxAvailable } from "./cli-args";
 import { McpServer } from "./mcp/server";
 import { createVaultTools } from "./mcp/vault-tools";
 import {
@@ -585,7 +606,7 @@ export class AgentPanelView extends ItemView {
 		// they consume Enter/Tab/arrows via stopImmediatePropagation.
 		this.mentionSuggest = new FileMentionSuggest(this.app, this.inputEl, composer);
 		this.slashSuggest = new SlashCommandSuggest(this.inputEl, composer);
-		if (this.plugin.slashCommands) this.slashSuggest.setCommands(this.plugin.slashCommands);
+		if (this.plugin.cliCommands) this.slashSuggest.setCommands(this.plugin.cliCommands);
 		this.inputEl.addEventListener("keydown", (evt) => {
 			if (evt.key === "Enter" && !evt.shiftKey && !evt.isComposing) {
 				evt.preventDefault();
@@ -1973,12 +1994,13 @@ export class AgentPanelView extends ItemView {
 		const text = this.inputEl.value.trim();
 		if (!text && tab.attachments.length === 0) return;
 
-		// Usage commands are answered by the plugin itself: sending them to the
-		// CLI would hand them to the model as plain text and burn tokens.
-		const command = /^\/([\w-]+)(?:\s|$)/.exec(text)?.[1]?.toLowerCase();
-		if (command && (LOCAL_USAGE_COMMANDS as readonly string[]).includes(command)) {
+		// Commands the panel answers itself (src/commands.ts): over stream-JSON
+		// the CLI would answer them in plain text, refuse them, or hand them to
+		// the model and burn tokens.
+		const command = parsePanelCommand(text);
+		if (command) {
 			this.inputEl.value = "";
-			this.runLocalUsageCommand(tab, text, command);
+			this.runPanelCommand(tab, text, command.name, command.args);
 			return;
 		}
 
@@ -1997,14 +2019,7 @@ export class AgentPanelView extends ItemView {
 		// with them (or queues them for the next turn, depending on version).
 		const queued = tab.session?.busy === true;
 
-		if (!tab.session) {
-			// Share one createSession() across concurrent sends (a double Enter
-			// while the CLI path resolves) so we never spawn a second, orphaned
-			// process that the first send's tab.session assignment would leak.
-			const created = await (tab.sessionInit ??= this.createSession(tab));
-			tab.sessionInit = null;
-			if (!created || tab.session === null) return;
-		}
+		if (!(await this.ensureSession(tab))) return;
 
 		// Steering messages are short corrections - skip the context block.
 		const context = queued ? null : this.buildContext(tab);
@@ -2152,6 +2167,162 @@ export class AgentPanelView extends ItemView {
 			.addEventListener("click", () => {
 				this.appendToInput(formatShellResultForChat(result));
 			});
+	}
+
+	/**
+	 * The tab's session, created if it has none (the CLI spawns on first use).
+	 * Null when it cannot be - createSession has shown why.
+	 */
+	private async ensureSession(tab: ChatTab): Promise<ClaudeSession | null> {
+		if (!this.tabs.includes(tab)) return null;
+		if (!tab.session) {
+			// Share one createSession() across concurrent callers (a double Enter
+			// while the CLI path resolves) so we never spawn a second, orphaned
+			// process that the first caller's tab.session assignment would leak.
+			const created = await (tab.sessionInit ??= this.createSession(tab));
+			tab.sessionInit = null;
+			if (!created) return null;
+			// Closed while the CLI path resolved: nothing would ever dispose it.
+			if (!this.tabs.includes(tab)) {
+				// createSession assigned it; TypeScript still narrows to null here.
+				(tab.session as ClaudeSession | null)?.dispose();
+				tab.session = null;
+				return null;
+			}
+		}
+		return tab.session;
+	}
+
+	/**
+	 * A command the panel answers itself. The usage family goes to the usage
+	 * service; the rest become a report
+	 * card built from the CLI's control replies - live, with buttons, here;
+	 * recorded as Markdown, so restore, export and copy show it too.
+	 */
+	private runPanelCommand(tab: ChatTab, text: string, name: string, args: string): void {
+		if (name === "usage" || name === "usage-credits" || name === "extra-usage") {
+			this.runLocalUsageCommand(tab, text, name);
+			return;
+		}
+		this.renderUserMessage(tab, text, null, false);
+		// Mid-turn, the turn's own text is recorded only when it finishes, so a
+		// card recorded now would land out of order - it stays on screen only.
+		const midTurn = tab.session?.busy === true;
+		if (!midTurn) this.record(tab, { kind: "user", text });
+		const conversation = tab.conversation;
+		const card = tab.messagesEl.createDiv({ cls: "ai-agent-panel-msg-assistant" });
+		card.setText("Loading…");
+		this.scrollToBottom(tab, true);
+
+		const stored: StoredMessage = { kind: "assistant", text: "" };
+		let recorded = midTurn;
+		const load = (commandArgs: string) =>
+			this.buildReport(tab, name, commandArgs).catch(
+				(err): CommandReport => ({
+					title: `/${name}`,
+					lead: err instanceof Error ? err.message : String(err),
+					sections: [],
+				})
+			);
+		const show = (report: CommandReport) => {
+			renderReport(card, report, (action, button) => void act(action, button));
+			const markdown = reportMarkdown(report);
+			addCopyButton(card, () => markdown);
+			stored.text = markdown;
+			// Deleted from history meanwhile: recording would start a new one.
+			if (tab.conversation !== conversation) return;
+			if (!recorded) {
+				recorded = true;
+				this.record(tab, stored);
+			} else if (conversation) this.plugin.history.queueSave(conversation);
+		};
+		const act = async (action: ReportAction, button: HTMLButtonElement) => {
+			button.disabled = true;
+			try {
+				const session = await this.ensureSession(tab);
+				// Connecting a server can take a while.
+				await session?.control(action.request, 60_000);
+			} catch (err) {
+				if (!this.tabs.includes(tab)) return;
+				new Notice(`${action.label} failed: ${err instanceof Error ? err.message : String(err)}`);
+			}
+			if (this.tabs.includes(tab)) show(await load(""));
+		};
+		void load(args).then((report) => {
+			show(report);
+			this.scrollToBottom(tab, true);
+		});
+	}
+
+	/** One panel command's report. Throws with a message meant for the card. */
+	private async buildReport(tab: ChatTab, name: string, args: string): Promise<CommandReport> {
+		if (name === "help")
+			return helpReport(this.plugin.cliCommands, this.plugin.settings.enableBashMode);
+		if (name === "cost") {
+			// Only an already running CLI has numbers of its own; not worth a spawn.
+			const live = tab.session?.running ? tab.session : null;
+			const reply = await live?.control({ subtype: "get_session_cost" }).catch(() => null);
+			const cliText = (reply as { text?: unknown } | null | undefined)?.text;
+			return costReport(tab.usage, typeof cliText === "string" ? cliText : null);
+		}
+		const session = await this.ensureSession(tab);
+		if (!session) throw new Error("Claude Code did not start - see the error above.");
+		const ask = async (request: { subtype: string; [key: string]: unknown }) => {
+			try {
+				return await session.control(request, 60_000);
+			} catch (err) {
+				const message = err instanceof Error ? err.message : String(err);
+				throw new Error(`Claude Code could not answer: ${message}. Updating it may help.`);
+			}
+		};
+		const settings = this.plugin.settings;
+		const profile = profileById(settings, session.profileId) ?? defaultProfile(settings);
+		switch (name) {
+			case "context":
+				return contextReport(await ask({ subtype: "get_context_usage" }));
+			case "mcp": {
+				if (args) {
+					const plan = mcpActionRequests(args, await ask({ subtype: "mcp_status" }));
+					if ("error" in plan) throw new Error(plan.error);
+					for (const request of plan.requests) await ask(request);
+				}
+				return mcpReport(await ask({ subtype: "mcp_status" }));
+			}
+			case "status":
+				return statusReport(await ask({ subtype: "get_status" }), this.panelStatusRows(tab, session));
+			case "memory":
+				return memoryReport(await ask({ subtype: "get_memory_dialog" }));
+			case "hooks":
+				return hooksReport(await ask({ subtype: "get_hooks_listing" }));
+			case "permissions":
+				return permissionsReport(await ask({ subtype: "list_permission_rules" }));
+			case "skills":
+				return skillsReport(await ask({ subtype: "get_skills_dialog" }));
+			case "chrome":
+				return chromeReport(await ask({ subtype: "get_chrome_dialog" }), profile.chrome);
+			case "sandbox":
+				return sandboxReport(
+					await ask({ subtype: "get_sandbox_dialog" }),
+					profile.sandbox,
+					sandboxAvailable(session.launchTarget.useWsl)
+				);
+		}
+		throw new Error(`/${name} is not answered by the panel.`);
+	}
+
+	/** The panel's own rows at the top of /status. */
+	private panelStatusRows(tab: ChatTab, session: ClaudeSession): Array<[string, string]> {
+		const settings = this.plugin.settings;
+		const profile = profileById(settings, session.profileId) ?? defaultProfile(settings);
+		const target = session.launchTarget;
+		const rows: Array<[string, string]> = [
+			["Plugin", `AI Agent Panel ${this.plugin.manifest.version}`],
+			["Profile", profile.name || "Unnamed"],
+			["CLI", `${target.cliPath}${target.useWsl ? " (in WSL)" : ""}`],
+			["Permission mode", this.shownMode(tab).label],
+		];
+		if (tab.selectedEffort) rows.push(["Effort", effortLabel(tab.selectedEffort)]);
+		return rows;
 	}
 
 	/**
@@ -2345,6 +2516,12 @@ export class AgentPanelView extends ItemView {
 					// the picker offers exactly that list from now on.
 					const models = parseCliModels((info as { models?: unknown }).models);
 					if (models) void this.plugin.rememberCliModels(profile.id, models);
+					const commands = parseCliCommands(info.commands);
+					if (commands) {
+						this.plugin.cliCommands = commands;
+						this.plugin.cliCommandsDescribed = true;
+						this.slashSuggest.setCommands(commands);
+					}
 					const mode = info.current_permission_mode;
 					const session = tab.session;
 					// A mode picked while this reply was in flight is newer than it.
@@ -2600,9 +2777,11 @@ export class AgentPanelView extends ItemView {
 							init.model
 						);
 					}
-					if (init.slash_commands?.length) {
-						this.plugin.slashCommands = init.slash_commands;
-						this.slashSuggest.setCommands(init.slash_commands);
+					// Names only - the initialize reply's list (with descriptions) wins
+					// when the CLI sent one.
+					if (init.slash_commands?.length && !this.plugin.cliCommandsDescribed) {
+						this.plugin.cliCommands = init.slash_commands.map((name) => ({ name }));
+						this.slashSuggest.setCommands(this.plugin.cliCommands);
 					}
 					if (tab.conversation) {
 						if (init.session_id) tab.conversation.sessionId = init.session_id;
@@ -4680,6 +4859,14 @@ export class AgentPanelView extends ItemView {
 					.onClick(() => {
 						if (profile.id === current) return;
 						tab.selectedProfileId = profile.id;
+						// A session only a panel command started (/status, /mcp)
+						// has no transcript to keep: start over on the new profile.
+						const session = tab.session;
+						if (session && !session.sessionId && !tab.resumeSessionId && !session.busy) {
+							session.dispose();
+							tab.session = null;
+							tab.cliMode = null;
+						}
 						this.updateConfigBar();
 						// A live session keeps its process (and its transcript, which
 						// the other CLI could not resume); the choice lands on the
@@ -4996,13 +5183,6 @@ function numberOrUndefined(value: unknown): number | undefined {
 
 function asString(value: unknown): string | undefined {
 	return typeof value === "string" && value !== "" ? value : undefined;
-}
-
-/** "12.1k" / "1.2M" - compact enough for a one-line meter. */
-function formatTokens(tokens: number): string {
-	if (tokens < 1000) return String(tokens);
-	if (tokens < 1_000_000) return `${(tokens / 1000).toFixed(1)}k`;
-	return `${(tokens / 1_000_000).toFixed(2)}M`;
 }
 
 /** "Research notes" → "Research notes (branch)", without stacking suffixes. */
