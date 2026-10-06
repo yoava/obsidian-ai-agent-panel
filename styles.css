@@ -1954,3 +1954,18 @@
 	width: 100%;
 	min-width: 240px;
 }
+
+/* Images a tool returned (browser screenshots) ----------------------------------- */
+
+.ai-agent-panel-tool-images {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-2);
+	margin-top: var(--size-2-2);
+}
+
+.ai-agent-panel-tool-image {
+	max-width: 100%;
+	border-radius: var(--radius-s);
+	border: 1px solid var(--background-modifier-border);
+}

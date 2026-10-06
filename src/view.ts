@@ -2744,7 +2744,7 @@ export class AgentPanelView extends ItemView {
 				const row = thread.bodyEl.createDiv({ cls: "ai-agent-panel-subagent-tool" });
 				const iconEl = row.createSpan();
 				setIcon(iconEl, toolIcon(use.name));
-				row.createSpan({ cls: "ai-agent-panel-tool-name", text: use.name });
+				row.createSpan({ cls: "ai-agent-panel-tool-name", text: toolDisplayName(use.name) });
 				const summary = summarizeToolInput(use.name, use.input);
 				if (summary)
 					row.createSpan({ cls: "ai-agent-panel-tool-summary", text: summary });
@@ -2941,6 +2941,7 @@ export class AgentPanelView extends ItemView {
 			// An edit's outcome is its diff, not its "the file has been updated"
 			// text - the raw result adds nothing next to the real change.
 			this.applyToolOutcome(card, pending && !isError ? null : preview, isError);
+			this.renderToolImages(card, result.content);
 			if (pending && !isError)
 				void this.settleEditCard(tab, card, stored?.name ?? "", stored, pending);
 			if (stored) {
@@ -2963,6 +2964,26 @@ export class AgentPanelView extends ItemView {
 			card.bodyEl
 				.createEl("pre", { cls: "ai-agent-panel-tool-result" })
 				.setText(preview.slice(0, MAX_PREVIEW_CHARS));
+		}
+	}
+
+	/**
+	 * Images a tool returned - a browser screenshot, above all. Shown live only;
+	 * the stored transcript keeps the text, as it does for pasted images.
+	 */
+	private renderToolImages(card: ToolCard, content: ToolResultBlock["content"]): void {
+		if (!Array.isArray(content)) return;
+		let strip: HTMLElement | null = null;
+		for (const block of content) {
+			const source = block.type === "image" ? block.source : null;
+			if (!source || typeof source !== "object") continue;
+			const { type, media_type: mediaType, data } = source as Record<string, unknown>;
+			if (type !== "base64" || typeof data !== "string") continue;
+			if (typeof mediaType !== "string" || !IMAGE_MEDIA_TYPES.has(mediaType)) continue;
+			strip ??= card.bodyEl.createDiv({ cls: "ai-agent-panel-tool-images" });
+			const img = strip.createEl("img", { cls: "ai-agent-panel-tool-image" });
+			img.src = `data:${mediaType};base64,${data}`;
+			img.alt = "Tool result image";
 		}
 	}
 
@@ -3983,7 +4004,7 @@ export class AgentPanelView extends ItemView {
 		const headerEl = rootEl.createDiv({ cls: "ai-agent-panel-tool-header" });
 		const iconEl = headerEl.createSpan();
 		setIcon(iconEl, toolIcon(name));
-		headerEl.createSpan({ cls: "ai-agent-panel-tool-name", text: name });
+		headerEl.createSpan({ cls: "ai-agent-panel-tool-name", text: toolDisplayName(name) });
 		const summary = summarizeToolInput(name, input);
 		if (summary)
 			headerEl.createSpan({ cls: "ai-agent-panel-tool-summary", text: summary });
@@ -4931,7 +4952,27 @@ function obsidianToolPrompt(
 	}
 }
 
+/** Name of Claude Code's browser MCP server; tools appear as `mcp__claude-in-chrome__…`. */
+const CHROME_MCP_SERVER = "claude-in-chrome";
+
+/** MCP servers whose tool cards carry a friendlier name than the server id. */
+const MCP_SERVER_LABELS: Record<string, string> = {
+	[CHROME_MCP_SERVER]: "Chrome",
+	[OBSIDIAN_MCP_SERVER]: "Obsidian",
+};
+
+/** `mcp__claude-in-chrome__navigate` → "Chrome · navigate"; other names unchanged. */
+function toolDisplayName(name: string): string {
+	const match = /^mcp__(.+?)__(.+)$/.exec(name);
+	if (!match) return name;
+	const [, server, tool] = match;
+	// Our own tools repeat the server in their names (obsidian_rename).
+	const bare = tool.startsWith(`${server}_`) ? tool.slice(server.length + 1) : tool;
+	return `${MCP_SERVER_LABELS[server] ?? server} · ${bare}`;
+}
+
 function toolIcon(name: string): string {
+	if (name.startsWith(`mcp__${CHROME_MCP_SERVER}__`)) return "globe";
 	if (name === "Bash") return "terminal";
 	if (name === "AskUserQuestion") return "help-circle";
 	if (name === "Read") return "file-text";

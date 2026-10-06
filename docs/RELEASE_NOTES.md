@@ -7,7 +7,9 @@ Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
 - **Claude in Chrome.** A CLI profile can turn Claude Code's browser
   integration on, so Claude opens pages, clicks, types and reads them in your
   Chrome or Edge, signed in as you. Needs the Claude in Chrome extension and a
-  claude.ai login; Claude Code does not support it in WSL.
+  claude.ai login; Claude Code does not support it in WSL. Browser actions get
+  readable cards (*Chrome · navigate*), and screenshots a tool returns show in
+  its card.
 - **Sandbox.** A profile can switch Claude Code's Bash sandbox on or off for
   the conversations it runs. On macOS, Linux and WSL2 only - native Windows
   has no sandbox, so the setting is hidden there.

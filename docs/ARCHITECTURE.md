@@ -163,6 +163,9 @@ doesn't match the expected shape, it falls back to the generic card.
   Obsidian's `MarkdownRenderer` (sanitized by Obsidian).
 - `tool_use` blocks become activity cards keyed by tool-use id;
   `tool_result` blocks update their card (status, collapsible output preview).
+  Base64 image blocks in a result (browser screenshots) render in the card,
+  live only - history keeps the text. MCP tools are titled by server and tool
+  (`mcp__claude-in-chrome__navigate` → *Chrome · navigate*).
 - **Edit tools render diffs instead of JSON** (see below).
 - Thinking blocks render as a collapsed `<details>`.
 - Links get no behavior from `MarkdownRenderer` outside a Markdown view, so
