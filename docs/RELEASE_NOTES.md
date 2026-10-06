@@ -1,5 +1,18 @@
 # Release notes
 
+## Unreleased
+
+### Development
+
+- **TypeScript 6.0.** typescript-eslint 8.71 supports it and its type-aware
+  rules no longer misreport, so the toolchain moves off 5.9; `main.js` builds
+  byte-identical. TypeScript 7 stays out until typescript-eslint supports it.
+- **`moment` pinned to 2.31** through `overrides`: the `obsidian` typings
+  package pulls in a version with a path-traversal advisory. Dev-only - the
+  plugin uses Obsidian's own `moment` at runtime - but the full dependency
+  tree audits clean again.
+- In-range dev dependency updates (ESLint 10.12, typescript-eslint 8.71).
+
 ## 0.4.0
 
 Opus 5.5 support, and one less thing that waits on a plugin release.

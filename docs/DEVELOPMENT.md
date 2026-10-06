@@ -34,11 +34,19 @@ release, so directory findings are reproducible locally and CI fails on a
 regression. `eslint.config.mjs` ignores the build output, the bundled test
 build, and `graphify-out/`.
 
-The devDependency is pinned to `typescript@^5.9` **for the linter's sake**:
-typescript-eslint's type-aware rules crash under TypeScript 7
-(`TypeError: Cannot read properties of undefined (reading 'Intrinsic')` inside
-`ts-api-utils`). Since `tsc` is only a type-checker here, this has no effect on
-`main.js` - the released bundle still reproduces byte-for-byte.
+The devDependency is pinned to `typescript@~6.0` **for the linter's sake**:
+typescript-eslint supports TypeScript below 6.1, and its type-aware rules crash
+under TypeScript 7 (`TypeError: Cannot read properties of undefined (reading
+'Intrinsic')` inside `ts-api-utils`). Move to 6.1 or 7 when typescript-eslint's
+`typescript` peer range admits it (`npm view typescript-eslint
+peerDependencies`). Since `tsc` is only a type-checker here, this has no effect
+on `main.js` - the released bundle still reproduces byte-for-byte.
+
+`package.json` `overrides` pins `moment` to a patched release: the `obsidian`
+typings package depends on an exact `moment` with an advisory. Only its types
+are used - at runtime the plugin gets Obsidian's own `moment` - so the override
+exists to keep the full-tree `npm audit` clean. Drop it once `obsidian` moves
+past the affected range.
 
 ## Testing in a vault
 
