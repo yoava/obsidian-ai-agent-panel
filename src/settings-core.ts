@@ -84,6 +84,12 @@ export interface AgentPanelSettings {
 	 * list, so models the CLI would reject never appear.
 	 */
 	cliModels?: Record<string, CliModel[]>;
+	/**
+	 * CLI profile id -> the permission mode that profile's CLI last started in
+	 * when launched without one (its own settings' `defaultMode`), so a
+	 * conversation shows it before its CLI is running.
+	 */
+	cliStartupModes?: Record<string, string>;
 	defaultPermissionMode: ChatPermissionMode;
 	/** Gates the dangerous bypassPermissions mode in the chat view. */
 	enableBypassMode: boolean;
@@ -263,7 +269,11 @@ const LEGACY_UNIT_KEYS: Record<string, string[]> = {
  * Learned caches that describe this machine's CLI install - never synced and
  * never offered in the sync chooser.
  */
-const ALWAYS_LOCAL_KEYS: (keyof AgentPanelSettings)[] = ["resolvedModels", "cliModels"];
+const ALWAYS_LOCAL_KEYS: (keyof AgentPanelSettings)[] = [
+	"resolvedModels",
+	"cliModels",
+	"cliStartupModes",
+];
 
 /** A valid localGroups list; anything else falls back to the defaults. */
 export function sanitizeLocalGroups(raw: unknown): string[] {

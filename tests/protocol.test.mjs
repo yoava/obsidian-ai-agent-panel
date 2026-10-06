@@ -111,13 +111,19 @@ test("profile arguments are appended after the panel's own", async () => {
 	assert.ok(flags.indexOf("--model") < flags.indexOf("--chrome"));
 });
 
-test("default permission mode is not passed as a flag", async () => {
+test("an unset permission mode leaves the CLI's own default", async () => {
+	const { messages } = await run({ scenario: "basic", options: {} });
+	const flags = probes(messages, "argv")[0].argv;
+	assert.equal(flags.includes("--permission-mode"), false);
+});
+
+test("an explicit default permission mode is passed", async () => {
 	const { messages } = await run({
 		scenario: "basic",
 		options: { permissionMode: "default" },
 	});
 	const flags = probes(messages, "argv")[0].argv;
-	assert.equal(flags.includes("--permission-mode"), false);
+	assert.equal(flags[flags.indexOf("--permission-mode") + 1], "default");
 });
 
 test("the initialize handshake goes out before the first turn", async () => {

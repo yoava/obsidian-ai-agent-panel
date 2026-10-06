@@ -36,6 +36,16 @@ Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
   quotes.** `!echo '$HOME'` printed your home directory instead of `$HOME`,
   because the distro's default shell read the command before `sh` did. It now
   runs through `wsl.exe --exec` too, so it behaves as in a terminal.
+- **Fixed: the permission control showed *Ask* while Claude Code ran in
+  another mode.** With `permissions.defaultMode` set in your Claude Code
+  settings, the CLI started in that mode but the control under the composer
+  still said *Ask*; it also stayed on *Plan* after an approved plan switched
+  the CLI out of plan mode. The control now shows the mode the CLI reports;
+  before a conversation's CLI starts, it shows the mode that profile last
+  started in (or *Default* when unknown). A mode you pick - *Ask* included -
+  is kept when the CLI restarts and when you reopen the conversation, and a
+  mode the CLI switches to is kept across restarts too. The *Default
+  permission mode* setting's first choice is now named *Claude Code default*.
 - **GitHub Sponsors** joins Buy Me a Coffee as a funding link in Obsidian's
   plugin list. Optional, as before; nothing is gated behind it.
 

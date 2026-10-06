@@ -22,6 +22,7 @@ export interface ClaudeClientOptions {
 	model?: string;
 	/** Reasoning effort (low|medium|high|xhigh|max). Spawn-time only. */
 	effort?: string;
+	/** Unset lets the CLI start in the mode its own settings configure. */
 	permissionMode?: PermissionMode;
 	/** Resume an existing CLI session by id. */
 	resumeSessionId?: string;
@@ -213,8 +214,7 @@ export class ClaudeClient {
 		} = this.options;
 		if (model) args.push("--model", model);
 		if (effort) args.push("--effort", effort);
-		if (permissionMode && permissionMode !== "default")
-			args.push("--permission-mode", permissionMode);
+		if (permissionMode) args.push("--permission-mode", permissionMode);
 		if (allowBypassPermissions) args.push("--allow-dangerously-skip-permissions");
 		if (replayUserMessages) args.push("--replay-user-messages");
 		if (resumeSessionId) args.push("--resume", resumeSessionId);

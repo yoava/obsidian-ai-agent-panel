@@ -169,6 +169,15 @@ const MODE_OPTIONS: Array<{
 	},
 ];
 
+/**
+ * Modes the CLI can report that the menu does not offer, shown as reported.
+ * The CLI's own `auto` (its classifier decides) is not the panel's "auto".
+ */
+const CLI_ONLY_MODES: Record<string, { label: string; short: string; icon: string }> = {
+	dontAsk: { label: "Don't ask (deny what isn't allowed)", short: "Don't ask", icon: "shield-x" },
+	auto: { label: "Auto mode (Claude Code decides)", short: "Auto mode", icon: "sparkles" },
+};
+
 interface ToolCard {
 	rootEl: HTMLElement;
 	statusEl: HTMLElement;
@@ -305,6 +314,13 @@ interface ChatTab {
 	selectedModel: string;
 	selectedEffort: string;
 	selectedMode: ChatPermissionMode;
+	/**
+	 * Launch without --permission-mode, so the CLI starts in the mode its own
+	 * settings configure. Cleared once the user picks a mode.
+	 */
+	inheritMode: boolean;
+	/** The mode the CLI last reported for this conversation; null until it has. */
+	cliMode: string | null;
 	/** CLI profile this conversation spawns with; falls back to the default profile. */
 	selectedProfileId: string;
 	/** Header status line (model name) shown while this tab is active. */
@@ -968,6 +984,8 @@ export class AgentPanelView extends ItemView {
 			selectedModel: settings.lastModel ?? settings.model,
 			selectedEffort: settings.lastEffort ?? settings.effort,
 			selectedMode: mode,
+			inheritMode: mode === "default",
+			cliMode: null,
 			selectedProfileId: settings.defaultProfileId,
 			statusText: "",
 			draft: "",
@@ -1824,8 +1842,7 @@ export class AgentPanelView extends ItemView {
 		);
 		const setup: string[] = [model.label];
 		if (tab.selectedEffort) setup.push(`${effortLabel(tab.selectedEffort)} effort`);
-		const mode = MODE_OPTIONS.find((m) => m.value === tab.selectedMode);
-		setup.push(mode?.short ?? tab.selectedMode);
+		setup.push(this.shownMode(tab).short);
 		lines.push(setup.join(" · "));
 
 		if (conv) {
@@ -1882,6 +1899,7 @@ export class AgentPanelView extends ItemView {
 			this.modeOptions().some((o) => o.value === stored.permissionMode)
 		)
 			tab.selectedMode = stored.permissionMode;
+		tab.inheritMode = !stored.permissionModePicked && tab.selectedMode === "default";
 		this.updateConfigBar();
 		this.updateTabTitle(tab);
 
@@ -2304,7 +2322,7 @@ export class AgentPanelView extends ItemView {
 				effort: tab.selectedEffort || undefined,
 				// "auto" is ours, not the CLI's: it launches in the normal mode and
 				// this view answers every prompt (see handlePermissionRequest).
-				permissionMode: cliPermissionMode(tab.selectedMode),
+				permissionMode: tab.inheritMode ? undefined : cliPermissionMode(tab.selectedMode),
 				resumeSessionId: tab.resumeSessionId ?? undefined,
 				appendSystemPrompt: settings.vaultInstructions || undefined,
 				allowBypassPermissions: settings.enableBypassMode,
@@ -2327,6 +2345,16 @@ export class AgentPanelView extends ItemView {
 					// the picker offers exactly that list from now on.
 					const models = parseCliModels((info as { models?: unknown }).models);
 					if (models) void this.plugin.rememberCliModels(profile.id, models);
+					const mode = info.current_permission_mode;
+					const session = tab.session;
+					// A mode picked while this reply was in flight is newer than it.
+					if (typeof mode !== "string" || !session) return;
+					if (session.permissionMode !== session.spawnedPermissionMode) return;
+					// Launched without a mode, the CLI reports its configured default -
+					// worth remembering for conversations that have not started yet.
+					if (session.spawnedPermissionMode === undefined)
+						void this.plugin.rememberStartupMode(profile.id, mode);
+					this.noteCliMode(tab, mode, false);
 				},
 			},
 			profile.id
@@ -2433,7 +2461,9 @@ export class AgentPanelView extends ItemView {
 				updatedAt: Date.now(),
 				model: tab.selectedModel || undefined,
 				effort: tab.selectedEffort || undefined,
-				permissionMode: tab.selectedMode,
+				// An inherited mode stays inherited on reopen, whatever the CLI reported.
+				permissionMode: tab.inheritMode ? "default" : tab.selectedMode,
+				permissionModePicked: tab.inheritMode ? undefined : true,
 				messages: [],
 			};
 		}
@@ -2559,8 +2589,10 @@ export class AgentPanelView extends ItemView {
 						model?: string;
 						session_id?: string;
 						slash_commands?: string[];
+						permissionMode?: string;
 					};
 					this.setTabStatus(tab, init.model ?? "");
+					this.noteCliMode(tab, init.permissionMode, false);
 					if (init.model) {
 						// Teach the picker what this alias currently points at.
 						void this.plugin.rememberModelResolution(
@@ -2841,6 +2873,10 @@ export class AgentPanelView extends ItemView {
 				this.applyTaskNotification(tab, msg);
 				return;
 			}
+			case "status":
+				// Sent on mode changes too, e.g. when an approved plan leaves plan mode.
+				this.noteCliMode(tab, msg.permissionMode, true);
+				return;
 			default:
 				return; // compaction boundaries, status pings, thinking counts, …
 		}
@@ -3365,6 +3401,9 @@ export class AgentPanelView extends ItemView {
 		branch.selectedModel = tab.selectedModel;
 		branch.selectedEffort = tab.selectedEffort;
 		branch.selectedMode = tab.selectedMode;
+		// Its own CLI reports once it starts; until then shownMode() says what
+		// that launch will get.
+		branch.inheritMode = tab.inheritMode;
 		// The fork resumes a transcript that lives on the original's CLI side.
 		branch.selectedProfileId = tab.selectedProfileId;
 		const conversation = this.ensureConversation(branch);
@@ -4391,7 +4430,70 @@ export class AgentPanelView extends ItemView {
 			: MODE_OPTIONS.filter((o) => o.value !== "bypassPermissions");
 	}
 
-	/** Re-render labels after an alias resolved to a newer model id. */
+	/**
+	 * The mode the CLI is actually in: its last report, or - for a conversation
+	 * whose CLI has not started yet - the mode this profile's CLI last started
+	 * in, or "Default" when that is unknown. The panel's "auto" is answered
+	 * here, so it always shows as picked.
+	 * `value` is null for a mode the menu does not offer.
+	 */
+	private shownMode(tab: ChatTab): {
+		value: ChatPermissionMode | null;
+		label: string;
+		short: string;
+		icon: string;
+		warn?: boolean;
+	} {
+		const describe = (mode: string) => {
+			const offered = MODE_OPTIONS.find((m) => m.value === mode && m.value !== "auto");
+			if (offered) return offered;
+			const other = CLI_ONLY_MODES[mode];
+			return other ? { value: null, ...other } : { value: null, label: mode, short: mode, icon: "shield" };
+		};
+		if (tab.selectedMode !== "auto" && tab.cliMode) return describe(tab.cliMode);
+		if (tab.inheritMode) {
+			// Not started yet: the launch gets Claude Code's configured default,
+			// known only from the last time this profile's CLI started.
+			const settings = this.plugin.settings;
+			const profile = profileById(settings, tab.selectedProfileId) ?? defaultProfile(settings);
+			const startup = settings.cliStartupModes?.[profile.id];
+			if (typeof startup !== "string" || !startup)
+				return {
+					value: null,
+					label: "Claude Code default (set in its settings)",
+					short: "Default",
+					icon: "shield",
+				};
+			const mode = describe(startup);
+			return { ...mode, label: `${mode.label} - Claude Code's default when it last started` };
+		}
+		return (
+			MODE_OPTIONS.find((m) => m.value === tab.selectedMode) ?? describe(tab.selectedMode)
+		);
+	}
+
+	/**
+	 * The CLI reported its permission mode: at startup, or (`changed`) on a
+	 * switch such as an approved plan leaving plan mode. A mode the menu offers
+	 * becomes the tab's selection; a switch is also what later launches resume
+	 * in, since a fresh process would otherwise start in the configured default.
+	 */
+	private noteCliMode(tab: ChatTab, mode: unknown, changed: boolean): void {
+		if (typeof mode !== "string" || !mode || tab.selectedMode === "auto") return;
+		tab.cliMode = mode;
+		const offered = MODE_OPTIONS.find((m) => m.value === mode && m.value !== "auto");
+		if (offered) {
+			tab.selectedMode = offered.value;
+			if (changed) {
+				tab.inheritMode = false;
+				tab.session?.adoptPermissionMode(cliPermissionMode(offered.value));
+			}
+		}
+		if (tab === this.active) this.updateConfigBar();
+		else this.refreshTabTooltip(tab);
+	}
+
+	/** Re-render labels after the CLI taught us something (a model id, a startup mode). */
 	refreshModelLabels(): void {
 		if (!this.active) return;
 		for (const tab of this.tabs) this.refreshTabTooltip(tab);
@@ -4445,13 +4547,13 @@ export class AgentPanelView extends ItemView {
 		const effort = effortLabel(tab.selectedEffort);
 		this.fillSegment(this.effortSegmentEl, "gauge", effort, `Reasoning effort: ${effort}`);
 
-		const mode = MODE_OPTIONS.find((m) => m.value === tab.selectedMode);
+		const mode = this.shownMode(tab);
 		this.fillSegment(
 			this.modeSegmentEl,
-			mode?.icon ?? "shield",
-			mode?.short ?? tab.selectedMode,
-			`Permissions: ${mode?.label ?? tab.selectedMode}`,
-			mode?.warn === true
+			mode.icon,
+			mode.short,
+			`Permissions: ${mode.label}`,
+			mode.warn === true
 		);
 
 		// The profile only matters - and only shows - once there are several.
@@ -4545,18 +4647,18 @@ export class AgentPanelView extends ItemView {
 	private openModeMenu(evt: MouseEvent): void {
 		const tab = this.active;
 		if (!tab) return;
+		const shown = this.shownMode(tab).value;
 		const menu = new Menu();
 		for (const option of this.modeOptions())
 			menu.addItem((item) =>
 				item
 					.setTitle(option.label)
-					.setChecked(option.value === tab.selectedMode)
+					.setChecked(option.value === shown)
 					.setWarning(option.warn === true)
 					.onClick(() => {
-						if (option.value === tab.selectedMode) return;
-						tab.selectedMode = option.value;
-						this.updateConfigBar();
-						void this.applyPermissionMode(tab, tab.selectedMode);
+						// Clicking the inherited mode still pins it as a pick.
+						if (option.value === shown && !tab.inheritMode) return;
+						void this.pickPermissionMode(tab, option.value);
 					})
 			);
 		menu.showAtMouseEvent(evt);
@@ -4589,14 +4691,33 @@ export class AgentPanelView extends ItemView {
 		menu.showAtMouseEvent(evt);
 	}
 
-	private async applyPermissionMode(
-		tab: ChatTab,
-		mode: ChatPermissionMode
-	): Promise<void> {
+	/**
+	 * A deliberate pick is passed on every later launch, "Ask" included, so a
+	 * respawn or reopen cannot fall back to the CLI default. A switch the CLI
+	 * refused puts the previous state back, so the control never claims it.
+	 */
+	private async pickPermissionMode(tab: ChatTab, mode: ChatPermissionMode): Promise<void> {
+		const before = {
+			selectedMode: tab.selectedMode,
+			inheritMode: tab.inheritMode,
+			cliMode: tab.cliMode,
+		};
+		tab.selectedMode = mode;
+		tab.inheritMode = false;
+		tab.cliMode = null;
+		this.updateConfigBar();
 		try {
 			await tab.session?.setPermissionMode(cliPermissionMode(mode));
 		} catch (err) {
+			Object.assign(tab, before);
+			this.updateConfigBar();
 			new Notice(`Could not switch mode: ${err instanceof Error ? err.message : String(err)}`);
+			return;
+		}
+		if (tab.conversation) {
+			tab.conversation.permissionMode = mode;
+			tab.conversation.permissionModePicked = true;
+			this.plugin.history.queueSave(tab.conversation);
 		}
 	}
 

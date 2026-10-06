@@ -422,8 +422,10 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 						kind: "build",
 						name: "Default permission mode",
 						desc:
-							'How Claude asks before using tools. "Default" prompts in the chat ' +
-							'for anything sensitive; "Accept edits" auto-approves file edits ' +
+							'How Claude asks before using tools. "Claude Code default" starts in ' +
+							"the mode Claude Code's own settings set (permissions.defaultMode), " +
+							'which prompts in the chat for anything sensitive unless you changed ' +
+							'it; "Accept edits" auto-approves file edits ' +
 							'inside the vault; "Plan" is read-only. ⚠️ "Auto-approve" ' +
 							"answers every prompt for you, so Claude runs shell commands and " +
 							"edits files with no confirmation - the CLI's own deny rules and " +
@@ -433,7 +435,7 @@ export class AgentPanelSettingTab extends PluginSettingTab {
 							setting.addDropdown((dropdown) =>
 								dropdown
 									.addOptions({
-										default: "Default (ask)",
+										default: "Claude Code default",
 										acceptEdits: "Accept edits",
 										plan: "Plan (read-only)",
 										auto: "⚠️ Auto-approve everything",

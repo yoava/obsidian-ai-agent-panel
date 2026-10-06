@@ -79,6 +79,12 @@ export interface StoredConversation {
 	model?: string;
 	effort?: string;
 	permissionMode?: ChatPermissionMode;
+	/**
+	 * The user picked permissionMode, so launches pass it even when it is
+	 * "default". Absent in older files, where "default" meant Claude Code's
+	 * own default - as it still does without this flag.
+	 */
+	permissionModePicked?: boolean;
 	/** Vault path of the exported Markdown note, once one exists. */
 	exportPath?: string;
 	/**

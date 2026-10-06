@@ -21,8 +21,7 @@ export interface SessionEvents {
 	onInitInfo?(info: Record<string, unknown>): void;
 }
 
-export type SessionConfig = Omit<ClaudeClientOptions, "permissionMode" | "model"> & {
-	permissionMode: PermissionMode;
+export type SessionConfig = Omit<ClaudeClientOptions, "model"> & {
 	model?: string;
 };
 
@@ -44,6 +43,7 @@ export class ClaudeSession {
 	 * resolved to, and a mid-flight setModel() must not be credited with it.
 	 */
 	private spawnModel: string | undefined;
+	private spawnPermissionMode: PermissionMode | undefined;
 
 	constructor(
 		private config: SessionConfig,
@@ -60,8 +60,14 @@ export class ClaudeSession {
 		return this.client?.running ?? false;
 	}
 
-	get permissionMode(): PermissionMode {
+	/** The mode passed at launch; undefined while the CLI picks its own default. */
+	get permissionMode(): PermissionMode | undefined {
 		return this.config.permissionMode;
+	}
+
+	/** The mode the running process was launched with; undefined = the CLI's default. */
+	get spawnedPermissionMode(): PermissionMode | undefined {
+		return this.spawnPermissionMode;
 	}
 
 	get spawnedModel(): string | undefined {
@@ -163,6 +169,7 @@ export class ClaudeSession {
 		);
 		this.client = client;
 		this.spawnModel = this.config.model;
+		this.spawnPermissionMode = this.config.permissionMode;
 		try {
 			client.start();
 		} catch (err) {
@@ -178,9 +185,18 @@ export class ClaudeSession {
 		if (this.client?.running) await this.client.interrupt();
 	}
 
+	/** Switch the running CLI; later launches use the mode only once it took. */
 	async setPermissionMode(mode: PermissionMode): Promise<void> {
-		this.config = { ...this.config, permissionMode: mode };
 		if (this.client?.running) await this.client.setPermissionMode(mode);
+		this.config = { ...this.config, permissionMode: mode };
+	}
+
+	/**
+	 * The CLI changed mode on its own (e.g. an approved plan left plan mode).
+	 * Later launches continue in it rather than in the startup default.
+	 */
+	adoptPermissionMode(mode: PermissionMode): void {
+		this.config = { ...this.config, permissionMode: mode };
 	}
 
 	async setModel(model: string | undefined): Promise<void> {

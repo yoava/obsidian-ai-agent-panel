@@ -137,7 +137,10 @@ and every one of these except the clipboard depends on it.
   Anthropic's API by the CLI - identical to running Claude Code on any folder.
   Don't point it at a vault whose contents you may not send to Anthropic.
 - **Defaults.** Out of the box the `!` shell escape and the `obsidian` MCP
-  server are on, the permission mode is *Ask before acting*, and *Bypass
+  server are on, the permission mode is Claude Code's own default (*Ask before
+  acting* unless your Claude Code settings set `permissions.defaultMode`; the
+  control shows the mode the CLI reports, or *Default* before a profile's CLI
+  has ever reported one), and *Bypass
   permissions* is hidden until enabled in settings. *Auto-approve everything*
   is never selected out of the box, but it is not per-conversation only: it is
   one of the choices in the *Default permission mode* setting, so it can be

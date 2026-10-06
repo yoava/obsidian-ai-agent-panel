@@ -146,7 +146,25 @@ for `--permission-mode` and `set_permission_mode`, and `handlePermissionRequest`
 answers `allow` without rendering a card. The CLI's rules and hooks therefore
 still run - a request they deny never arrives - which is what separates it from
 `bypassPermissions`. Stored conversations keep the conversation-level value, so
-reopening one restores the mode it ran in.
+reopening one restores the mode picked for it.
+
+A conversation whose mode is *Claude Code default* (`inheritMode`) launches
+without `--permission-mode`, so the CLI starts in its own `defaultMode` (a
+`--resume` without the flag does too, not in the session's last mode). The CLI
+reports its mode in the initialize reply (`current_permission_mode`),
+`system/init`, and `system/status` (sent on every change, e.g. leaving plan
+mode); `noteCliMode` makes a reported mode the tab's selection, and the control
+shows modes the menu lacks (`dontAsk`, the CLI's own `auto`) as reported. An
+initialize reply is ignored once the session's mode moved past the one it
+launched with (`spawnedPermissionMode`), since a pick made in flight is newer.
+A `system/status` switch is adopted into the session config, so a respawn
+continues in it. A mode reported by a CLI launched without one is stored per
+profile (`cliStartupModes`, device-local) and shown for conversations that have
+not spawned yet. Picking a mode clears `inheritMode` and is stored with the
+conversation (`permissionModePicked`), so later launches and reopens pass it -
+`--permission-mode default` included; a pick the CLI refuses is rolled back. A
+stored `default` without that flag (and every file from before it) means
+*Claude Code default*.
 
 `AskUserQuestion` is special-cased: instead of an Allow/Deny card, the view
 renders the tool's questions as an interactive form (option buttons per

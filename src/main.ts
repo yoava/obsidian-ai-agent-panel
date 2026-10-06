@@ -283,6 +283,14 @@ export default class AgentPanelPlugin extends Plugin {
 		for (const view of this.chatViews()) view.refreshModelLabels();
 	}
 
+	async rememberStartupMode(profileId: string, mode: string): Promise<void> {
+		const known = this.settings.cliStartupModes ?? {};
+		if (known[profileId] === mode) return;
+		this.settings.cliStartupModes = { ...known, [profileId]: mode };
+		await this.saveSettings();
+		for (const view of this.chatViews()) view.refreshModelLabels();
+	}
+
 	/**
 	 * The learned model list for a profile; a profile that has not run a
 	 * session yet borrows the default profile's list (same account, so the
