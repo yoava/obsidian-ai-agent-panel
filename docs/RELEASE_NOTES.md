@@ -50,6 +50,10 @@ Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
 - **`/` autocomplete shows what each command does.** Descriptions and
   argument hints come from Claude Code itself once a conversation has
   started.
+- **Fixed: `/usage` run while Claude was working was saved out of order.**
+  The turn's reply is saved when the turn ends, so the usage card landed
+  before it in a reopened or exported transcript. A command run mid-turn now
+  stays on screen only.
 - **Fixed: the permission control showed *Ask* while Claude Code ran in
   another mode.** With `permissions.defaultMode` set in your Claude Code
   settings, the CLI started in that mode but the control under the composer

@@ -676,7 +676,8 @@ Disable) exist only on the live card: each sends its `mcp_reconnect` or
 `mcp_toggle` request, then the card rebuilds and the recorded Markdown is
 replaced. The panel's own `obsidian` server gets no buttons and is skipped by
 `/mcp … all`; its setting switches it. A command run mid-turn is drawn but
-not recorded, as the turn's text is recorded only when the turn ends. A tab whose CLI only a panel command
+not recorded, as the turn's text is recorded only when the turn ends (the
+usage commands follow the same rule). A tab whose CLI only a panel command
 started has no transcript to keep, so switching its profile disposes that
 session rather than pinning the old CLI. The replies are undocumented
 control-protocol payloads, so every

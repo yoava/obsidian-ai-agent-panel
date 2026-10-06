@@ -2333,7 +2333,9 @@ export class AgentPanelView extends ItemView {
 	 */
 	private runLocalUsageCommand(tab: ChatTab, text: string, command: string): void {
 		this.renderUserMessage(tab, text, null, false);
-		this.record(tab, { kind: "user", text });
+		// Not recorded mid-turn, as in runPanelCommand.
+		const midTurn = tab.session?.busy === true;
+		if (!midTurn) this.record(tab, { kind: "user", text });
 		const card = tab.messagesEl.createDiv({ cls: "ai-agent-panel-msg-assistant" });
 		card.setText("Checking usage…");
 		this.scrollToBottom(tab, true);
@@ -2345,7 +2347,7 @@ export class AgentPanelView extends ItemView {
 			card.empty();
 			await this.renderMarkdown(markdown, card);
 			addCopyButton(card, () => markdown);
-			this.record(tab, { kind: "assistant", text: markdown });
+			if (!midTurn) this.record(tab, { kind: "assistant", text: markdown });
 			this.scrollToBottom(tab, true);
 		});
 	}
