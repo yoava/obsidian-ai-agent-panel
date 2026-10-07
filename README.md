@@ -13,12 +13,10 @@ The agent gets your vault as its working directory: it can search notes, answer 
 | Agent | Status |
 | --- | --- |
 | [Claude Code](https://code.claude.com) (Anthropic) | **Available** - the first integration, and the only one today |
-| Codex / ChatGPT (OpenAI) | **Planned** - not implemented yet |
+| Codex / ChatGPT (OpenAI) | **Planned for the next major release (1.0)** - not implemented |
 
-Right now the panel requires Claude Code, so everything below describes that
-integration. Adding a second agent means writing another adapter over the same
-session layer; until that lands, treat Codex support as a roadmap item rather
-than a feature.
+The panel requires Claude Code, so everything below describes that integration.
+Codex support is not coming in any 0.x release; do not expect it before 1.0.
 
 > **Unofficial and independent.** This community plugin is not affiliated with,
 > endorsed by, or sponsored by Anthropic or OpenAI. It implements no login and
