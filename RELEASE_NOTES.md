@@ -190,6 +190,10 @@ unpublished 0.5.0 build updates the same way.
   scaffold 2.4.0, and edits outside the repository ask in Claude Code.
 - **Dependabot** opens one pull request per runtime package update, so each
   passes the dependency screen.
+- **README and listing:** the README is written as the directory page, with
+  two screenshots of a fixture conversation under `docs/images/`; the
+  manifest's description names the permission card, the vault tools and the
+  user's own CLI login.
 - **TypeScript 6.0**, `moment` pinned to 2.31 through `overrides` (dev
   only), in-range ESLint and typescript-eslint updates.
 - **Records for this release:** the owner's real-CLI run of `/clear` and
