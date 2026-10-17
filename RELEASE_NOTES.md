@@ -191,7 +191,8 @@ unpublished 0.5.0 build updates the same way.
   numbered docs start with their ID. The repository records Agentic SDLC
   scaffold 2.4.0, and edits outside the repository ask in Claude Code.
 - **Dependabot** opens one pull request per runtime package update, so each
-  passes the dependency screen.
+  passes the dependency screen. Its first update, `actions/setup-node` 7.1.0
+  in both workflows, landed with this release.
 - **PRD-001.R7** says a tab's close button shows on hover only, as the tabs
   have drawn it since 2026-10-13.
 - **README and listing:** the README is written as the directory page, with
