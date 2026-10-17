@@ -54,7 +54,7 @@ Copy `manifest.json`, `main.js` and `styles.css` to `<vault>/.obsidian/plugins/a
 
 ### Verifying a release
 
-`main.js` and `styles.css` carry a build-provenance attestation: `gh attestation verify main.js --repo yoava/obsidian-ai-agent-panel`.
+`main.js`, `manifest.json` and `styles.css` each carry a build-provenance attestation: `gh attestation verify main.js --repo yoava/obsidian-ai-agent-panel` (same for the other two files).
 
 ## Use
 

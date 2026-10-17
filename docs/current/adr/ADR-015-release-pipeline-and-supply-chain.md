@@ -64,10 +64,10 @@ The design:
   `contents`, `id-token` and `attestations` write (`release.yml:7-12`):
   setup-node with `node-version-file: .nvmrc` (`release.yml:19-22`),
   `npm ci --ignore-scripts` (`release.yml:23-24`), `make verify`, which
-  builds `main.js` (`release.yml:25-26`), attest `main.js` and `styles.css`
-  with `actions/attest-build-provenance` (`release.yml:27-32`), and create a
-  draft release with the three assets (`release.yml:33-40`); a human
-  publishes it. Only this workflow gets write permissions.
+  builds `main.js` (`release.yml:25-26`), attest `main.js`, `manifest.json`
+  and `styles.css` with `actions/attest-build-provenance` (`release.yml:27-33`),
+  and create a draft release with the same three assets (`release.yml:34-41`);
+  a human publishes it. Only this workflow gets write permissions.
 - `ci.yml` on pushes to `main` and on pull requests, with `contents: read`
   and the `.nvmrc` Node (`.github/workflows/ci.yml:3-19`):
   `npm ci --ignore-scripts`, `make verify`, then `npm audit --omit=dev`
@@ -94,7 +94,6 @@ The design:
   commit, not to a clean build.
 - CodeQL's configuration lives outside the checkout and changes without a
   commit.
-- `manifest.json` is not attested.
 - The draft release carries no notes; they live in the repository.
 - npm majors never arrive automatically; they are taken deliberately.
 - The release commit's message convention is an open decision (D-05 in

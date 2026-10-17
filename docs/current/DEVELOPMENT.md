@@ -267,7 +267,7 @@ spends real tokens.
 3. Push: `git push && git push --tags`.
 4. The `release.yml` workflow builds and attaches `main.js`, `manifest.json`,
    and `styles.css` to a draft GitHub release - review and publish it. It also
-   attests `main.js` and `styles.css` with `actions/attest-build-provenance`,
+   attests all three with `actions/attest-build-provenance`,
    so each asset carries a signed statement of the run that built it; the
    verify command is in the [README](../../README.md).
 

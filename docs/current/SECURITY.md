@@ -318,7 +318,7 @@ and every one of these except the clipboard depends on it.
   Dependabot proposes the bumps (`.github/dependabot.yml`) so a pin is only
   ever moved by a reviewed pull request, never silently.
 - **Release assets carry a signed provenance attestation.** `release.yml`
-  attests `main.js` and `styles.css` with
+  attests `main.js`, `manifest.json` and `styles.css` with
   `actions/attest-build-provenance`, so each release asset has a Sigstore-signed
   statement naming the workflow, repository, and commit that produced it. Anyone
   can check that the `main.js` in a release really came from this repository's
