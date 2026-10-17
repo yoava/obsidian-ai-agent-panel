@@ -205,6 +205,9 @@ unpublished 0.5.0 build updates the same way.
   tooling can read every commit; tags stay bare versions, pushed by name.
 - **Every release asset is attested**, `manifest.json` now included, so a
   verified install checks all three files it copies.
+- **The constitution** now states the two bounds SECURITY.md discloses: vault
+  paths are checked as spelled, and an embedded vault note renders as
+  Obsidian renders it.
 - **Records for this release:** the owner's real-CLI run of `/clear` and
   Undo on native Linux and WSL (task 110), the cross-review's design
   corrections, the comparison's download counts from 2026-10-17, and the

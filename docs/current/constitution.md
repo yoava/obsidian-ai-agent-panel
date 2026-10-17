@@ -42,13 +42,16 @@ a human decision, never an autonomous agent edit. Evidence and detail:
   files its own checkpoints track, inside or outside the vault, after a
   preview has named each of them; the plugin itself writes nothing outside the
   vault. Stored ids and paths are validated so a tampered or synced file
-  cannot steer a write or delete elsewhere.
+  cannot steer a write or delete elsewhere. Vault bounds are checked on the
+  path as spelled, so a folder symlinked or junctioned into the vault counts
+  as inside it ([SECURITY.md](SECURITY.md)).
 - **Inert rendering.** Model output reaches the DOM only through Obsidian's
   `MarkdownRenderer` or text nodes. Before rendering or export, inline code
   and every fence not on the plugin's allowlist are neutralized so no other
   plugin's processor runs on model text, and no remote image or other remote
-  embed is loaded; no
-  `innerHTML`, `outerHTML`, `eval`, or `Function`.
+  embed is loaded; an embed of a vault note renders as Obsidian renders the
+  note ([SECURITY.md](SECURITY.md)); no `innerHTML`, `outerHTML`, `eval`, or
+  `Function`.
 - **Bundled libraries only; no Anthropic code.** A runtime library ships
   inside `main.js` or `styles.css`, never fetched at runtime, once it passes
   the dependency screen (Security) and ADR-007; bundled code obeys every rule
