@@ -14,6 +14,7 @@
  */
 .ai-agent-panel-scope {
 	/* Stacking, bottom to top (DES-003 Layout model); every z-index reads one. */
+	--ai-agent-panel-z-below: -1;
 	--ai-agent-panel-z-sticky: 1;
 	--ai-agent-panel-z-pin: 2;
 	--ai-agent-panel-z-rail: 3;
@@ -1361,10 +1362,14 @@
 	display: none;
 }
 
-/* The concave foot, re-stated for the sidebars and pop-outs, which lack the main area's .mod-root. */
+/*
+ * The concave foot, re-stated for the sidebars and pop-outs, which lack the main area's .mod-root.
+ * Below the tab's content in its stacking context, so the focus ring (an outline) paints over it.
+ */
 .ai-agent-panel-board .workspace-tab-header.is-active::before,
 .ai-agent-panel-board .workspace-tab-header.is-active::after {
 	box-shadow: 0 0 0 calc(var(--tab-curve) * 4) var(--tab-background-active);
+	z-index: var(--ai-agent-panel-z-below);
 }
 
 .ai-agent-panel-board .workspace-tab-header-inner {

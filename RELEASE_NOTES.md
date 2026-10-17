@@ -78,6 +78,8 @@ unpublished 0.5.0 build updates the same way.
 
 ### Improvements and fixes
 
+- **A focused tab's ring is whole.** The active tab's feet no longer paint
+  over the keyboard focus ring.
 - **Security: what a synced or edited file may do.** The default permission
   mode, Bypass, vault instructions, the `!` shell escape and the vault tools
   are now per device, so a synced settings file cannot switch them on, start
