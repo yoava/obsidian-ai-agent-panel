@@ -7,7 +7,17 @@ import {
 	type McpTool,
 	type McpToolResult,
 } from "./server";
-import { matchesQuery, normalizeProperties, parseQuery, type NoteFacts } from "./query";
+import {
+	SEARCH_LIMIT_DEFAULT,
+	SEARCH_LIMIT_MAX,
+	matchesQuery,
+	normalizeProperties,
+	parseQuery,
+	searchLimit,
+	type NoteFacts,
+} from "./query";
+import { renameTargetError, renameTargetPath } from "./paths";
+import { renameReply } from "./replies";
 
 /**
  * The `obsidian` MCP server's tools: the things Claude cannot do from the
@@ -17,7 +27,6 @@ import { matchesQuery, normalizeProperties, parseQuery, type NoteFacts } from ".
  * asks before calling any MCP tool - so nothing here is a way around consent.
  */
 
-const MAX_RESULTS = 200;
 const MAX_LINKS = 500;
 
 /** Resolve a path or link text the model supplied to a real file. */
@@ -68,7 +77,25 @@ function backlinksOf(app: App, file: TFile): string[] {
 	return found.sort();
 }
 
-export function createVaultTools(app: App): McpTool[] {
+/**
+ * The Markdown view the user last had focused: the panel's record while a leaf
+ * still holds it (a closed tab, or one switched to a PDF, does not count),
+ * else the workspace's most recent leaf. The panel's own focus hides the
+ * editor from `getActiveViewOfType`, hence the record.
+ */
+function lastFocusedEditor(app: App, lastEditor: () => MarkdownView | null): MarkdownView | null {
+	const remembered = lastEditor();
+	if (
+		remembered?.file &&
+		app.workspace.getLeavesOfType("markdown").some((leaf) => leaf.view === remembered)
+	)
+		return remembered;
+	const recent = app.workspace.getMostRecentLeaf()?.view;
+	return recent instanceof MarkdownView && recent.file ? recent : null;
+}
+
+/** `lastEditor`: the Markdown view the panel last saw focused, if any. */
+export function createVaultTools(app: App, lastEditor: () => MarkdownView | null): McpTool[] {
 	return [
 		{
 			name: "obsidian_links",
@@ -144,7 +171,9 @@ export function createVaultTools(app: App): McpTool[] {
 					query: { type: "string", description: "The query, e.g. 'tag:project -prop:status=done'." },
 					limit: {
 						type: "number",
-						description: `Maximum notes to return (default 50, max ${MAX_RESULTS}).`,
+						description:
+							`Maximum notes to return, a whole number from 1 to ${SEARCH_LIMIT_MAX} ` +
+							`(default ${SEARCH_LIMIT_DEFAULT}).`,
 					},
 				},
 				required: ["query"],
@@ -157,7 +186,7 @@ export function createVaultTools(app: App): McpTool[] {
 					return errorResult(
 						"That query had nothing to match on. Try tag:, heading:, prop:, folder:, path:, or a bare word."
 					);
-				const limit = Math.min(optionalNumber(args, "limit") ?? 50, MAX_RESULTS);
+				const limit = searchLimit(optionalNumber(args, "limit"));
 
 				const matches: NoteFacts[] = [];
 				for (const file of app.vault.getMarkdownFiles()) {
@@ -253,9 +282,9 @@ export function createVaultTools(app: App): McpTool[] {
 		{
 			name: "obsidian_rename",
 			description:
-				"Rename or move a note, updating every link that points to it. This is " +
-				"the only safe way to move a note: a plain filesystem move would leave " +
-				"every backlink in the vault broken.",
+				"Rename or move a note through Obsidian, updating links to it as the " +
+				"user's Obsidian link-update setting directs. Prefer it to a plain " +
+				"filesystem move, which gives Obsidian no chance to update those links.",
 			inputSchema: {
 				type: "object",
 				properties: {
@@ -273,10 +302,13 @@ export function createVaultTools(app: App): McpTool[] {
 				if (!path.ok) return path.error;
 				const newPath = requireString(args, "newPath");
 				if (!newPath.ok) return newPath.error;
+				// Before anything is resolved, normalized or created (PRD-004.R7).
+				const refusal = renameTargetError(newPath.value, app.vault.configDir);
+				if (refusal) return errorResult(refusal);
 				const file = resolveFile(app, path.value);
 				if (!file) return notFound(path.value);
 
-				const target = normalizePath(newPath.value);
+				const target = normalizePath(renameTargetPath(newPath.value));
 				if (target === file.path) return textResult(`${file.path} is already there.`);
 				if (app.vault.getAbstractFileByPath(target))
 					return errorResult(`${target} already exists - pick another name.`);
@@ -286,14 +318,10 @@ export function createVaultTools(app: App): McpTool[] {
 				if (parent && !(app.vault.getAbstractFileByPath(parent) instanceof TFolder))
 					await app.vault.createFolder(parent).catch(() => undefined);
 
-				const before = backlinksOf(app, file).length;
+				const from = file.path;
+				const linked = backlinksOf(app, file).length;
 				await app.fileManager.renameFile(file, target);
-				return textResult(
-					`Renamed ${path.value} → ${target}.` +
-						(before > 0
-							? ` ${before} note(s) linked to it; Obsidian updated those links.`
-							: " Nothing linked to it.")
-				);
+				return textResult(renameReply(from, target, linked));
 			},
 		},
 
@@ -305,7 +333,7 @@ export function createVaultTools(app: App): McpTool[] {
 				'note "this" or "here" refers to.',
 			inputSchema: { type: "object", properties: {} },
 			async handler() {
-				const view = app.workspace.getActiveViewOfType(MarkdownView);
+				const view = lastFocusedEditor(app, lastEditor);
 				const file = view?.file ?? app.workspace.getActiveFile();
 				if (!file) return textResult("No note is open.");
 				const lines = [`Active note: ${file.path}`];

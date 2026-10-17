@@ -19,7 +19,7 @@ export interface ModelOption {
 	label: string;
 	/** Compact form shown on the composer button. */
 	short: string;
-	/** CLI-provided blurb, shown as the entry's tooltip when known. */
+	/** CLI-provided blurb, shown under the entry in the popover. */
 	description?: string;
 }
 
@@ -27,6 +27,17 @@ export type ModelDescription = Pick<ModelOption, "label" | "short">;
 
 /** Alias -> the model id the CLI last resolved it to. */
 export type ResolvedModels = Record<string, string>;
+
+/**
+ * The id `resolved` holds for `value`, by its own key: a pick named like an
+ * object member (`constructor`, `toString`) resolves to nothing rather than to
+ * the inherited function (PRD-003.R4).
+ */
+export function resolvedId(resolved: ResolvedModels | undefined, value: string): string | undefined {
+	if (!resolved || !Object.hasOwn(resolved, value)) return undefined;
+	const id = resolved[value];
+	return typeof id === "string" ? id : undefined;
+}
 
 /**
  * One model as the CLI reports it in the `initialize` response (same shape as
@@ -44,24 +55,26 @@ export interface CliModel {
 	supportedEffortLevels?: string[];
 }
 
-/** Parse the `models` array of an initialize response; null when absent/empty. */
+/**
+ * Parse the `models` array of an initialize response, or a stored copy of
+ * one; null when absent/empty. The CLI's `default` sentinel and the picker's
+ * own `""` both read as the Default pick; a field not sent is left out, so a
+ * stored list reads back as it was written.
+ */
 export function parseCliModels(raw: unknown): CliModel[] | null {
 	if (!Array.isArray(raw)) return null;
 	const models: CliModel[] = [];
 	for (const entry of raw) {
 		if (!entry || typeof entry !== "object") continue;
 		const o = entry as Record<string, unknown>;
-		if (typeof o.value !== "string" || !o.value) continue;
-		models.push({
-			value: o.value === "default" ? "" : o.value,
-			resolvedModel:
-				typeof o.resolvedModel === "string" ? o.resolvedModel : undefined,
-			displayName: typeof o.displayName === "string" ? o.displayName : undefined,
-			description: typeof o.description === "string" ? o.description : undefined,
-			supportedEffortLevels: Array.isArray(o.supportedEffortLevels)
-				? o.supportedEffortLevels.filter((l): l is string => typeof l === "string")
-				: undefined,
-		});
+		if (typeof o.value !== "string") continue;
+		const model: CliModel = { value: o.value === "default" ? "" : o.value };
+		if (typeof o.resolvedModel === "string") model.resolvedModel = o.resolvedModel;
+		if (typeof o.displayName === "string") model.displayName = o.displayName;
+		if (typeof o.description === "string") model.description = o.description;
+		if (Array.isArray(o.supportedEffortLevels))
+			model.supportedEffortLevels = o.supportedEffortLevels.filter((l): l is string => typeof l === "string");
+		models.push(model);
 	}
 	return models.length ? models : null;
 }
@@ -174,7 +187,7 @@ export function describeModel(
 		return { label: fallback.label, short: fallback.short };
 
 	// The id the CLI reported for this alias is the freshest naming there is.
-	const learned = describeModelId(resolved?.[value] ?? "");
+	const learned = describeModelId(resolvedId(resolved, value) ?? "");
 
 	if (!value)
 		return {
@@ -204,6 +217,17 @@ export function effortLabel(level: string): string {
 	return EFFORT_LABELS[level] ?? capitalize(level);
 }
 
+/** One row of the effort table (PRD-001.R23): the short string, and the long one for wide panels. */
+export interface EffortEntry {
+	short: string;
+	long: string;
+}
+
+export function effortEntry(level: string): EffortEntry {
+	const short = effortLabel(level);
+	return { short, long: `${short} effort` };
+}
+
 /**
  * Effort levels to offer: every level any reported model accepts, in the
  * CLI's order, so a level a newer CLI introduces is offered without a plugin
@@ -224,32 +248,53 @@ export function effortLevels(cliModels?: CliModel[] | null): string[] {
 }
 
 /**
- * The picker's entries with current labels applied. A CLI-reported list wins
- * outright - it is exactly what this CLI + account accept - with the account
- * -default entry kept first; MODEL_OPTIONS only covers the first run, before
- * any session has reported a list.
+ * The "Model and effort" popover's models (PRD-001.R22), current labels
+ * applied. A CLI-reported list wins outright - it is exactly what this CLI +
+ * account accept - with the account-default entry first; MODEL_OPTIONS only
+ * covers the first run, before any session has reported a list. `extras`
+ * (the configured model, the tab's pick) are added when the list lacks them,
+ * so they stay selectable. Descriptions come only from the CLI.
  */
 export function modelOptions(
 	resolved?: ResolvedModels,
-	cliModels?: CliModel[] | null
+	cliModels?: CliModel[] | null,
+	extras: readonly string[] = []
 ): ModelOption[] {
-	if (cliModels?.length) {
-		const options = cliModels.map((model) => ({
-			value: model.value,
-			description: model.description,
-			...describeCliModel(model),
-		}));
-		if (!options.some((option) => option.value === ""))
-			options.unshift({
-				value: "",
-				description: undefined,
-				label: "Default model",
-				short: "Default",
-			});
-		return options;
-	}
-	return MODEL_OPTIONS.map((option) => ({
-		value: option.value,
-		...describeModel(option.value, resolved),
+	const options: ModelOption[] = cliModels?.length
+		? cliModels.map((model) => ({
+				value: model.value,
+				description: model.description,
+				...describeCliModel(model),
+			}))
+		: MODEL_OPTIONS.map((option) => ({ value: option.value, ...describeModel(option.value, resolved) }));
+	const defaultAt = options.findIndex((option) => option.value === "");
+	if (defaultAt > 0) options.unshift(...options.splice(defaultAt, 1));
+	else if (defaultAt < 0) options.unshift({ value: "", label: "Default model", short: "Default" });
+	for (const extra of extras)
+		if (extra && !options.some((option) => option.value === extra))
+			options.push({ value: extra, ...describeModel(extra, resolved, cliModels) });
+	return options;
+}
+
+/** One level of the popover's effort control (PRD-001.R23). */
+export interface EffortChoice {
+	value: string;
+	short: string;
+	/** The selected model does not accept it, per the CLI's report. */
+	disabled: boolean;
+}
+
+/**
+ * "Default" plus every level any reported model accepts, in the CLI's order,
+ * with the levels `model` lacks disabled. A model the CLI did not list, or no
+ * list at all, leaves every level enabled.
+ */
+export function effortChoices(cliModels: CliModel[] | null | undefined, model: string): EffortChoice[] {
+	const cli = cliModels?.find((entry) => entry.value === model);
+	const accepted = cli ? cli.supportedEffortLevels ?? [] : null;
+	return ["", ...effortLevels(cliModels)].map((value) => ({
+		value,
+		short: effortEntry(value).short,
+		disabled: value !== "" && accepted !== null && !accepted.includes(value),
 	}));
 }

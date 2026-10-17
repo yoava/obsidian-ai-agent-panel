@@ -156,3 +156,9 @@ test("stderr, exit codes and timeouts are spelled out", () => {
 	assert.match(timedOut, /timed out/);
 	assert.equal(/Exit code/.test(timedOut), false);
 });
+
+test("PRD-002.R16: Add output to chat says a run killed with no exit code failed, as its card does", () => {
+	const text = formatShellResultForChat({ command: "x", stdout: "", stderr: "", code: null, timedOut: false, durationMs: 1, truncated: false });
+	assert.match(text, /\n\nThe command failed with no exit code\.$/);
+	assert.doesNotMatch(text, /null/);
+});

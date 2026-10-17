@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "pretest": "esbuild src/diff.ts src/edits.ts src/bash.ts src/cli.ts src/checkpoints.ts src/mcp/server.ts src/mcp/query.ts src/protocol/client.ts src/settings-core.ts src/cli-args.ts src/commands.ts src/models.ts src/tabs-layout.ts src/conversation-list.ts --bundle --platform=node --format=esm --outbase=src --out-extension:.js=.mjs --log-level=warning --outdir=tests/.build",
+    "pretest": "esbuild src/state/clear-operation.ts src/state/stop-operation.ts src/state/clear-dialog.ts src/tab/clear-flow.ts src/tab/held-sends.ts src/state/held-rows.ts src/state/held-send.ts src/diff.ts src/edits.ts src/bash.ts src/cli.ts src/mcp/server.ts src/mcp/query.ts src/protocol/client.ts src/settings-core.ts src/cli-args.ts src/commands.ts src/models.ts src/tabs-layout.ts src/conversation-list.ts src/inert-markdown.ts src/transcript-markdown.ts src/restore.ts src/session.ts src/timers.ts src/save-queue.ts src/mcp/replies.ts src/tool-labels.ts src/usage-core.ts src/attachments.ts src/context-format.ts src/mcp/paths.ts src/edit-tracker.ts src/history-core.ts src/history-file.ts src/history-notice.ts src/json.ts src/state/tab.ts src/state/composer.ts src/state/image-viewer.ts src/state/status-line.ts src/fonts.ts src/state/fonts.ts src/state/theme.ts src/state/prompt-color.ts src/state/section-spy.ts src/state/cli-missing.ts src/state/settings-rows.ts src/state/settings-filter.ts src/state/settings-reset.ts src/state/tooltips.ts src/state/popover.ts src/state/usage-segment.ts src/state/report-card.ts src/state/agent-icon.ts src/state/tabs.ts src/state/layout.ts src/state/bar-clearance.ts src/state/ticker.ts src/state/prompt-cache.ts src/state/cache-surfaces.ts src/state/prompts.ts src/state/stream.ts src/state/compaction.ts src/state/turn.ts src/state/branch-failure.ts src/state/branch-history.ts src/state/branch-hold.ts src/state/session-id.ts src/state/session-provenance.ts src/state/boundary-records.ts src/state/clear-divider.ts src/state/segments.ts src/state/turn-cost.ts src/state/fork-base.ts src/state/stream-render.ts src/state/suggest-rows.ts src/state/slash-rank.ts src/state/blur-close.ts src/state/working-line.ts src/state/permission.ts src/state/roving.ts src/state/shell-output.ts src/state/step-groups.ts src/tab/recorder.ts src/tab/permission-flow.ts src/tab/shell-escape.ts src/tab/panel-commands.ts --bundle --platform=node --format=esm --outbase=src --loader:.woff2=dataurl --out-extension:.js=.mjs --log-level=warning --outdir=tests/.build",
     "test": "node --test \"tests/*.test.mjs\"",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "audit": "npm audit --omit=dev"
   },
   "keywords": [
@@ -35,11 +35,15 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.11.0",
     "eslint-plugin-obsidianmd": "^0.4.2",
-    "obsidian": "latest",
+    "obsidian": "1.13.1",
     "tslib": "^2.8.0",
     "typescript": "~6.0.3"
   },
   "overrides": {
     "moment": "^2.31.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource-variable/geist-mono": "5.3.0"
   }
 }

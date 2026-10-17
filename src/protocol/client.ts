@@ -1,13 +1,17 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { isJsonObject } from "../json";
 import { clearTimer, setTimer, type TimerHandle } from "../timers";
+import { isCliId, PROCESS_EXITED } from "./types";
 import type {
 	ContentBlock,
 	ContextUsage,
 	ControlRequestEnvelope,
 	ControlResponseEnvelope,
+	PermissionFlags,
 	PermissionMode,
 	PermissionRequest,
 	PermissionResult,
+	RewindFilesResult,
 	RewindResult,
 	StreamMessage,
 } from "./types";
@@ -17,7 +21,10 @@ export interface ClaudeClientOptions {
 	cliPath: string;
 	/** Working directory for the CLI - normally the vault root. */
 	cwd: string;
-	/** Windows only: run the CLI inside WSL (`wsl.exe --cd <cwd> -- claude …`). */
+	/**
+	 * Windows only: run the CLI inside WSL, as
+	 * `wsl.exe --cd <cwd> --exec sh -lc 'exec "<cli>" "$@"' sh ...` (see `cliSpawnSpec`).
+	 */
 	useWsl?: boolean;
 	model?: string;
 	/** Reasoning effort (low|medium|high|xhigh|max). Spawn-time only. */
@@ -71,6 +78,45 @@ export interface ClaudeClientCallbacks {
 	onClose(info: { code: number | null; error?: string; stderrTail: string }): void;
 }
 
+function isString(value: unknown): value is string {
+	return typeof value === "string";
+}
+
+function isBoolean(value: unknown): value is boolean {
+	return typeof value === "boolean";
+}
+
+/**
+ * The decision-reason flags of a `can_use_tool` request (PRD-002.R9). A flag
+ * of the wrong type stays out of its typed field and is named in
+ * `mistypedFlags`, which flags the request too; null counts as absent. A
+ * tool name that is not a string is named there as well.
+ */
+function permissionFlags(request: Record<string, unknown>): PermissionFlags {
+	const flags: PermissionFlags = {};
+	const mistyped: string[] = [];
+	if (typeof request.tool_name !== "string") mistyped.push("tool_name");
+	const read = <T>(name: string, ok: (value: unknown) => value is T): T | undefined => {
+		const value = request[name];
+		if (value === undefined || value === null) return undefined;
+		if (ok(value)) return value;
+		mistyped.push(name);
+		return undefined;
+	};
+	const type = read("decision_reason_type", isString);
+	if (type !== undefined) flags.decisionReasonType = type;
+	const code = read("decision_reason_code", isString);
+	if (code !== undefined) flags.decisionReasonCode = code;
+	const approvable = read("classifier_approvable", isBoolean);
+	if (approvable !== undefined) flags.classifierApprovable = approvable;
+	const interaction = read("requires_user_interaction", isBoolean);
+	if (interaction !== undefined) flags.requiresUserInteraction = interaction;
+	// Only its presence counts: an ask rule forced the prompt.
+	if (read("matched_ask_rule", isJsonObject) !== undefined) flags.matchedAskRule = true;
+	if (mistyped.length > 0) flags.mistypedFlags = mistyped;
+	return flags;
+}
+
 interface PendingRequest {
 	resolve(value: unknown): void;
 	reject(err: Error): void;
@@ -84,7 +130,11 @@ export interface CliSpawnSpec {
 	args: string[];
 	cwd?: string;
 	shell: boolean;
+	env: NodeJS.ProcessEnv;
 }
+
+/** Turns on the CLI's file checkpoints under stream-JSON, which Restore files rewinds (ADR-006). */
+const CHECKPOINTING = "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING";
 
 /** True when the CLI is a Windows batch shim, which only runs through cmd.exe. */
 export function isCmdShim(cliPath: string, platform: NodeJS.Platform = process.platform): boolean {
@@ -106,11 +156,13 @@ function windowsQuote(arg: string): string {
 
 /**
  * The CLI path as one word of an `sh -c` script, still expanding a leading
- * `~/` and `$VARIABLES` the way a configured path would in a terminal.
+ * `~/` and plain `$NAME` / `${NAME}` the way a configured path would in a
+ * terminal, but never running a command: every other `$` (`$(`, `${X:=...}`,
+ * `$((`) is escaped, as are `"`, backslash and backtick.
  */
 function shellPath(cliPath: string): string {
 	const tilde = cliPath.startsWith("~/") ? "~/" : "";
-	return `${tilde}"${cliPath.slice(tilde.length).replace(/["\\`]/g, "\\$&")}"`;
+	return `${tilde}"${cliPath.slice(tilde.length).replace(/["\\`]|\$(?![A-Za-z_]\w*|\{[A-Za-z_]\w*\})/g, "\\$&")}"`;
 }
 
 /**
@@ -129,13 +181,19 @@ function shellPath(cliPath: string): string {
  * and an argument cmd.exe would still interpret is refused rather than passed.
  */
 export function cliSpawnSpec(
-	options: Pick<ClaudeClientOptions, "cliPath" | "cwd" | "useWsl">,
+	options: Pick<ClaudeClientOptions, "cliPath" | "cwd" | "useWsl" | "env">,
 	args: string[],
-	platform: NodeJS.Platform = process.platform
+	platform: NodeJS.Platform = process.platform,
+	baseEnv: NodeJS.ProcessEnv = process.env
 ): CliSpawnSpec {
+	const env: NodeJS.ProcessEnv = { ...baseEnv, ...options.env, [CHECKPOINTING]: "true" };
 	if (options.useWsl) {
+		// WSL passes only the variables WSLENV names into the distro; the
+		// user's own entries stay.
+		env.WSLENV = env.WSLENV ? `${env.WSLENV}:${CHECKPOINTING}` : CHECKPOINTING;
 		// wsl.exe translates the Windows --cd path into the distro's mount.
 		return {
+			env,
 			command: "wsl.exe",
 			args: [
 				"--cd",
@@ -151,6 +209,13 @@ export function cliSpawnSpec(
 		};
 	}
 	if (isCmdShim(options.cliPath, platform)) {
+		// npm's shim reads its own directory unquoted (`SET dp0=%~dp0`), so the
+		// path is screened like an argument, not only for what quotes protect.
+		if (CMD_UNSAFE.test(options.cliPath))
+			throw new Error(
+				`Cannot launch ${options.cliPath}: cmd.exe would interpret a character in the path. ` +
+					"Move the shim to a path without & ^ % ! quotes or similar, or install Claude Code's native build."
+			);
 		const unsafe = args.find((arg) => CMD_UNSAFE.test(arg));
 		if (unsafe !== undefined)
 			throw new Error(
@@ -158,13 +223,38 @@ export function cliSpawnSpec(
 					"Remove it from the profile's additional arguments, or install Claude Code's native build."
 			);
 		return {
-			command: windowsQuote(options.cliPath),
+			// Always quoted: windowsQuote leaves a whitespace-free path bare.
+			command: `"${options.cliPath}"`,
 			args: args.map(windowsQuote),
 			cwd: options.cwd,
 			shell: true,
+			env,
 		};
 	}
-	return { command: options.cliPath, args, cwd: options.cwd, shell: false };
+	return { command: options.cliPath, args, cwd: options.cwd, shell: false, env };
+}
+
+/**
+ * A `rewind_files` reply: `canRewind` a boolean, `filesChanged` an array of
+ * strings (other entries dropped) or absent, the counts numbers or absent.
+ */
+function parseRewindFiles(raw: unknown): RewindFilesResult {
+	const reply = (raw ?? {}) as Record<string, unknown>;
+	const count = (value: unknown) => value === undefined || typeof value === "number";
+	const files = reply.filesChanged;
+	if (
+		typeof reply.canRewind !== "boolean" ||
+		(files !== undefined && !Array.isArray(files)) ||
+		!count(reply.insertions) ||
+		!count(reply.deletions)
+	)
+		throw new Error("Unexpected rewind_files reply");
+	const result: RewindFilesResult = { canRewind: reply.canRewind };
+	if (Array.isArray(files)) result.filesChanged = files.filter((file): file is string => typeof file === "string");
+	if (typeof reply.error === "string") result.error = reply.error;
+	if (typeof reply.insertions === "number") result.insertions = reply.insertions;
+	if (typeof reply.deletions === "number") result.deletions = reply.deletions;
+	return result;
 }
 
 /**
@@ -180,6 +270,7 @@ export class ClaudeClient {
 	private pendingRequests = new Map<string, PendingRequest>();
 	private cancelledPermissions = new Set<string>();
 	private closed = false;
+	private stopped: Promise<void> | null = null;
 
 	constructor(
 		private readonly options: ClaudeClientOptions,
@@ -217,6 +308,9 @@ export class ClaudeClient {
 		if (permissionMode) args.push("--permission-mode", permissionMode);
 		if (allowBypassPermissions) args.push("--allow-dangerously-skip-permissions");
 		if (replayUserMessages) args.push("--replay-user-messages");
+		// The last guard before a stored id reaches the command line (ADR-018 Decision 1): the link has vetted it already.
+		if (resumeSessionId !== undefined && !isCliId(resumeSessionId))
+			throw new Error("Claude Code was not started: the session to resume is not a lowercase UUID.");
 		if (resumeSessionId) args.push("--resume", resumeSessionId);
 		// Only meaningful alongside --resume; the CLI rejects it on its own.
 		if (forkSession && resumeSessionId) args.push("--fork-session");
@@ -226,7 +320,7 @@ export class ClaudeClient {
 
 		const proc = spawn(spec.command, spec.args, {
 			cwd: spec.cwd,
-			env: { ...process.env, ...this.options.env },
+			env: spec.env,
 			stdio: ["pipe", "pipe", "pipe"],
 			windowsHide: true,
 			shell: spec.shell,
@@ -300,23 +394,36 @@ export class ClaudeClient {
 	/**
 	 * Truncate the conversation back to a user message, dropping everything after
 	 * it. This edits the live session in place - to branch instead, resume with
-	 * `forkSession` and rewind the fork.
+	 * `forkSession` and rewind the fork. `lastSeen` is the session's latest user
+	 * message as the caller knows it: Claude Code refuses a target that later
+	 * prompts follow unless it names the one the CLI holds ("stale target"
+	 * without one, "unseen later turn" with another).
 	 */
-	async rewindConversation(userMessageUuid: string): Promise<RewindResult> {
-		const raw = await this.request(
-			{
-				subtype: "rewind_conversation",
-				target_message_uuid: userMessageUuid,
-				interrupt_if_running: true,
-			},
-			30_000
-		);
+	async rewindConversation(userMessageUuid: string, lastSeen: string | null): Promise<RewindResult> {
+		const request: Record<string, unknown> = {
+			subtype: "rewind_conversation",
+			target_message_uuid: userMessageUuid,
+			interrupt_if_running: true,
+		};
+		if (lastSeen !== null) request.last_seen_user_message_uuid = lastSeen;
+		const raw = await this.request(request, 30_000);
 		const result = (raw ?? {}) as Record<string, unknown>;
 		return {
 			rewound: result.rewound === true,
 			error: typeof result.error === "string" ? result.error : undefined,
+			reason: typeof result.reason === "string" ? result.reason : undefined,
 			prefillText: typeof result.prefillText === "string" ? result.prefillText : undefined,
 		};
+	}
+
+	/**
+	 * Return the files the CLI's checkpoints track to their state at a user
+	 * message, or with `dryRun` only report what that would change (ADR-006).
+	 */
+	async rewindFiles(userMessageId: string, dryRun: boolean): Promise<RewindFilesResult> {
+		const request: Record<string, unknown> = { subtype: "rewind_files", user_message_id: userMessageId };
+		if (dryRun) request.dry_run = true;
+		return parseRewindFiles(await this.request(request, 30_000));
 	}
 
 	/**
@@ -351,18 +458,22 @@ export class ClaudeClient {
 
 	/**
 	 * Context-window occupancy for this session. Fails with "no turn received
-	 * yet" before the first turn, so only call it once a turn has finished.
+	 * yet" before the first turn, so only call it once a turn has finished;
+	 * a process that resumed a session answers at once. With `strict`, a reply
+	 * without the categories list is none.
 	 */
-	async getContextUsage(): Promise<ContextUsage | null> {
+	async getContextUsage(strict = false): Promise<ContextUsage | null> {
 		const raw = await this.request({ subtype: "get_context_usage" }, 15_000);
 		if (raw === null || typeof raw !== "object") return null;
 		const usage = raw as Record<string, unknown>;
 		const total = usage.totalTokens;
 		const max = usage.maxTokens;
 		if (typeof total !== "number" || typeof max !== "number") return null;
+		// An Undo takes a reply for the resumed session only if it has the report's shape (PRD-001.R38).
+		if (strict && !Array.isArray(usage.categories)) return null;
 		const categories = Array.isArray(usage.categories)
 			? usage.categories
-					.map((entry) => entry as Record<string, unknown>)
+					.filter(isJsonObject)
 					.filter(
 						(entry) =>
 							typeof entry.name === "string" && typeof entry.tokens === "number"
@@ -384,10 +495,12 @@ export class ClaudeClient {
 								? rawName.replace(/\s*\(deferred\)\s*$/i, "").trim()
 								: rawName,
 							tokens: entry.tokens as number,
-							deferred: entry.isDeferred === true || embedded,
+							deferred: entry.isDeferred === true || embedded || entry.kind === "deferred",
+							kind: typeof entry.kind === "string" ? entry.kind : "",
 						};
 					})
 			: [];
+		const threshold = usage.autoCompactThreshold;
 		return {
 			totalTokens: total,
 			maxTokens: max,
@@ -395,32 +508,47 @@ export class ClaudeClient {
 				typeof usage.percentage === "number"
 					? usage.percentage
 					: Math.round((total / Math.max(1, max)) * 100),
+			model: typeof usage.model === "string" && usage.model ? usage.model : null,
+			autoCompactAt: usage.isAutoCompactEnabled === true && typeof threshold === "number" ? threshold : null,
 			categories,
 		};
 	}
 
-	/** Terminate the process. Safe to call repeatedly. */
-	stop(): void {
+	/**
+	 * Terminate the process: SIGTERM, then SIGKILL 3 s later unless it closed.
+	 * Resolves on the close, or at the SIGKILL, so a process that never closes
+	 * cannot hold its caller. Safe to call repeatedly.
+	 */
+	stop(): Promise<void> {
 		const proc = this.proc;
-		if (!proc || this.closed) return;
-		try {
-			proc.stdin.end();
-		} catch {
-			// stdin may already be gone
-		}
-		const killTimer = setTimer(() => {
+		if (this.stopped) return this.stopped;
+		if (!proc || this.closed) return Promise.resolve();
+		this.stopped = new Promise((resolve) => {
 			try {
-				proc.kill("SIGKILL");
+				proc.stdin.end();
 			} catch {
-				// already exited
+				// stdin may already be gone
 			}
-		}, 3000);
-		proc.once("close", () => clearTimer(killTimer));
-		try {
-			proc.kill("SIGTERM");
-		} catch {
-			clearTimer(killTimer);
-		}
+			const killTimer = setTimer(() => {
+				try {
+					proc.kill("SIGKILL");
+				} catch {
+					// already exited
+				}
+				resolve();
+			}, 3000);
+			proc.once("close", () => {
+				clearTimer(killTimer);
+				resolve();
+			});
+			try {
+				proc.kill("SIGTERM");
+			} catch {
+				clearTimer(killTimer);
+				resolve();
+			}
+		});
+		return this.stopped;
 	}
 
 	// -----------------------------------------------------------------------
@@ -430,7 +558,7 @@ export class ClaudeClient {
 		this.closed = true;
 		for (const [, pending] of this.pendingRequests) {
 			clearTimer(pending.timer);
-			pending.reject(new Error("Claude process exited"));
+			pending.reject(new Error(PROCESS_EXITED));
 		}
 		this.pendingRequests.clear();
 		this.callbacks.onClose({
@@ -441,22 +569,28 @@ export class ClaudeClient {
 	}
 
 	private handleStdout(chunk: string): void {
-		this.stdoutBuffer += chunk;
-		// Split once per chunk instead of repeatedly slicing the front off the
-		// buffer (which reallocated it for every complete line in a burst). The
-		// last element is the not-yet-terminated remainder, kept for next time.
-		const parts = this.stdoutBuffer.split("\n");
-		this.stdoutBuffer = parts.pop() ?? "";
-		for (const part of parts) {
+		// Only the new chunk is searched for a line end, so a long line arriving
+		// in small pieces is not rescanned for each one. What follows the last
+		// line end waits for the next chunk.
+		const lastEnd = chunk.lastIndexOf("\n");
+		if (lastEnd === -1) {
+			this.stdoutBuffer += chunk;
+			return;
+		}
+		// Split once instead of repeatedly slicing the front off the text (which
+		// reallocated it for every complete line in a burst).
+		const lines = (this.stdoutBuffer + chunk.slice(0, lastEnd)).split("\n");
+		this.stdoutBuffer = chunk.slice(lastEnd + 1);
+		for (const part of lines) {
 			const line = part.trim();
 			if (!line) continue;
-			let msg: StreamMessage;
+			let msg: unknown;
 			try {
-				msg = JSON.parse(line) as StreamMessage;
+				msg = JSON.parse(line);
 			} catch {
 				continue; // non-JSON noise on stdout
 			}
-			this.route(msg);
+			if (isJsonObject(msg)) this.route(msg as unknown as StreamMessage);
 		}
 	}
 
@@ -464,15 +598,25 @@ export class ClaudeClient {
 		switch (msg.type) {
 			case "control_response": {
 				const payload = (msg as unknown as ControlResponseEnvelope).response;
+				if (!isJsonObject(payload)) return;
 				const pending = this.pendingRequests.get(payload.request_id);
 				if (!pending) return;
 				this.pendingRequests.delete(payload.request_id);
 				clearTimer(pending.timer);
 				if (payload.subtype === "success") pending.resolve(payload.response);
-				else pending.reject(new Error(payload.error));
+				else
+					pending.reject(
+						new Error(
+							typeof payload.error === "string" && payload.error
+								? payload.error
+								: "Claude Code refused the request."
+						)
+					);
 				return;
 			}
 			case "control_request":
+				// Without a request object there is nothing to answer.
+				if (!isJsonObject((msg as { request?: unknown }).request)) return;
 				void this.handleControlRequest(msg as unknown as ControlRequestEnvelope);
 				return;
 			case "control_cancel_request": {
@@ -516,6 +660,10 @@ export class ClaudeClient {
 			toolUseId: request.tool_use_id as string | undefined,
 			agentId: request.agent_id as string | undefined,
 		};
+		// Auto-approve shows a card for a flagged request (PRD-002.R9).
+		Object.assign(permissionRequest, permissionFlags(request));
+		if (typeof request.decision_reason === "string")
+			permissionRequest.decisionReason = request.decision_reason;
 
 		let result: PermissionResult;
 		try {
@@ -594,8 +742,9 @@ export class ClaudeClient {
 		this.write({ type: "control_response", response: payload });
 	}
 
+	/** Nothing reaches a stopped process: an answer given after `stop` could still run a tool. */
 	private write(value: unknown): void {
-		if (!this.proc || this.closed) return;
+		if (!this.proc || this.closed || this.stopped) return;
 		try {
 			this.proc.stdin.write(JSON.stringify(value) + "\n");
 		} catch {

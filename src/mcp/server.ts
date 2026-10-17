@@ -71,9 +71,14 @@ export class McpServer {
 
 	/**
 	 * Handle one JSON-RPC message. Returns null for notifications, which the
-	 * CLI's transport accepts as a `mcp_response` of null (verified live).
+	 * CLI's transport accepts as a `mcp_response` of null (verified live). Throws
+	 * on anything that is not a JSON object: the client turns that into a control
+	 * error, where null would pass as a notification.
 	 */
-	async handle(message: JsonRpcMessage): Promise<JsonRpcResponse | null> {
+	async handle(input: unknown): Promise<JsonRpcResponse | null> {
+		if (input === null || typeof input !== "object" || Array.isArray(input))
+			throw new Error("mcp_message carried no JSON-RPC message");
+		const message = input as JsonRpcMessage;
 		const id = message.id;
 		if (id === undefined) return null; // notification: nothing to answer
 		const reply = (result: unknown): JsonRpcResponse => ({ jsonrpc: "2.0", id, result });

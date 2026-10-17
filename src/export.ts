@@ -1,7 +1,8 @@
 import { moment, normalizePath, TFile, type App } from "obsidian";
-import type { StoredConversation, StoredMessage } from "./history";
-import type { AgentPanelSettings } from "./settings";
-import { summarizeToolInput } from "./view";
+import type { StoredConversation } from "./history";
+import { isSafeExportPath } from "./history-file";
+import type { AgentPanelSettings } from "./settings-core";
+import { conversationToMarkdown } from "./transcript-markdown";
 
 const DEFAULT_FOLDER = "Agent Chats";
 const DEFAULT_FILE_PATTERN = "{date} {title}";
@@ -107,168 +108,6 @@ export class TranscriptExporter {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Markdown serialization
-// ---------------------------------------------------------------------------
-
-export function conversationToMarkdown(
-	conversation: StoredConversation,
-	vaultName?: string
-): string {
-	const parts: string[] = [frontmatter(conversation)];
-	for (const msg of conversation.messages) {
-		const rendered = renderMessage(msg, vaultName);
-		if (!rendered) continue;
-		// A rule before each user turn separates the exchanges visually
-		// (skipped right after the frontmatter, where it would be ambiguous).
-		if (msg.kind === "user" && parts.length > 1) parts.push("---");
-		parts.push(rendered);
-	}
-	return parts.join("\n\n") + "\n";
-}
-
-function frontmatter(conversation: StoredConversation): string {
-	const lastCost = [...conversation.messages]
-		.reverse()
-		.find(
-			(m): m is Extract<StoredMessage, { kind: "meta" }> =>
-				m.kind === "meta" && typeof m.costUsd === "number"
-		);
-	const lines = [
-		"---",
-		`title: ${JSON.stringify(conversation.title || "Conversation")}`,
-		`created: ${formatDateTime(conversation.createdAt)}`,
-		`updated: ${formatDateTime(conversation.updatedAt)}`,
-	];
-	if (conversation.model) lines.push(`model: ${conversation.model}`);
-	if (conversation.effort) lines.push(`effort: ${conversation.effort}`);
-	if (conversation.sessionId) lines.push(`session: ${conversation.sessionId}`);
-	if (lastCost?.costUsd !== undefined)
-		lines.push(`cost_usd: ${lastCost.costUsd.toFixed(4)}`);
-	lines.push("---");
-	return lines.join("\n");
-}
-
-function renderMessage(msg: StoredMessage, vaultName?: string): string | null {
-	switch (msg.kind) {
-		case "user": {
-			const context = renderContextLinks(msg.contextPaths, vaultName);
-			// With linked paths the compact label would be redundant.
-			const title =
-				!context && msg.contextName
-					? `You - ${escapeCalloutTitle(msg.contextName)}`
-					: "You";
-			const contextLine = context ? `> **Context:** ${context}\n>\n` : "";
-			const imageLine = msg.images
-				? `> **Attached:** ${msg.images} ${msg.images === 1 ? "image" : "images"}\n>\n`
-				: "";
-			return `> [!question]+ ${title}\n${contextLine}${imageLine}${quote(msg.text)}`;
-		}
-		case "bash": {
-			const title = escapeCalloutTitle(`Shell · ${msg.command}`);
-			const streams = [msg.stdout, msg.stderr].filter(
-				(stream): stream is string => !!stream?.trim()
-			);
-			const body = streams.length ? `\n${quote(fence(streams.join("\n")))}` : "";
-			const status = msg.timedOut
-				? "timed out"
-				: msg.code !== undefined && msg.code !== 0
-					? `exit ${msg.code}`
-					: null;
-			return `> [!example]- ${title}${status ? ` (${status})` : ""}${body}`;
-		}
-		case "assistant":
-			return msg.text.trim() || null;
-		case "thinking":
-			return `> [!quote]- Thinking\n${quote(msg.text)}`;
-		case "tool": {
-			const summary = summarizeToolInput(msg.name, asRecord(msg.input));
-			const title = escapeCalloutTitle(
-				`${msg.isError ? "Failed: " : ""}${msg.name}${summary ? ` · ${summary}` : ""}`
-			);
-			const body = msg.result ? `\n${quote(fence(msg.result))}` : "";
-			return `> [!example]- ${title}${body}`;
-		}
-		case "meta": {
-			if (msg.error) return `> [!failure] Turn failed\n${quote(msg.error)}`;
-			const bits: string[] = [];
-			if (typeof msg.durationMs === "number")
-				bits.push(`${(msg.durationMs / 1000).toFixed(1)}s`);
-			if (typeof msg.costUsd === "number") bits.push(`$${msg.costUsd.toFixed(4)}`);
-			return bits.length ? `*${bits.join(" · ")}*` : null;
-		}
-	}
-}
-
-/**
- * Context paths as clickable references: files become wiki links; folders
- * (trailing "/") have no native link form, so they link to an Obsidian
- * search scoped to the folder when the vault name is known.
- */
-function renderContextLinks(
-	paths: string[] | undefined,
-	vaultName?: string
-): string | null {
-	if (!paths || paths.length === 0) return null;
-	const links = paths.map((path) => {
-		if (path.endsWith("/")) {
-			const name = path.split("/").filter(Boolean).pop() ?? path;
-			if (!vaultName) return `\`${path}\``;
-			const url = `obsidian://search?vault=${encodeURIComponent(
-				vaultName
-			)}&query=${encodeURIComponent(`path:"${path}"`)}`
-				.replace(/\(/g, "%28")
-				.replace(/\)/g, "%29");
-			return `[${name}/](${url})`;
-		}
-		const base = path.split("/").pop() ?? path;
-		const display = base.replace(/\.md$/, "");
-		return `[[${path}|${display}]]`;
-	});
-	return links.join(" · ");
-}
-
-/**
- * Callout titles are rendered as Markdown, so tool names like `mcp__a__b`
- * come out with bold runs and a stray `*` or `[` in an input summary breaks
- * the line. Escape the formatting characters; Obsidian honors backslashes.
- */
-function escapeCalloutTitle(text: string): string {
-	return text.replace(/[\\`*_~=<>[\]]/g, (c) => `\\${c}`);
-}
-
-function quote(text: string): string {
-	return text
-		.split("\n")
-		.map((line) => (line ? `> ${line}` : ">"))
-		.join("\n");
-}
-
-function fence(text: string): string {
-	return "````\n" + text.replace(/````/g, "```​`") + "\n````";
-}
-
-function asRecord(value: unknown): Record<string, unknown> {
-	return typeof value === "object" && value !== null
-		? (value as Record<string, unknown>)
-		: {};
-}
-
-/**
- * True when a stored export path is safe to write to: a `.md` note that
- * stays within the configured folder, with no traversal segments. Guards the
- * reuse path in export() against a tampered `exportPath`.
- */
-function isSafeExportPath(path: string, folder: string): boolean {
-	if (!path.endsWith(".md")) return false;
-	if (!path.startsWith(folder + "/")) return false;
-	// No empty/"."/".." segments - those are the only way to escape the folder
-	// once the prefix is fixed (normalizePath does NOT collapse "..").
-	return path
-		.split("/")
-		.every((segment) => segment !== "" && segment !== "." && segment !== "..");
-}
-
 function sanitizeName(title: string): string {
 	return title
 		.replace(/[\\/:*?"<>|#^[\]]/g, " ")
@@ -301,16 +140,4 @@ function patternToPath(
 		)
 		.filter((segment) => segment && segment !== "." && segment !== "..")
 		.join("/");
-}
-
-function formatDate(timestamp: number): string {
-	const d = new Date(timestamp);
-	const pad = (n: number) => String(n).padStart(2, "0");
-	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-function formatDateTime(timestamp: number): string {
-	const d = new Date(timestamp);
-	const pad = (n: number) => String(n).padStart(2, "0");
-	return `${formatDate(timestamp)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }

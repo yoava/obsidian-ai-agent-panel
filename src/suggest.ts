@@ -1,4 +1,5 @@
 import {
+	FuzzySuggestModal,
 	prepareFuzzySearch,
 	setIcon,
 	TFile,
@@ -6,9 +7,20 @@ import {
 	type App,
 	type TAbstractFile,
 } from "obsidian";
-import { PANEL_COMMANDS } from "./commands";
+import { commandList, type SlashCommand } from "./commands";
+import { BlurClose, holdsFocus } from "./state/blur-close";
+import { rankSlash } from "./state/slash-rank";
+import { folderLabel, matchedPrefix } from "./state/suggest-rows";
+import { themeModal } from "./theme-scope";
 
 const MAX_FILE_RESULTS = 8;
+const BLUR_GRACE_MS = 150;
+
+/** One key hint of a list's footer: the keys, then what they do. */
+interface KeyHint {
+	keys: readonly string[];
+	action: string;
+}
 
 interface Trigger {
 	/** Index of the trigger character ("@" or "/") in the textarea value. */
@@ -29,6 +41,9 @@ abstract class TextareaSuggest<T> {
 	protected items: T[] = [];
 	private selected = 0;
 	protected trigger: Trigger | null = null;
+	/** Called when the list appears or goes away. */
+	onShownChange: ((shown: boolean) => void) | null = null;
+	private wasShown = false;
 
 	constructor(
 		protected inputEl: HTMLTextAreaElement,
@@ -43,14 +58,25 @@ abstract class TextareaSuggest<T> {
 			if (this.isOpen) this.update();
 		});
 		this.inputEl.addEventListener("keydown", (evt) => this.onKeydown(evt));
-		this.inputEl.addEventListener("blur", () => {
-			// Delay so a mousedown on a suggestion can land first.
-			window.setTimeout(() => this.close(), 150);
-		});
+		// Delay the close so a mousedown on a suggestion can land first, but not
+		// past focus returning (the commands button refocuses the textarea).
+		const blurClose = new BlurClose(
+			() => this.close(),
+			() => holdsFocus(this.inputEl),
+			BLUR_GRACE_MS,
+			this.inputEl.win as typeof window
+		);
+		this.inputEl.addEventListener("blur", () => blurClose.schedule());
+		this.inputEl.addEventListener("focus", () => blurClose.cancel());
 	}
 
 	get isOpen(): boolean {
 		return this.trigger !== null;
+	}
+
+	/** The list is on screen, so it takes Enter, Tab, the arrows and Escape. */
+	get isShown(): boolean {
+		return this.isOpen && this.items.length > 0;
 	}
 
 	/** Where (if anywhere) the trigger token around the cursor starts. */
@@ -59,6 +85,24 @@ abstract class TextareaSuggest<T> {
 	/** Text that replaces the trigger…cursor range when an item is picked. */
 	protected abstract insertion(item: T): string;
 	protected abstract renderItem(el: HTMLElement, item: T): void;
+
+	/** The group an item is listed under, a header starting each; null lists it with no header. */
+	protected groupOf(_item: T): string | null {
+		return null;
+	}
+
+	/** A group's header, which takes no selection. */
+	protected renderGroup(_el: HTMLElement, _group: string): void {}
+
+	/** The label above the rows; null for none. */
+	protected headerLabel(): string | null {
+		return null;
+	}
+
+	/** The keys the list answers to, under the rows; none for no footer. */
+	protected footerHints(): readonly KeyHint[] {
+		return [];
+	}
 
 	private onKeydown(evt: KeyboardEvent): void {
 		if (!this.isOpen || this.items.length === 0 || evt.isComposing) return;
@@ -123,9 +167,22 @@ abstract class TextareaSuggest<T> {
 		this.popupEl.empty();
 		const visible = this.isOpen && this.items.length > 0;
 		this.popupEl.toggleClass("ai-agent-panel-hidden", !visible);
+		if (visible !== this.wasShown) {
+			this.wasShown = visible;
+			this.onShownChange?.(visible);
+		}
 		if (!visible) return;
+		let group: string | null = null;
+		const label = this.headerLabel();
+		if (label !== null) this.popupEl.createDiv({ cls: "ai-agent-panel-suggest-header", text: label });
+		// The rows scroll between the header and the footer, which stay.
+		const rows = this.popupEl.createDiv({ cls: "ai-agent-panel-suggest-rows" });
 		this.items.forEach((item, index) => {
-			const el = this.popupEl.createDiv({ cls: "ai-agent-panel-suggest-item" });
+			const itemGroup = this.groupOf(item);
+			if (itemGroup !== null && itemGroup !== group)
+				this.renderGroup(rows.createDiv({ cls: "ai-agent-panel-suggest-group" }), itemGroup);
+			group = itemGroup;
+			const el = rows.createDiv({ cls: "ai-agent-panel-suggest-item" });
 			el.toggleClass("is-selected", index === this.selected);
 			this.renderItem(el, item);
 			el.addEventListener("mousedown", (evt) => {
@@ -140,6 +197,17 @@ abstract class TextareaSuggest<T> {
 			});
 			if (index === this.selected) el.scrollIntoView({ block: "nearest" });
 		});
+		const hints = this.footerHints();
+		if (hints.length === 0) return;
+		const footer = this.popupEl.createDiv({ cls: "ai-agent-panel-suggest-footer" });
+		for (const hint of hints) {
+			const el = footer.createSpan({ cls: "ai-agent-panel-suggest-hint-keys" });
+			for (const key of hint.keys) el.createEl("kbd", { cls: "ai-agent-panel-kbd", text: key });
+			// Whitespace between flex items does not draw, but keeps the DOM text apart.
+			el.appendText(" ");
+			el.createSpan({ text: hint.action });
+			footer.appendText(" ");
+		}
 	}
 }
 
@@ -206,51 +274,71 @@ export class FileMentionSuggest extends TextareaSuggest<TAbstractFile> {
 		return item instanceof TFolder ? `@${item.path}/ ` : `@${item.path} `;
 	}
 
+	protected headerLabel(): string {
+		return "Files";
+	}
+
+	protected footerHints(): readonly KeyHint[] {
+		return [
+			{ keys: ["↑", "↓"], action: "navigate" },
+			{ keys: ["↵"], action: "attach" },
+			{ keys: ["esc"], action: "close" },
+		];
+	}
+
 	protected renderItem(el: HTMLElement, item: TAbstractFile): void {
 		const folder = item instanceof TFolder;
 		const icon = el.createSpan();
 		setIcon(icon, folder ? "folder" : "file-text");
-		el.createSpan({
-			cls: "ai-agent-panel-suggest-name",
-			text: item instanceof TFile ? item.basename : item.name,
-		});
-		el.createSpan({
-			cls: "ai-agent-panel-suggest-detail",
-			text: folder ? `${item.path}/` : item.path,
-		});
+		const label = folder ? `${item.name}/` : item.name;
+		const matched = matchedPrefix(label, this.trigger?.query ?? "");
+		el.addClass("mod-file");
+		const name = el.createSpan({ cls: "ai-agent-panel-suggest-name" });
+		if (matched > 0) name.createSpan({ cls: "ai-agent-panel-suggest-match", text: label.slice(0, matched) });
+		name.appendText(label.slice(matched));
+		el.createSpan({ cls: "ai-agent-panel-suggest-detail mod-path", text: folderLabel(item.path) });
+		el.createEl("kbd", { cls: "ai-agent-panel-kbd ai-agent-panel-suggest-enter", text: "↵" });
 	}
 }
 
-export interface SlashCommand {
-	name: string;
-	description?: string;
-	argumentHint?: string;
+export type { SlashCommand };
+
+/** A row of the command list: a command and the group it is listed in (PRD-001.R19). */
+interface SlashEntry extends SlashCommand {
+	group: "panel" | "cli";
 }
 
 /**
- * CLI commands shown until a session reports the real list (names without a
- * description of their own borrow these).
+ * "/" slash-command autocomplete (DES-003 Suggests): while the text starts
+ * with "/" and the name has no whitespace yet, the commands matching it in
+ * two groups, "Answered by the panel" marked "no tokens" and then "Claude
+ * Code" (what the CLI last reported, `cliCommands`, or the built-ins before
+ * it has), each row with its description and argument hint.
  */
-const BUILTIN_DESCRIPTIONS: Record<string, string> = {
-	compact: "Free up context by summarizing the conversation so far",
-	init: "Create a CLAUDE.md with codebase documentation",
-	"security-review": "Security review of pending changes",
-};
+export class SlashCommandSuggest extends TextareaSuggest<SlashEntry> {
+	private source: readonly SlashCommand[] | null | undefined = undefined;
+	private entries: SlashEntry[] = [];
 
-/**
- * "/" slash-command autocomplete. Typing "/" at the start of the message
- * lists available commands - built-ins plus, once a session is running,
- * whatever the CLI reports (custom commands and skills included).
- */
-export class SlashCommandSuggest extends TextareaSuggest<SlashCommand> {
-	private commands = withPanelCommands(
-		Object.entries(BUILTIN_DESCRIPTIONS).map(([name, description]) => ({ name, description }))
-	);
+	constructor(
+		inputEl: HTMLTextAreaElement,
+		anchorEl: HTMLElement,
+		private readonly cliCommands: () => readonly SlashCommand[] | null
+	) {
+		super(inputEl, anchorEl);
+	}
 
-	/** Replace the CLI part of the list with what a session reported. */
-	setCommands(commands: SlashCommand[]): void {
-		this.commands = withPanelCommands(commands);
-		if (this.isOpen) this.update();
+	/** The list for the CLI's commands as last reported, built once per report. */
+	private get commands(): SlashEntry[] {
+		const cli = this.cliCommands();
+		if (cli !== this.source) {
+			this.source = cli;
+			const list = commandList(cli);
+			this.entries = [
+				...list.panel.map((cmd): SlashEntry => ({ ...cmd, group: "panel" })),
+				...list.cli.map((cmd): SlashEntry => ({ ...cmd, group: "cli" })),
+			];
+		}
+		return this.entries;
 	}
 
 	protected findTrigger(): Trigger | null {
@@ -264,24 +352,26 @@ export class SlashCommandSuggest extends TextareaSuggest<SlashCommand> {
 		return { start: 0, query };
 	}
 
-	protected search(query: string): SlashCommand[] {
-		if (!query) return this.commands;
-		const fuzzy = prepareFuzzySearch(query);
-		const scored: Array<{ cmd: SlashCommand; score: number }> = [];
-		for (const cmd of this.commands) {
-			const match = fuzzy(cmd.name);
-			if (match) scored.push({ cmd, score: match.score });
-		}
-		scored.sort((a, b) => b.score - a.score);
-		return scored.map((s) => s.cmd);
+	/** Fuzzy over the names, the exact match first, then the groups in order (`rankSlash`). */
+	protected search(query: string): SlashEntry[] {
+		return rankSlash(this.commands, query, query ? prepareFuzzySearch(query) : () => null);
 	}
 
-	protected insertion(cmd: SlashCommand): string {
+	protected insertion(cmd: SlashEntry): string {
 		return `/${cmd.name} `;
 	}
 
-	protected renderItem(el: HTMLElement, cmd: SlashCommand): void {
-		const name = el.createSpan({ cls: "ai-agent-panel-suggest-name" });
+	protected groupOf(cmd: SlashEntry): string {
+		return cmd.group;
+	}
+
+	protected renderGroup(el: HTMLElement, group: string): void {
+		el.createSpan({ text: group === "panel" ? "Answered by the panel" : "Claude Code" });
+		if (group === "panel") el.createSpan({ cls: "ai-agent-panel-suggest-badge", text: "no tokens" });
+	}
+
+	protected renderItem(el: HTMLElement, cmd: SlashEntry): void {
+		const name = el.createSpan({ cls: "ai-agent-panel-suggest-name mod-command" });
 		name.createSpan({ cls: "ai-agent-panel-suggest-slash", text: "/" });
 		name.appendText(cmd.name);
 		if (cmd.argumentHint)
@@ -291,17 +381,40 @@ export class SlashCommandSuggest extends TextareaSuggest<SlashCommand> {
 	}
 }
 
-/**
- * The CLI's commands plus the panel's own, sorted. The panel's description
- * wins: a name both have (/context, /usage) is answered by the panel.
- */
-function withPanelCommands(cli: SlashCommand[]): SlashCommand[] {
-	const byName = new Map<string, SlashCommand>();
-	for (const cmd of cli)
-		byName.set(cmd.name, {
-			...cmd,
-			description: cmd.description ?? BUILTIN_DESCRIPTIONS[cmd.name],
-		});
-	for (const cmd of PANEL_COMMANDS) byName.set(cmd.name, { ...cmd });
-	return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+/** The composer's attach picker: a vault file or folder to attach as context. */
+export class AddContextModal extends FuzzySuggestModal<TAbstractFile> {
+	private detachTheme: (() => void) | null = null;
+
+	constructor(
+		app: App,
+		private items: TAbstractFile[],
+		private onPick: (item: TAbstractFile) => void
+	) {
+		super(app);
+		this.setPlaceholder("Attach a file or folder as context…");
+	}
+
+	onOpen(): void {
+		void super.onOpen();
+		this.detachTheme = themeModal(this);
+	}
+
+	onClose(): void {
+		super.onClose();
+		this.detachTheme?.();
+		this.detachTheme = null;
+	}
+
+	getItems(): TAbstractFile[] {
+		return this.items;
+	}
+
+	getItemText(item: TAbstractFile): string {
+		// The trailing slash marks folders apart from files.
+		return item instanceof TFolder ? `${item.path}/` : item.path;
+	}
+
+	onChooseItem(item: TAbstractFile): void {
+		this.onPick(item);
+	}
 }

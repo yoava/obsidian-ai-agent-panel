@@ -166,6 +166,7 @@ export function formatShellResultForChat(result: ShellResult): string {
 	lines.push("```", body.join("\n"), "```");
 	if (result.timedOut) lines.push("", "The command timed out and was killed.");
 	else if (result.error) lines.push("", `The command could not run: ${result.error}`);
+	else if (result.code === null) lines.push("", "The command failed with no exit code.");
 	else if (result.code !== 0) lines.push("", `Exit code: ${result.code}`);
 	return lines.join("\n");
 }

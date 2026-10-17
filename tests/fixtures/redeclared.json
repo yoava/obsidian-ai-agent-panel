@@ -1,0 +1,178 @@
+{
+	"names": [
+		"--background-modifier-active-hover",
+		"--background-modifier-border",
+		"--background-modifier-border-focus",
+		"--background-modifier-border-hover",
+		"--background-modifier-cover",
+		"--background-modifier-error",
+		"--background-modifier-error-hover",
+		"--background-modifier-form-field",
+		"--background-modifier-form-field-hover",
+		"--background-modifier-hover",
+		"--background-primary",
+		"--background-primary-alt",
+		"--background-secondary",
+		"--blockquote-border-color",
+		"--callout-blend-mode",
+		"--checkbox-border-color",
+		"--checkbox-border-color-hover",
+		"--checkbox-color",
+		"--checkbox-marker-color",
+		"--checklist-done-color",
+		"--code-background",
+		"--code-border-color",
+		"--code-comment",
+		"--code-function",
+		"--code-important",
+		"--code-keyword",
+		"--code-normal",
+		"--code-operator",
+		"--code-property",
+		"--code-punctuation",
+		"--code-string",
+		"--code-tag",
+		"--code-value",
+		"--collapse-icon-color",
+		"--collapse-icon-color-collapsed",
+		"--divider-color",
+		"--dropdown-background",
+		"--dropdown-background-hover",
+		"--embed-actions-background",
+		"--embed-border-start",
+		"--highlight-background",
+		"--highlight-background-blue",
+		"--highlight-background-green",
+		"--highlight-background-orange",
+		"--highlight-background-purple",
+		"--highlight-background-red",
+		"--highlight-background-yellow",
+		"--highlight-mix-blend-mode",
+		"--hotkey-background",
+		"--hr-color",
+		"--icon-color",
+		"--icon-color-active",
+		"--icon-color-focused",
+		"--icon-color-hover",
+		"--indentation-guide-color",
+		"--input-date-separator",
+		"--input-placeholder-color",
+		"--input-shadow",
+		"--input-shadow-hover",
+		"--interactive-hover",
+		"--interactive-normal",
+		"--link-color",
+		"--link-color-hover",
+		"--link-external-color",
+		"--link-external-color-hover",
+		"--link-unresolved-color",
+		"--link-unresolved-decoration-color",
+		"--list-marker-color",
+		"--list-marker-color-collapsed",
+		"--list-marker-color-hover",
+		"--metadata-label-background-active",
+		"--modal-background",
+		"--modal-border-color",
+		"--mono-100",
+		"--pill-border-color",
+		"--pill-border-color-hover",
+		"--pill-color",
+		"--pill-color-hover",
+		"--pill-color-remove",
+		"--pill-color-remove-hover",
+		"--prompt-background",
+		"--prompt-border-color",
+		"--scrollbar-active-thumb-bg",
+		"--scrollbar-thumb-bg",
+		"--search-clear-button-color",
+		"--search-icon-color",
+		"--setting-group-heading-color",
+		"--setting-item-name-color",
+		"--setting-items-background",
+		"--setting-items-border-color",
+		"--setting-items-divider-color",
+		"--settings-background",
+		"--shadow-l",
+		"--shadow-s",
+		"--slider-fill-background",
+		"--slider-thumb-border-color",
+		"--slider-track-background",
+		"--suggestion-background",
+		"--swatch-shadow",
+		"--table-border-color",
+		"--table-header-border-color",
+		"--table-header-color",
+		"--tag-background",
+		"--tag-background-hover",
+		"--tag-border-color",
+		"--tag-border-color-hover",
+		"--tag-color",
+		"--tag-color-hover",
+		"--text-accent",
+		"--text-error",
+		"--text-faint",
+		"--text-muted",
+		"--text-normal",
+		"--text-selection",
+		"--text-warning"
+	],
+	"excluded": [
+		{
+			"name": "--callout-bug",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-default",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-error",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-example",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-fail",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-important",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-info",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-question",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-success",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-summary",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-tip",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-todo",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--callout-warning",
+			"reason": "pre-1.13 value type"
+		},
+		{
+			"name": "--interactive-accent",
+			"reason": "source"
+		}
+	],
+	"obsidian": "1.14.4"
+}

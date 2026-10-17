@@ -171,24 +171,125 @@ export function planEdit(
 	};
 }
 
+/** Whether file names on `platform` compare ignoring case: Windows and macOS do, Linux does not. */
+export function namesIgnoreCase(platform: string): boolean {
+	return platform === "win32" || platform === "darwin";
+}
+
+/**
+ * Whether file names on `platform` compare ignoring Unicode normalization
+ * form: macOS does (HFS+ stores NFD, APFS compares forms as one), so the root
+ * Obsidian holds and the CLI's own spelling of it may differ in form only;
+ * NTFS and ext4 tell the forms apart.
+ */
+export function namesIgnoreForm(platform: string): boolean {
+	return platform === "darwin";
+}
+
+interface ResolvedPath {
+	/** `/`, a drive (`C:/`), a UNC share (`//host/share/`), or "" when relative. */
+	anchor: string;
+	segments: string[];
+}
+
+/**
+ * `path` as its anchor and segments, `.` and `..` resolved: Windows form when
+ * `windows` (`\` and `/` separate), else POSIX, where `\` is a name character.
+ * Empty and `.` segments drop; `..` at the anchor stays there, as the OS
+ * resolves it. Null for what this cannot place safely: `\` in a POSIX path, a
+ * UNC path without host and share or on a device (`\\?\`, `\\.\`), a drive
+ * with no separator after it, a relative path starting at `~` (the CLI expands
+ * it) or climbing above its start, a segment of only dots and spaces (Windows
+ * trims those).
+ */
+function resolvePath(path: string, windows: boolean): ResolvedPath | null {
+	if (!windows && path.includes("\\")) return null;
+	const slashed = windows ? path.replace(/\\/g, "/") : path;
+	let anchor = "";
+	if (windows && slashed.startsWith("//")) {
+		const [host = "", share = ""] = slashed.slice(2).split("/");
+		if (host === "" || share === "" || host === "?" || host === ".") return null;
+		anchor = `//${host}/${share}/`;
+	} else if (windows && /^[A-Za-z]:/.test(slashed)) {
+		if (slashed[2] !== "/") return null;
+		anchor = slashed.slice(0, 3);
+	} else if (slashed.startsWith("/")) anchor = "/";
+	const raw = slashed.slice(anchor.length).split("/");
+	if (anchor === "" && raw[0] === "~") return null;
+	const segments: string[] = [];
+	for (const segment of raw) {
+		if (segment === "" || segment === ".") continue;
+		if (segment === "..") {
+			if (segments.length > 0) segments.pop();
+			else if (anchor === "") return null;
+		} else if (/^[. ]+$/.test(segment)) return null;
+		else segments.push(segment);
+	}
+	return { anchor, segments };
+}
+
+/**
+ * A character as Windows compares it ignoring case: upper-cased only when that
+ * gives one character that lower-cases back, so the Kelvin sign stays apart
+ * from k and the dotless i from i.
+ */
+function foldChar(char: string): string {
+	const upper = char.toUpperCase();
+	return [...upper].length === 1 && (upper === char || upper.toLowerCase() === char)
+		? upper
+		: char;
+}
+
+/** Two names equal ignoring case; different lengths end the test before any folding. */
+function sameIgnoringCase(a: string, b: string): boolean {
+	const left = [...a];
+	const right = [...b];
+	if (left.length !== right.length) return false;
+	return left.every((char, i) => char === right[i] || foldChar(char) === foldChar(right[i]));
+}
+
 /**
  * Vault-relative form of a path a tool reported, or null when it points outside
- * the vault. The CLI runs with the vault root as its cwd and reports absolute
- * paths; Obsidian's APIs want relative ones.
+ * the vault, at its root, or at something this cannot place. The CLI runs with
+ * the vault root as its cwd and reports absolute paths; Obsidian's APIs want
+ * relative ones. The root's form decides the path's (Windows for a drive or UNC
+ * root); both are resolved, then compared anchor and segment by segment,
+ * ignoring case when `ignoreCase` (`namesIgnoreCase`) and normalization form
+ * when `ignoreForm` (`namesIgnoreForm`); the segments returned keep the
+ * reported form. The path is taken as reported, surrounding whitespace
+ * included: a leading space makes a relative path through a folder named by
+ * that space, which is refused, never the vault's own file.
  */
-export function vaultRelativePath(reported: string, vaultRoot: string): string | null {
-	const normalize = (p: string) => p.replace(/\\/g, "/").replace(/\/+$/, "");
-	const path = normalize(reported.trim());
-	const root = normalize(vaultRoot);
-	if (path === "") return null;
-	if (!/^([A-Za-z]:)?\//.test(path)) {
-		// Already relative. Reject traversal out of the vault.
-		return path.split("/").includes("..") ? null : path;
+export function vaultRelativePath(
+	reported: string,
+	vaultRoot: string,
+	ignoreCase: boolean,
+	ignoreForm = false
+): string | null {
+	const windows = /^([A-Za-z]:|\\\\|\/\/)/.test(vaultRoot);
+	const path = resolvePath(reported, windows);
+	if (path === null) return null;
+	if (path.anchor === "") return path.segments.length > 0 ? path.segments.join("/") : null;
+	const root = resolvePath(vaultRoot, windows);
+	const form = (name: string) => (ignoreForm ? name.normalize("NFC") : name);
+	const same = (a: string, b: string) => (ignoreCase ? sameIgnoringCase(form(a), form(b)) : form(a) === form(b));
+	if (root === null || !same(path.anchor, root.anchor)) return null;
+	if (path.segments.length <= root.segments.length) return null;
+	if (!root.segments.every((segment, i) => same(segment, path.segments[i]))) return null;
+	return path.segments.slice(root.segments.length).join("/");
+}
+
+/**
+ * `vaultRelativePath` for the running platform, with the vault root read
+ * lazily; null too when the root cannot be read (not a local file system),
+ * since a caller showing a path must not be the thing that throws. A path
+ * the CLI reports through a Windows mount in WSL (`/mnt/c/...`) is placed
+ * only when the vault's root is spelled the same way.
+ */
+export function placeInVault(reported: string, root: () => string, platform: string = process.platform): string | null {
+	try {
+		return vaultRelativePath(reported, root(), namesIgnoreCase(platform), namesIgnoreForm(platform));
+	} catch {
+		return null;
 	}
-	if (root === "") return null;
-	const lowerPath = path.toLowerCase();
-	const lowerRoot = root.toLowerCase();
-	if (lowerPath === lowerRoot) return null;
-	if (!lowerPath.startsWith(lowerRoot + "/")) return null;
-	return path.slice(root.length + 1);
 }

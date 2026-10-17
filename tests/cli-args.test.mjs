@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseCliArgs, profileLaunchArgs, sandboxAvailable } from "./.build/cli-args.mjs";
+import { parseCliArgs, profileLaunchArgs, relaunchOptions, sandboxAvailable } from "./.build/cli-args.mjs";
+import { DEFAULT_SETTINGS, settingsLaunchOptions } from "./.build/settings-core.mjs";
 
 const profile = (fields = {}) => ({ chrome: "", sandbox: "", extraArgs: "", ...fields });
 const posix = { cliPath: "/usr/local/bin/claude", useWsl: false };
@@ -119,4 +120,46 @@ test("a parse error is reported, not thrown", () => {
 	const result = profileLaunchArgs(profile({ extraArgs: `--x "open` }), posix);
 	assert.deepEqual(result.args, []);
 	assert.match(result.error, /Unterminated/);
+});
+
+const launchSettings = { vaultInstructions: "Use wiki-links.", enableObsidianMcp: true, enableBypassMode: true };
+
+test("PRD-001.R25: a settings-close restart carries each option a new conversation launches with", () => {
+	const options = relaunchOptions(launchSettings, profile({ chrome: "on", extraArgs: "--debug" }), posix, posix, "linux");
+	assert.deepEqual(options, {
+		appendSystemPrompt: "Use wiki-links.",
+		sdkMcpServers: ["obsidian"],
+		allowBypassPermissions: true,
+		extraArgs: ["--chrome", "--debug"],
+	});
+	const fresh = { ...settingsLaunchOptions(launchSettings), extraArgs: profileLaunchArgs(profile({ chrome: "on", extraArgs: "--debug" }), posix, "linux").args };
+	assert.deepEqual(options, fresh);
+	// Each option follows its own setting.
+	const withSetting = (change) => relaunchOptions({ ...launchSettings, ...change }, profile(), posix, posix, "linux");
+	assert.equal(withSetting({ vaultInstructions: "" }).appendSystemPrompt, undefined);
+	assert.equal(withSetting({ vaultInstructions: "Be brief." }).appendSystemPrompt, "Be brief.");
+	assert.equal(withSetting({ enableObsidianMcp: false }).sdkMcpServers, undefined);
+	assert.equal(withSetting({ enableBypassMode: false }).allowBypassPermissions, false);
+	assert.deepEqual(relaunchOptions(DEFAULT_SETTINGS, profile(), posix, posix, "linux").extraArgs, []);
+});
+
+test("PRD-001.R4: a restart is skipped when the CLI no longer resolves or has moved", () => {
+	const restart = (cli, target, platform = "linux") =>
+		relaunchOptions(launchSettings, profile(), cli, target, platform);
+	assert.equal(restart(null, posix), null);
+	assert.equal(restart({ ...posix, cliPath: "/opt/claude" }, posix), null);
+	const wsl = { cliPath: "claude", useWsl: true };
+	const native = { cliPath: "claude", useWsl: false };
+	assert.equal(restart(wsl, native, "win32"), null);
+	assert.equal(restart(native, wsl, "win32"), null);
+	assert.ok(restart(wsl, wsl, "win32"));
+	// Off Windows the WSL flag is ignored, so it cannot have moved the CLI.
+	assert.ok(restart(wsl, native, "linux"));
+});
+
+test("PRD-001.R4: a restart is skipped when the profile's arguments cannot launch, with no option applied", () => {
+	const refused = (extraArgs) => relaunchOptions(launchSettings, profile({ extraArgs }), posix, posix, "linux");
+	assert.equal(refused("--model opus"), null);
+	assert.equal(refused("--chrome"), null);
+	assert.equal(refused(`--x "open`), null);
 });

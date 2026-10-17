@@ -1,80 +1,50 @@
 /**
- * Geometry for the conversation column: how wide the user is allowed to drag
- * it, and the pane width at which "auto" switches between the top strip and
- * the side column.
- *
- * Obsidian-free on purpose - this is the arithmetic worth unit-testing, and
- * keeping it out of view.ts means the clamp and the layout threshold cannot
- * drift apart from each other.
+ * The conversation column's width (PRD-001.R8): its default while none is
+ * stored, the range a drag may set, and what a stored value reads as. Strip
+ * or column is `state/layout`'s.
  */
 
-/** Column width a fresh install (and a double-clicked handle) gets. */
-export const SIDE_WIDTH_DEFAULT_PX = 180;
-/** Below this the titles stop being readable, so dragging stops here. */
-export const SIDE_WIDTH_MIN_PX = 140;
-/** A conversation list is a list, not a second pane - it never grows past this. */
-export const SIDE_WIDTH_MAX_PX = 480;
-/** The column may never take more than this share of the pane. */
-export const SIDE_WIDTH_MAX_FRACTION = 0.5;
+/** Dragging stops here: below it titles stop being readable. */
+export const COLUMN_MIN_PX = 140;
+/** A conversation list is a list, not a second pane. */
+export const COLUMN_MAX_PX = 480;
+/** The column never takes more than this share of the panel. */
+export const COLUMN_MAX_FRACTION = 0.5;
+/** Unset, the column takes this share of the panel... */
+export const COLUMN_DEFAULT_FRACTION = 0.26;
+/** ...within this range. */
+export const COLUMN_DEFAULT_MIN_PX = 220;
+export const COLUMN_DEFAULT_MAX_PX = 300;
+/** Earlier versions stored their 180 px default; that value reads as unset. */
+export const COLUMN_LEGACY_DEFAULT_PX = 180;
 
-/**
- * Transcript width that still reads as a transcript. "auto" puts the tabs on
- * the side once the pane can afford the column plus this - so the threshold
- * moves with the column instead of assuming the 180px default.
- */
-export const TABS_SIDE_MIN_TRANSCRIPT_PX = 380;
+/** A panel that has not been laid out reports 0 px. */
+const measured = (panelWidth: number): boolean => Number.isFinite(panelWidth) && panelWidth > 0;
 
-/**
- * Slack that has to be lost again before the layout flips back, so dragging
- * the pane edge across the threshold cannot make it flicker.
- */
-export const TABS_SIDE_HYSTERESIS_PX = 40;
-
-/**
- * The width the column may actually take, given the pane it sits in. The
- * minimum wins over the fraction: in a pane too narrow for both, "auto" has
- * already moved the tabs back to the top strip, and an explicit "side" is the
- * user insisting - neither case is improved by an illegible 70px column.
- */
-export function clampSideWidth(
-	width: number,
-	paneWidth: number,
-	options: { keepAutoLayout?: boolean } = {}
-): number {
-	if (!Number.isFinite(width)) return SIDE_WIDTH_DEFAULT_PX;
-	const measured = Number.isFinite(paneWidth) && paneWidth > 0;
-	// A pane that has not been laid out yet reports 0; fall back to the plain
-	// ceiling rather than clamping every restored width down to the minimum.
-	const limits = measured
-		? [SIDE_WIDTH_MAX_PX, paneWidth * SIDE_WIDTH_MAX_FRACTION]
-		: [SIDE_WIDTH_MAX_PX];
-	// In "auto" the column is only shown while the pane clears the threshold
-	// that this very width feeds. Without this cap, dragging the handle to the
-	// fraction limit in a pane under ~680px pushes the threshold past the pane
-	// and the layout flips to the top strip - taking the handle, and the
-	// double-click that would undo it, with it.
-	if (measured && options.keepAutoLayout)
-		limits.push(paneWidth - TABS_SIDE_MIN_TRANSCRIPT_PX + TABS_SIDE_HYSTERESIS_PX);
-	const upper = Math.max(SIDE_WIDTH_MIN_PX, Math.min(...limits));
-	return Math.round(Math.max(SIDE_WIDTH_MIN_PX, Math.min(upper, width)));
+/** The column with no stored width: 26% of the panel within 220 to 300 px, and at most half the panel. */
+export function defaultColumnWidth(panelWidth: number): number {
+	if (!measured(panelWidth)) return COLUMN_DEFAULT_MIN_PX;
+	const width = Math.min(COLUMN_DEFAULT_MAX_PX, Math.max(COLUMN_DEFAULT_MIN_PX, panelWidth * COLUMN_DEFAULT_FRACTION));
+	return Math.round(Math.min(width, panelWidth * COLUMN_MAX_FRACTION));
 }
 
 /**
- * Pane width from which "auto" uses the side column, for a column of
- * `sideWidth`. Pass whether the tabs are on the side right now: while they
- * are, the threshold drops by the hysteresis so the pane has to shrink past
- * the flip point before the layout goes back to a strip.
+ * A dragged width: 140 px to the smaller of 480 px and half the panel, the
+ * minimum winning when both cannot hold; an unmeasured panel caps at 480 px
+ * only, so a restored width survives the first pass.
  */
-export function sideLayoutThreshold(sideWidth: number, onSide: boolean): number {
-	const width = Number.isFinite(sideWidth) ? sideWidth : SIDE_WIDTH_DEFAULT_PX;
-	return (
-		width + TABS_SIDE_MIN_TRANSCRIPT_PX - (onSide ? TABS_SIDE_HYSTERESIS_PX : 0)
-	);
+export function clampColumnWidth(width: number, panelWidth: number): number {
+	const upper = measured(panelWidth) ? Math.min(COLUMN_MAX_PX, panelWidth * COLUMN_MAX_FRACTION) : COLUMN_MAX_PX;
+	return Math.round(Math.max(COLUMN_MIN_PX, Math.min(upper, width)));
 }
 
-/** A width read back from device-local storage, or the default if it is junk. */
-export function parseStoredSideWidth(raw: unknown): number {
-	return typeof raw === "number" && Number.isFinite(raw)
-		? clampSideWidth(raw, 0)
-		: SIDE_WIDTH_DEFAULT_PX;
+/** The width drawn in this panel: the stored one, or the default when none is. */
+export function columnWidth(stored: number | null, panelWidth: number): number {
+	return stored === null ? defaultColumnWidth(panelWidth) : clampColumnWidth(stored, panelWidth);
+}
+
+/** A width read back from device-local storage: clamped, or null (unset) for junk and for 180 px. */
+export function parseStoredColumnWidth(raw: unknown): number | null {
+	if (typeof raw !== "number" || !Number.isFinite(raw) || raw === COLUMN_LEGACY_DEFAULT_PX) return null;
+	return clampColumnWidth(raw, 0);
 }

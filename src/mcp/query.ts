@@ -173,6 +173,19 @@ export function matchesQuery(parsed: ParsedQuery, note: NoteFacts): boolean {
 	return true;
 }
 
+export const SEARCH_LIMIT_DEFAULT = 50;
+export const SEARCH_LIMIT_MAX = 200;
+
+/**
+ * How many notes a search lists: a number is cut to a whole number and held to
+ * 1..200, so 0, a negative or a fraction cannot reach `slice`; anything that is
+ * not a finite number gives the default.
+ */
+export function searchLimit(value: number | undefined): number {
+	if (value === undefined || !Number.isFinite(value)) return SEARCH_LIMIT_DEFAULT;
+	return Math.min(Math.max(Math.trunc(value), 1), SEARCH_LIMIT_MAX);
+}
+
 /** Frontmatter into the lower-cased string lists the matcher compares against. */
 export function normalizeProperties(
 	frontmatter: Record<string, unknown> | undefined

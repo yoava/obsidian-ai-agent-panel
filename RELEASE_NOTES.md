@@ -1,86 +1,200 @@
 # Release notes
 
-## 0.5.0
+## Unreleased
 
-Claude in Chrome, the sandbox, and your own CLI arguments, per profile.
+**The panel is redrawn, `/clear` keeps your conversation on screen, and
+Claude Code's status commands are answered without spending tokens.** The
+panel draws in its own light and dark palettes, prompts and turns are easier
+to follow and to get back to, settings sit on one page, and a round of
+security hardening limits what a synced or edited file can make the panel do.
+It is 1.0 because the redesign is complete: the panel, its settings page and
+its conversation format are the base for what comes next. The release carries
+everything since 0.4.0, the last published version; a device that ran an
+unpublished 0.5.0 build updates the same way.
 
-- **Claude in Chrome.** A CLI profile can turn Claude Code's browser
-  integration on, so Claude opens pages, clicks, types and reads them in your
-  Chrome or Edge, signed in as you. Needs the Claude in Chrome extension and a
-  claude.ai login; Claude Code does not support it in WSL. Browser actions get
-  readable cards (*Chrome · navigate*), and screenshots a tool returns show in
-  its card.
-- **Sandbox.** A profile can switch Claude Code's Bash sandbox on or off for
-  the conversations it runs. On macOS, Linux and WSL2 only - native Windows
-  has no sandbox, so the setting is hidden there.
-- **Additional CLI arguments.** Each profile takes extra arguments for every
-  launch, e.g. `--add-dir /path/to/projects`. Quote values with spaces; no
-  shell is involved, so `~` and `$VARIABLES` are passed as typed. Flags the
-  panel sets itself (`--model`, `--resume`, the stream-JSON flags, …) are
-  refused with a message saying why, in settings as you type and in the chat.
-- **Both toggles default to *Claude Code default***, which passes nothing and
-  leaves the choice to your Claude Code settings (`/chrome`'s *Enabled by
-  default*, `sandbox.enabled`) - existing profiles behave exactly as before.
-  The flags are verified against Claude Code 2.1.292, natively and in WSL.
-- **Changes reach open conversations** when you close settings: each restarts
-  its CLI after the current turn and resumes where it was.
-- **WSL launches keep your default shell out of the arguments.** `wsl.exe --`
-  hands its command line to the distro's default shell to re-parse, so an
-  argument containing `;`, `$` or a quote would have been read by bash, zsh
-  or fish - each differently. The CLI now starts through `wsl.exe --exec` and
-  a login `sh` that receives the arguments as parameters, so they arrive
-  exactly as given. On a Windows npm install (`claude.cmd`), an argument
-  cmd.exe would interpret is refused instead of passed, and empty arguments
-  and paths ending in a backslash survive the trip.
-- **Fixed: the `!` escape under WSL expanded `$variables` inside single
-  quotes.** `!echo '$HOME'` printed your home directory instead of `$HOME`,
-  because the distro's default shell read the command before `sh` did. It now
-  runs through `wsl.exe --exec` too, so it behaves as in a terminal.
-- **Claude Code's info commands, answered in the panel.** `/context`,
-  `/mcp`, `/status`, `/memory`, `/hooks`, `/permissions`, `/skills`,
-  `/chrome`, `/sandbox`, `/cost` and `/help` now render as cards in the chat
-  instead of reaching Claude Code as a prompt - where most of them came back
-  as plain text, a pointer to the terminal, or "isn't available in this
-  environment". `/context` draws the window as a bar by category; `/mcp`
-  lists every server with its status and has Reconnect / Enable / Disable
-  buttons (or type `/mcp disable <server>`). The data comes from Claude
-  Code's own control requests - no turn, no tokens - and starts the CLI if
-  the conversation has none running yet. Verified against Claude Code
-  2.1.292.
-- **`/` autocomplete shows what each command does.** Descriptions and
-  argument hints come from Claude Code itself once a conversation has
-  started.
-- **Fixed: `/clear` left the transcript resuming an empty session.** Sent to
-  Claude Code, it started a new session under the conversation on screen,
-  which from then on resumed that empty session. `/clear` now opens a new
-  conversation, as *New conversation* does; the old one stays in history.
-- **Fixed: `/usage` run while Claude was working was saved out of order.**
-  The turn's reply is saved when the turn ends, so the usage card landed
-  before it in a reopened or exported transcript. A command run mid-turn now
-  stays on screen only.
-- **Fixed: the permission control showed *Ask* while Claude Code ran in
-  another mode.** With `permissions.defaultMode` set in your Claude Code
-  settings, the CLI started in that mode but the control under the composer
-  still said *Ask*; it also stayed on *Plan* after an approved plan switched
-  the CLI out of plan mode. The control now shows the mode the CLI reports;
-  before a conversation's CLI starts, it shows the mode that profile last
-  started in (or *Default* when unknown). A mode you pick - *Ask* included -
-  is kept when the CLI restarts and when you reopen the conversation, and a
-  mode the CLI switches to is kept across restarts too. The *Default
-  permission mode* setting's first choice is now named *Claude Code default*.
-- **GitHub Sponsors** joins Buy Me a Coffee as a funding link in Obsidian's
-  plugin list. Optional, as before; nothing is gated behind it.
+### What's new
 
-### Development
+- **Read and get around a long conversation.** Each prompt shows its send
+  time and context, numbered as a card or shown as a bubble, in a prompt color
+  you pick (Sand by default). The prompt of the turn you are reading stays
+  pinned at the top, a rail beside the messages has a tick per prompt, and a
+  long conversation reopens at once, last screen first. Rename a conversation
+  from its tab or row.
+- **See what Claude is doing.** A turn reads *Working*, *Writing* or *Waiting
+  for you* with its time; a working line stays at the end while Claude works;
+  thinking sits behind a toggle; replies stream as formatted Markdown.
+  Consecutive tool calls form one card of steps, each opening to its input,
+  result or diff; subagents are rows that open to their own replies; background
+  tasks are listed with Stop. MCP tools are named readably and images a tool
+  returns are shown. A finished turn's footer holds *Restore files*, *Branch*,
+  copy, duration and the turn's own cost.
+- **`/clear` clears Claude's context and keeps your conversation.** A
+  "Context cleared" divider marks the point; the messages above stay, dimmed
+  and folded when long. *Undo* on the divider brings the cleared session back
+  until you send another message; the permission mode and model the clear
+  dropped are set again. A `/clear` typed during a turn waits for the turn,
+  and one with agents running asks before stopping them. Compaction shows
+  the same way, as a divider with the token counts and a *Summary* button.
+- **Claude Code's info commands, answered in the panel.** `/context`, `/mcp`,
+  `/status`, `/memory`, `/hooks`, `/permissions`, `/skills`, `/chrome`,
+  `/sandbox`, `/cost` and `/help` render as cards with no turn and no tokens.
+  `/mcp` can reconnect, enable and disable servers. `/` autocomplete says what
+  each command does.
+- **One status line under the composer.** Model, effort, permissions, profile,
+  the context meter and plan usage share one line; each opens a popover. The
+  context segment counts down the prompt cache's estimated time left, offers
+  *Compact* and tints while Claude compacts; plan usage lists every limit
+  with its reset time.
+- **Tabs drawn as Obsidian tabs**, with a hover card per tab, a list of every
+  open conversation when they no longer fit, equal widths, and a conversation
+  column on wide panels (automatic by width on new installs).
+- **A new look.** The panel, its popovers and dialogs draw in their own light
+  and dark palettes with your Obsidian accent, set in Geist and Geist Mono
+  (bundled, about 70 KB, no download). *Theme* is *Auto*, *Light* or *Dark*;
+  Obsidian's own menus, notices and settings window keep Obsidian's look.
+  Light-mode text meets 4.5:1 contrast. The panel works down to a 300 px
+  pane. A changes chip, `N files +x -y`, opens
+  the files the conversation changed.
+- **Settings on one page.** Sections under a bar of links, a search field, a
+  *Modified* filter showing each changed setting with its default, and reset
+  per setting, per section or for everything, with Undo. Tab placement is
+  picked from picture cards. CLI profiles are
+  stacked with their own *Run via WSL*, path, *Claude in Chrome*, *Sandbox*,
+  extra arguments and *Use for new conversations*; a profile whose Claude Code
+  is not found is flagged with *Fix it*.
+- **Claude in Chrome, the sandbox and your own CLI arguments, per profile.**
+  Turn Claude Code's browser integration on for a
+  profile, switch its Bash sandbox on or off (macOS, Linux and WSL2), and add
+  arguments such as `--add-dir`; flags the panel sets itself are refused with
+  a reason. Changes reach open conversations when you close settings.
+- **Smaller things you will notice.** The prompt box grows with its text;
+  images open large in a viewer with Left and Right between a message's
+  images; a selection sent with a message names its note and line range, and
+  the note chip reads "N lines selected"; a new conversation offers starters
+  (*Summarize*, *Find notes that should link here*, *Draft a follow-up from
+  the selection*); commands to bind to keys: *Focus prompt box*, *Stop
+  Claude's turn*, *Next* and *Previous conversation tab*; a *Show tooltips*
+  setting; *GitHub Sponsors* and *Buy Me a Coffee* at the foot of settings.
 
-- **TypeScript 6.0.** typescript-eslint 8.71 supports it and its type-aware
-  rules no longer misreport, so the toolchain moves off 5.9; `main.js` builds
-  byte-identical. TypeScript 7 stays out until typescript-eslint supports it.
-- **`moment` pinned to 2.31** through `overrides`: the `obsidian` typings
-  package pulls in a version with a path-traversal advisory. Dev-only - the
-  plugin uses Obsidian's own `moment` at runtime - but the full dependency
-  tree audits clean again.
-- In-range dev dependency updates (ESLint 10.12, typescript-eslint 8.71).
+### Improvements and fixes
+
+- **Security: what a synced or edited file may do.** The default permission
+  mode, Bypass, vault instructions, the `!` shell escape and the vault tools
+  are now per device, so a synced settings file cannot switch them on, start
+  conversations in Bypass, add CLI profiles or fill the model picker. Stored
+  conversation files are checked field by field: ids, models, efforts,
+  profiles, paths and times that could act as flags or point outside the
+  vault are ignored, and a conversation resumes only a session this device
+  recorded. Nothing to do; a value that fails a check is dropped.
+- **Security: permissions.** Auto-approve shows a card for every request
+  Claude Code meant you to see: escalated by your rules or hooks, flagged by
+  its safety checks, an MCP tool set to always ask, or a command asking to run
+  outside the sandbox (also from a CLI that sends no reason fields). The
+  permission control shows the mode Claude Code reports.
+- **Security: rendering and export.** Replies, thinking and exports can no
+  longer run other plugins' code (`dataviewjs`, inline `$=`, Templater `<%`,
+  Dataview `::`) or load remote images, percent-encoded addresses included;
+  raw HTML shows as text; links open
+  only for `http`, `https`, `mailto` and `obsidian`; a stored context path
+  that is no vault path is left out of exported notes.
+- **Security: vault tools and launch.** `obsidian_rename` refuses targets
+  outside the vault, in the configuration folder, hidden (`.claude/`,
+  `.mcp.json`), shaped like a Windows short name (`MCP~1.JSO`) or holding a
+  character Obsidian forbids (`* " < > : | ?`). A `claude.cmd` path cmd.exe
+  would misread is refused and always quoted; a WSL path and `!` command no
+  longer pass through the distro's default shell, so `$(...)` and `'$HOME'`
+  behave as in a terminal.
+- **Conversation and history.** Branch starts at the chosen turn, leaves
+  the source's cost out and is disabled on turns a compaction summarized
+  away; a reopened conversation keeps its model, effort,
+  profile and cost; `/compact` and other slash commands are sent as typed; a
+  model change or a manual `/compact` no longer counts as your message; a
+  model Claude Code refused stays refused; a permission card no longer
+  outlives a restart; conversation files that cannot be read or saved say so,
+  and a malformed entry is skipped; titles, pins and deletes behave.
+- **Edits and restores.** *Restore files* uses Claude Code's own
+  checkpoints after listing the files it would change. Edit cards place a
+  reported path as spelled, keep vault bounds after `..`, follow subagent
+  edits and, on macOS, compare the vault root in NFC, so an accented vault
+  path no longer puts every edit outside the vault. Diffs
+  show three lines of context with folded gaps that open in place, draw in
+  batches, and "Review changes" opens at once however many files changed.
+- **Panel and settings.** Settings of the wrong type load as defaults; a
+  setting switched between device-only and synced is kept even when saving
+  fails; the first device to update from an older version keeps its security
+  settings;
+  the composer, cards and question forms are reachable by keyboard; the
+  commands list stays open; `/usage` runs the exact command and is saved in
+  order; closed tabs release their embeds; one usage timer serves every
+  panel; only PNG, JPEG, GIF and WebP attach, and other files are named.
+- **Vault tools.** `obsidian_search` takes `limit` as a whole number from 1
+  to 200; `obsidian_active` finds the editor you last focused; a vault-tool
+  card names the note it acts on; a rename's reply no longer claims to have
+  updated links (Obsidian does, as your link-update setting directs).
+
+### Upgrade notes
+
+- **Update every device.** The `!` shell escape, the vault tools, the
+  default permission mode and the vault instructions move out of the synced
+  settings file to each device. The first device to update keeps its own
+  values (`!` and the vault tools stay off if they were, instructions carry
+  over, Plan or Claude Code default stays). A device that updates after
+  another gets `!` and the vault tools off and needs its default mode and
+  instructions set again. A device still on the old version after another
+  has updated runs with `!` and the vault tools on and no instructions until
+  it updates.
+- **CLI profiles are device-only again.** A device with none of its own
+  starts with one auto-detect profile; add yours again.
+- **Restore before you update if you still need it.** *Restore files* now
+  uses Claude Code's checkpoints under `~/.claude/file-history/`; turns from
+  before the update offer no restore, and the panel deletes its old copies
+  folder.
+- **Sessions resume only where this device ran them.** A conversation copied
+  or synced from another machine opens with all its messages, starts a fresh
+  session on its next message, and has *Branch* disabled.
+- **Conversations with a clear or a fresh start need this release**; an
+  older version leaves them out of its list. A conversation saved in Auto-approve asks
+  before reopening in it.
+- **Codex is not in this release.** The panel drives Claude Code only; a
+  second agent is planned for a later release.
+
+### Known issues
+
+- **A message sent while Claude works can be lost when a setting change or a
+  new effort restarts Claude Code at the end of that turn** (as before): it
+  shows as sent but never runs. Wait for the turn to end before changing
+  launch settings or effort.
+- **Under a WSL profile, edit cards and the change list treat vault files as
+  outside the vault**, since the CLI reports `/mnt/<drive>/...` paths. The
+  edits themselves are fine; use a native Linux or Windows profile for the
+  vault-relative view.
+- **A folder symlinked or junctioned into the vault counts as inside it**
+  for edit previews and `obsidian_rename`, since bounds are checked by path
+  spelling. Read the card's path before approving a write into such a folder.
+- **On native Windows, a `!` command containing `"` may be cut short** by
+  `cmd.exe`'s quoting. Avoid double quotes there, or run `!` through a WSL
+  profile.
+- **On a case-insensitive file system, `obsidian_rename` can overwrite a note
+  whose name differs only by case.** Pick a distinct name when a card shows
+  one.
+
+### For contributors
+
+- **`make verify`** is the one local and CI gate, with Node pinned in
+  `.nvmrc`; ESLint warnings fail it, and the release workflow runs it before
+  attesting.
+- **`AGENTS.md`** is the contributor guide (it names the one shell launch,
+  the `claude.cmd` shim, bounded in `docs/current/SECURITY.md`); governing
+  docs live under `docs/current/`, records under `docs/records/`, and
+  numbered docs start with their ID. The repository records Agentic SDLC
+  scaffold 2.4.0, and edits outside the repository ask in Claude Code.
+- **Dependabot** opens one pull request per runtime package update, so each
+  passes the dependency screen.
+- **TypeScript 6.0**, `moment` pinned to 2.31 through `overrides` (dev
+  only), in-range ESLint and typescript-eslint updates.
+- **Records for this release:** the owner's real-CLI run of `/clear` and
+  Undo on native Linux and WSL (task 110), the cross-review's design
+  corrections, and the comparison's download counts from 2026-10-17.
 
 ## 0.4.0
 
@@ -152,7 +266,7 @@ came from, and stops a few things that were wrong but silent.
   `can_use_tool` request whose `tool_name` is not a string is now labelled
   *unknown* rather than stringified into the card's title.
 - **What the plugin can do, stated up front.** `README.md` and
-  `docs/SECURITY.md` now open with the four capabilities a plugin review flags
+  `docs/current/SECURITY.md` now open with the four capabilities a plugin review flags
   in this one - it starts a process, reads a few paths outside the vault to find
   the CLI, lists the vault's files, and writes to the clipboard - each with the
   reason it is there and where it stops, plus the four things the plugin does
@@ -358,5 +472,5 @@ extra process. Needs Claude Code 2.1.210+; can be switched off.
 Conversation history and turn checkpoints live under
 `.obsidian/plugins/ai-agent-panel/` and contain full note contents; transcript
 exports are ordinary notes. Treat both as you would any other note when syncing
-or sharing a vault. See [SECURITY.md](SECURITY.md) for the full model and
+or sharing a vault. See [SECURITY.md](docs/current/SECURITY.md) for the full model and
 [LEGAL.md](docs/current/LEGAL.md) for licensing and trademark detail.

@@ -18,18 +18,27 @@ export interface InlineSegment {
 	changed: boolean;
 }
 
-export type DiffRowType = "context" | "add" | "remove" | "gap";
+export type DiffRowType = "context" | "add" | "remove" | "gap" | "cut";
 
 export interface DiffRow {
 	type: DiffRowType;
-	/** 1-based line number in the old text (`context` and `remove` rows). */
+	/**
+	 * 1-based line number in the old text (`context` and `remove` rows); on a
+	 * `gap` row, the first line it hides.
+	 */
 	oldLine?: number;
-	/** 1-based line number in the new text (`context` and `add` rows). */
+	/**
+	 * 1-based line number in the new text (`context` and `add` rows); on a `gap`
+	 * row, the first line it hides.
+	 */
 	newLine?: number;
 	text: string;
 	/** Word-level refinement; present only when a removal paired with an addition. */
 	segments?: InlineSegment[];
-	/** `gap` rows only: how many unchanged lines were collapsed away. */
+	/**
+	 * `gap` rows: how many unchanged lines were collapsed away. `cut` rows: how
+	 * many rows were dropped to stay under `maxRows`.
+	 */
 	hidden?: number;
 }
 
@@ -44,7 +53,7 @@ export interface FileDiff {
 	 * one wholesale replacement instead of line-by-line.
 	 */
 	coarse: boolean;
-	/** Rows were dropped to stay under `maxRows`. */
+	/** Rows were dropped to stay under `maxRows`; the last row is a `cut` row. */
 	truncated: boolean;
 }
 
@@ -72,6 +81,25 @@ const DEFAULTS = {
 	maxRows: 4000,
 	minSimilarity: 0.34,
 };
+
+/** Most rows one gap expands to; the rest stays a gap row. */
+const MAX_GAP_ROWS = 20_000;
+
+/**
+ * A chunk of rows drawn in one animation frame ends at this many rows or at
+ * `CHUNK_CHARS` characters of row text, whichever comes first, so long lines
+ * stay inside the 100 ms task bound too (PRD-001.R29).
+ */
+const CHUNK_ROWS = 500;
+const CHUNK_CHARS = 50_000;
+
+/** An option left undefined (`{ context: opts.context }`) keeps its default. */
+function withDefaults(options: DiffOptions): typeof DEFAULTS {
+	const opts = { ...DEFAULTS };
+	for (const key of Object.keys(DEFAULTS) as Array<keyof typeof DEFAULTS>)
+		opts[key] = options[key] ?? DEFAULTS[key];
+	return opts;
+}
 
 /**
  * Split into display lines. A trailing newline does not become an extra empty
@@ -134,7 +162,7 @@ export function diffText(
 	newText: string,
 	options: DiffOptions = {}
 ): FileDiff {
-	const opts = { ...DEFAULTS, ...options };
+	const opts = withDefaults(options);
 	const a = splitLines(oldText);
 	const b = splitLines(newText);
 
@@ -203,7 +231,7 @@ export function diffText(
 	if (truncated) {
 		const dropped = collapsed.length - opts.maxRows;
 		collapsed.length = opts.maxRows;
-		collapsed.push({ type: "gap", text: "", hidden: dropped });
+		collapsed.push({ type: "cut", text: "", hidden: dropped });
 	}
 
 	return {
@@ -253,9 +281,9 @@ function tokenize(text: string): string[] {
 }
 
 /**
- * Pair each removal in a change block with the addition at the same offset and
- * highlight only the words that differ. Unequal-length blocks still pair by
- * offset: leftovers simply stay whole-line.
+ * Pair each removal in a change block with an addition and
+ * highlight only the words that differ. Equal-length blocks pair by offset;
+ * unequal ones by similarity (`alignBlock`). Leftovers stay whole-line.
  */
 function refineInline(
 	rows: RawRow[],
@@ -274,13 +302,20 @@ function refineInline(
 		while (ad < rows.length && rows[ad].type === "add") ad++;
 		const removals = rows.slice(i, r);
 		const additions = rows.slice(r, ad);
-		const pairs = Math.min(removals.length, additions.length);
-		for (let k = 0; k < pairs; k++) {
-			const from = removals[k];
-			const to = additions[k];
-			if (from.text.length > maxInlineChars || to.text.length > maxInlineChars)
-				continue;
-			if (from.text === "" || to.text === "") continue;
+		const refinable = (from: RawRow, to: RawRow): boolean =>
+			from.text.length <= maxInlineChars &&
+			to.text.length <= maxInlineChars &&
+			from.text !== "" &&
+			to.text !== "";
+		const offsets: [number, number][] = Array.from({ length: Math.min(removals.length, additions.length) }, (_, k) => [k, k]);
+		const pairs =
+			removals.length !== additions.length && removals.length <= MAX_ALIGNED && additions.length <= MAX_ALIGNED
+				? (alignByTokens(removals, additions, refinable, minSimilarity) ?? offsets)
+				: offsets;
+		for (const [fromAt, toAt] of pairs) {
+			const from = removals[fromAt];
+			const to = additions[toAt];
+			if (!refinable(from, to)) continue;
 			const refined = refinePair(from.text, to.text, minSimilarity);
 			if (!refined) continue;
 			from.segments = refined.from;
@@ -288,6 +323,78 @@ function refineInline(
 		}
 		i = ad > i ? ad : i + 1;
 	}
+}
+
+/** The largest block, either side, whose lines are aligned by similarity rather than by offset. */
+const MAX_ALIGNED = 24;
+
+/** The most work (Σ tokens² over a block's lines) spent aligning one block; a bigger block pairs by offset. */
+export const MAX_ALIGN_WORK = 120_000;
+
+/** Token-pair cells the word-level LCS has filled; read by tests to bound the work, never by the app. */
+export const refineWork = { cells: 0 };
+
+/**
+ * Pair a block's lines by cheap similarity (shared token characters, no LCS),
+ * or null when the block's Σ tokens² is over `MAX_ALIGN_WORK`, so the caller
+ * falls back to offset pairing.
+ */
+function alignByTokens(
+	removals: RawRow[],
+	additions: RawRow[],
+	refinable: (from: RawRow, to: RawRow) => boolean,
+	minSimilarity: number
+): [number, number][] | null {
+	const tokens = (rows: RawRow[]) => rows.map((row) => tokenize(row.text));
+	const from = tokens(removals);
+	const to = tokens(additions);
+	let work = 0;
+	for (const list of [from, to]) for (const t of list) work += t.length * t.length;
+	if (work > MAX_ALIGN_WORK) return null;
+	const counts = (t: string[]) => {
+		const map = new Map<string, number>();
+		for (const token of t) map.set(token, (map.get(token) ?? 0) + 1);
+		return map;
+	};
+	const fromCounts = from.map(counts);
+	const toCounts = to.map(counts);
+	return alignBlock(removals, additions, (a, b, ia, ib) => {
+		if (!refinable(a, b)) return 0;
+		let shared = 0;
+		for (const [token, n] of fromCounts[ia]) shared += Math.min(n, toCounts[ib].get(token) ?? 0) * token.length;
+		const score = shared / Math.max(a.text.length, b.text.length);
+		return score < minSimilarity ? 0 : score;
+	});
+}
+
+/**
+ * The in-order pairing of a block's removals and additions with the most
+ * similarity between them, so a paragraph re-wrapped to fewer or more lines
+ * still pairs the lines that share words (a zero score pairs nothing).
+ */
+function alignBlock(
+	removals: RawRow[],
+	additions: RawRow[],
+	score: (from: RawRow, to: RawRow, fromAt: number, toAt: number) => number
+): [number, number][] {
+	const n = removals.length;
+	const m = additions.length;
+	const scores = removals.map((from, a) => additions.map((to, b) => score(from, to, a, b)));
+	const best: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
+	for (let a = 1; a <= n; a++)
+		for (let b = 1; b <= m; b++)
+			best[a][b] = Math.max(best[a - 1][b], best[a][b - 1], best[a - 1][b - 1] + scores[a - 1][b - 1]);
+	const out: [number, number][] = [];
+	for (let a = n, b = m; a > 0 && b > 0; ) {
+		if (best[a][b] === best[a - 1][b]) a--;
+		else if (best[a][b] === best[a][b - 1]) b--;
+		else {
+			out.unshift([a - 1, b - 1]);
+			a--;
+			b--;
+		}
+	}
+	return out;
 }
 
 function refinePair(
@@ -299,6 +406,7 @@ function refinePair(
 	const b = tokenize(newLine);
 	if (a.length === 0 || b.length === 0) return null;
 
+	refineWork.cells += a.length * b.length;
 	const pairs = lcsPairs(a, b);
 	// Similarity by shared characters, not shared tokens: one long identical
 	// clause matters more than a handful of shared spaces and commas.
@@ -369,21 +477,114 @@ function collapse(rows: RawRow[], context: number): DiffRow[] {
 
 	const out: DiffRow[] = [];
 	let run = 0;
-	const flush = () => {
+	// Every row of a run is unchanged, so its first row's numbers start the gap.
+	const flush = (end: number) => {
 		if (run === 0) return;
-		out.push({ type: "gap", text: "", hidden: run });
+		const first = rows[end - run];
+		out.push({
+			type: "gap",
+			text: "",
+			hidden: run,
+			oldLine: first.oldLine,
+			newLine: first.newLine,
+		});
 		run = 0;
 	};
 	for (let i = 0; i < rows.length; i++) {
 		if (keep[i]) {
-			flush();
+			flush(i);
 			out.push({ ...rows[i] });
 		} else {
 			run++;
 		}
 	}
-	flush();
+	flush(rows.length);
 	return out;
+}
+
+/**
+ * The unchanged lines a `gap` row hides, as `context` rows taken by the gap's
+ * line range from the old text's lines (unchanged lines read the same in both
+ * texts) - no re-diff. At most `limit` rows come back; `rest` is a gap row for
+ * the lines after them, or null when none remain.
+ */
+export function expandGap(
+	gap: DiffRow,
+	oldLines: string[],
+	limit = MAX_GAP_ROWS
+): { rows: DiffRow[]; rest: DiffRow | null } {
+	const { oldLine, newLine, hidden } = gap;
+	if (gap.type !== "gap" || oldLine === undefined || newLine === undefined || !hidden)
+		return { rows: [], rest: gap };
+	const count = Math.min(hidden, limit);
+	const rows: DiffRow[] = [];
+	for (let k = 0; k < count; k++)
+		rows.push({
+			type: "context",
+			oldLine: oldLine + k,
+			newLine: newLine + k,
+			text: oldLines[oldLine - 1 + k],
+		});
+	const rest: DiffRow | null =
+		count < hidden
+			? {
+					type: "gap",
+					text: "",
+					hidden: hidden - count,
+					oldLine: oldLine + count,
+					newLine: newLine + count,
+				}
+			: null;
+	return { rows, rest };
+}
+
+/**
+ * Draw `rows` in chunks without holding the UI thread: the first chunk now,
+ * whether or not the target is on the page yet, each later one when
+ * `schedule` runs the step it is given (an animation frame). `draw` gets the
+ * chunk and whether it is the last. Nothing more is drawn once `alive` says
+ * the target is gone. A chunk always holds at least one row, so a line longer
+ * than the character budget still draws.
+ */
+export function drawInChunks(
+	rows: DiffRow[],
+	draw: (chunk: DiffRow[], last: boolean) => void,
+	schedule: (step: () => void) => void,
+	alive: () => boolean,
+	maxRows = CHUNK_ROWS,
+	maxChars = CHUNK_CHARS
+): void {
+	let next = 0;
+	const chunk = () => {
+		let end = next;
+		let chars = 0;
+		while (end < rows.length && end - next < maxRows && chars < maxChars)
+			chars += rows[end++].text.length;
+		const last = end >= rows.length;
+		draw(rows.slice(next, end), last);
+		next = end;
+		if (!last) schedule(step);
+	};
+	const step = () => {
+		if (alive()) chunk();
+	};
+	chunk();
+}
+
+/**
+ * The changed region before and after, as two texts: context rows on both
+ * sides, removals before only, additions after only. Gap and cut rows stand
+ * for lines that are not in the diff, so they contribute nothing.
+ */
+export function sidesOf(diff: FileDiff): { before: string; after: string } {
+	const before: string[] = [];
+	const after: string[] = [];
+	for (const row of diff.rows) {
+		if (row.type === "gap" || row.type === "cut") continue;
+		if (row.type !== "add") before.push(row.text);
+		if (row.type !== "remove") after.push(row.text);
+	}
+	return { before: before.join("\n"), after: after.join("\n") };
 }
 
 /** "+3 -1" style summary, or null when nothing changed. */

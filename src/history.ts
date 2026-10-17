@@ -1,12 +1,27 @@
 import {
 	FuzzySuggestModal,
-	Modal,
 	Notice,
 	setIcon,
 	type App,
 	type FuzzyMatch,
 } from "obsidian";
-import type { ChatPermissionMode } from "./settings-core";
+import { ConfirmModal } from "./confirm-modal";
+import { displayTitle } from "./conversation-list";
+import { ScanJournal } from "./history-core";
+import { checkStoredMessages, checkStoredTimes, dropNonStringText, readForkBase } from "./history-file";
+import { OncePerId } from "./history-notice";
+import { dropUnsafeArgValues, migrateStoredModel, type ChatPermissionMode } from "./settings-core";
+import { fileVersion, isStoredVersion, type ClearRecord, type FreshStartRecord } from "./state/boundary-records";
+import {
+	MIGRATION_MARKER,
+	storedSessionIds,
+	type ScanReport,
+	type SeedSource,
+	type SessionProvenance,
+} from "./state/session-provenance";
+import type { ForkBase } from "./state/fork-base";
+import { hidesTooltips, NO_TOOLTIPS_CLASS } from "./state/tooltips";
+import { themeModal } from "./theme-scope";
 import { clearTimer, setTimer, type TimerHandle } from "./timers";
 
 /**
@@ -31,6 +46,8 @@ export type StoredMessage =
 			 * dwarf the transcript - so a restored message shows the count only.
 			 */
 			images?: number;
+			/** When a prompt sent to Claude was sent (ms since the epoch); absent in older files (PRD-003.R1). */
+			sentAt?: number;
 	  }
 	| {
 			/** A "!" shell command the user ran from the composer. */
@@ -44,6 +61,22 @@ export type StoredMessage =
 	  }
 	| { kind: "assistant"; text: string }
 	| { kind: "thinking"; text: string }
+	| {
+			/** A compaction the CLI reported done (PRD-003.R1); an optional addition in version 1 (ADR-018). */
+			kind: "compaction";
+			/** When it was reported (ms since the epoch). */
+			at?: number;
+			trigger?: "auto" | "manual";
+			/** Tokens before and after, where the CLI reported them. */
+			preTokens?: number;
+			postTokens?: number;
+			/** The CLI's summary of what it kept, where it supplied one. */
+			summary?: string;
+	  }
+	// A session started without `--resume`: a boundary with no divider (ADR-018).
+	| FreshStartRecord
+	// A completed clear: a boundary with a divider (ADR-018).
+	| ClearRecord
 	| {
 			kind: "tool";
 			name: string;
@@ -59,25 +92,42 @@ export type StoredMessage =
 			durationMs?: number;
 			costUsd?: number;
 			error?: string;
-			/** 1-based turn number, the key for this turn's file checkpoint. */
+			/** 1-based turn number in its tab. */
 			turn?: number;
-			/** The turn snapshotted files, so "restore files" is offered. */
-			restorable?: boolean;
-			/** uuid of the turn's user message, for branching from this point. */
+			/** uuid of the turn's user message: the CLI's restore point and branch point. */
 			rewindUuid?: string;
+			/** uuid of the turn's last prompt the CLI echoed, queued and steered ones included: what a branch names as last seen. */
+			lastPromptUuid?: string;
+			/** CLI session the turn ran in, which holds its file checkpoints. */
+			sessionId?: string;
+			/** CLI profile of that session. */
+			profileId?: string;
+			/** The main agent called Edit, Write, MultiEdit or NotebookEdit. */
+			edited?: boolean;
+			/** On a branch still to make (recorded when it opens, and on a failure that kept the fork): the session it forks, the prompt it rewinds to, the latest it names. */
+			branchSession?: string;
+			branchTarget?: string;
+			branchLatest?: string;
 	  };
 
 export interface StoredConversation {
-	version: 1;
+	/** 2 while the conversation holds a clear or a fresh start, which 0.5.x refuses; else 1 (ADR-018 Decision 2). */
+	version: 1 | 2;
 	/** Stable file id, assigned by the plugin (not the CLI session id). */
 	id: string;
 	/** CLI session id, once known; used for --resume. */
 	sessionId: string | null;
+	/** CLI profile of the conversation's session; absent reopens on the default profile. */
+	profileId?: string;
 	title: string;
 	createdAt: number;
 	updatedAt: number;
+	/** Model pick; "" or absent is Default. */
 	model?: string;
+	/** Effort pick; "" or absent is Default. */
 	effort?: string;
+	/** Model id the CLI last reported in system/init, "" until then; never a pick. Absent in 0.5.x files. */
+	resolvedModel?: string;
 	permissionMode?: ChatPermissionMode;
 	/**
 	 * The user picked permissionMode, so launches pass it even when it is
@@ -85,6 +135,8 @@ export interface StoredConversation {
 	 * own default - as it still does without this flag.
 	 */
 	permissionModePicked?: boolean;
+	/** On a branch: the source session's total when the fork started, which the fork's totals include (PRD-005.R7). Optional, so version 1 files hold it and 0.5.x ignores it. */
+	forkBase?: ForkBase;
 	/** Vault path of the exported Markdown note, once one exists. */
 	exportPath?: string;
 	/**
@@ -109,10 +161,6 @@ export interface ConversationMeta {
 }
 
 const SAVE_DEBOUNCE_MS = 1000;
-
-export function newConversationId(): string {
-	return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
 
 /**
  * Conversation ids become file names (`<id>.json`), so they must not contain
@@ -142,8 +190,10 @@ export class HistoryStore {
 	private scanned = false;
 	/** In-flight scan, so two views opening together read the folder once. */
 	private scanning: Promise<ConversationMeta[]> | null = null;
-	/** Deleted while a scan was in flight - that scan's snapshot predates them. */
-	private deletedDuringScan = new Set<string>();
+	/** Saved or deleted while a scan was in flight - that scan's snapshot predates them. */
+	private journal = new ScanJournal();
+	/** Ids whose failed write has been announced; each is announced once per session. */
+	private failedSaves = new OncePerId();
 
 	/**
 	 * Runs before each persist and may enrich the conversation (markdown
@@ -151,8 +201,18 @@ export class HistoryStore {
 	 */
 	onBeforeSave: ((conversation: StoredConversation) => Promise<void>) | null = null;
 
-	/** Runs after a conversation is deleted, so its side data can go too. */
+	/**
+	 * Runs after a conversation is deleted. `main` fans it out so every panel
+	 * view detaches its tabs showing it.
+	 */
 	onDeleted: ((id: string) => void) | null = null;
+
+	/**
+	 * Runs when a conversation's write fails, the first time for each id until
+	 * the plugin reloads. `main` shows the Notice, so several open views do not
+	 * show it more than once.
+	 */
+	onSaveFailed: ((id: string, title: string) => void) | null = null;
 
 	/**
 	 * Runs whenever the known set of conversations changes, so a view can
@@ -160,7 +220,14 @@ export class HistoryStore {
 	 */
 	onChanged: (() => void) | null = null;
 
-	constructor(private app: App, private dir: string) {}
+	constructor(
+		private app: App,
+		private dir: string,
+		/** The session ids this device recorded: scans migrate and prune it, a delete forgets an entry (ADR-018 Decision 1). */
+		private provenance: SessionProvenance,
+		/** The profile a conversation's stored profile seeds ids for in the migration; null when this device lacks it. */
+		private seedProfile: (stored: string | undefined) => string | null
+	) {}
 
 	/** What the cache would record for a conversation. */
 	private static metaOf(conversation: StoredConversation): ConversationMeta {
@@ -189,6 +256,15 @@ export class HistoryStore {
 		return this.scanned;
 	}
 
+	/**
+	 * Resolves once a scan has ended, its migration and pruning of the session
+	 * record included (success or not): resume, Branch and Undo wait for it
+	 * (ADR-018 Decision 1, Grandfathering).
+	 */
+	async settled(): Promise<void> {
+		if (!this.scanned) await this.refresh();
+	}
+
 	/** Debounced save; call after every recorded message. */
 	queueSave(conversation: StoredConversation): void {
 		clearTimer(this.saveTimers.get(conversation.id));
@@ -201,9 +277,28 @@ export class HistoryStore {
 		);
 	}
 
-	async save(
+	/** The last save of each conversation still writing: the next waits for it, so an older write never lands after a newer one. */
+	private writing = new Map<string, Promise<void>>();
+	/** Bumped by a delete: saves queued before it never write. */
+	private epochs = new Map<string, number>();
+
+	save(conversation: StoredConversation, options: { touch?: boolean } = {}): Promise<void> {
+		const prior = this.writing.get(conversation.id) ?? Promise.resolve();
+		const epoch = this.epochs.get(conversation.id) ?? 0;
+		// Each write serializes the conversation as it is then, so the last one holds the latest snapshot.
+		// A delete between the call and the turn of this write cancels it.
+		const run = prior.then(() => ((this.epochs.get(conversation.id) ?? 0) === epoch ? this.write(conversation, options) : undefined));
+		const tail = run.catch(() => undefined);
+		this.writing.set(conversation.id, tail);
+		void tail.then(() => {
+			if (this.writing.get(conversation.id) === tail) this.writing.delete(conversation.id);
+		});
+		return run;
+	}
+
+	private async write(
 		conversation: StoredConversation,
-		options: { touch?: boolean } = {}
+		options: { touch?: boolean }
 	): Promise<void> {
 		if (conversation.messages.length === 0) return;
 		// Pinning is not activity. Without this, unpinning a months-old
@@ -216,13 +311,34 @@ export class HistoryStore {
 		}
 		try {
 			await this.ensureDir();
+			// From the snapshot being written, after the awaits: a clear committed meanwhile is in it (ADR-018).
+			conversation.version = fileVersion(conversation.messages);
 			await this.app.vault.adapter.write(
 				this.pathFor(conversation.id),
 				JSON.stringify(conversation)
 			);
-			this.remember(conversation);
 		} catch (err) {
 			console.error("AI Agent Panel: failed to save conversation", err);
+			this.announceSaveFailure(conversation);
+			return;
+		}
+		// Outside the write's try: the file is on disk, so a redraw that throws
+		// is not a failed save and must neither raise the Notice nor use up the
+		// conversation's one announcement.
+		try {
+			this.remember(conversation);
+		} catch (err) {
+			console.error("AI Agent Panel: failed to update the conversation list", err);
+		}
+	}
+
+	/** Hand a failed write to `onSaveFailed`, once per id; a handler that throws is only logged. */
+	private announceSaveFailure(conversation: StoredConversation): void {
+		if (!this.failedSaves.claim(conversation.id)) return;
+		try {
+			this.onSaveFailed?.(conversation.id, conversation.title);
+		} catch (err) {
+			console.error("AI Agent Panel: save-failure notice failed", err);
 		}
 	}
 
@@ -235,6 +351,7 @@ export class HistoryStore {
 		const meta = HistoryStore.metaOf(conversation);
 		const previous = this.metas.get(meta.id);
 		this.metas.set(meta.id, meta);
+		this.journal.noteSaved(meta.id);
 		if (
 			!previous ||
 			previous.title !== meta.title ||
@@ -264,10 +381,11 @@ export class HistoryStore {
 	}
 
 	/**
-	 * Re-read the folder. Only worth doing when files can have appeared behind
-	 * the plugin's back - a view opening, or a vault sync landing new files -
-	 * since every change this plugin makes goes through save() or delete() and
-	 * updates the cache in place.
+	 * Re-read the folder. Called when a view opens and on the first list();
+	 * nothing re-scans after that, since every change this plugin makes goes
+	 * through save() or delete() and updates the cache in place. A file that
+	 * appears behind the plugin's back, such as one a vault sync lands, shows up
+	 * on the next view open.
 	 */
 	refresh(): Promise<ConversationMeta[]> {
 		return (this.scanning ??= this.scan().finally(() => {
@@ -276,20 +394,36 @@ export class HistoryStore {
 	}
 
 	private async scan(): Promise<ConversationMeta[]> {
+		this.journal.begin();
 		const found = new Map<string, ConversationMeta>();
+		// What the session record needs of the scan: whether the listing worked, apart from the names it found.
+		const report = { listed: false, names: new Set<string>(), markerPresent: false, sources: [] as SeedSource[] };
 		try {
 			const adapter = this.app.vault.adapter;
 			if (await adapter.exists(this.dir)) {
 				const listing = await adapter.list(this.dir);
+				// The marker is a dotfile, which a listing may leave out: ask for it too. A failed question fails the listing.
+				report.markerPresent =
+					listing.files.some((file) => file.endsWith(`/${MIGRATION_MARKER}`)) ||
+					(await adapter.exists(`${this.dir}/${MIGRATION_MARKER}`));
 				for (const file of listing.files) {
 					if (!file.endsWith(".json")) continue;
+					const stem = file.split("/").pop()?.replace(/\.json$/, "") ?? "";
+					if (isSafeConversationId(stem)) report.names.add(stem);
 					const conversation = await this.readFile(file);
 					if (!conversation) continue;
 					// The file name is authoritative for the id (readFile pins it),
 					// so load()/delete() always resolve back to this same file.
 					found.set(conversation.id, HistoryStore.metaOf(conversation));
+					report.sources.push({
+						id: conversation.id,
+						profileId: conversation.profileId,
+						sessionIds: storedSessionIds(conversation),
+					});
 				}
 			}
+			// Only a pass to the end counts: a folder not yet made lists as nothing.
+			report.listed = true;
 		} catch (err) {
 			// A folder that cannot be listed must not leave the column saying
 			// "Loading…" for the rest of the session, or reject into the void
@@ -299,20 +433,31 @@ export class HistoryStore {
 		}
 		// A scan takes a while, and saves and deletes keep happening while it
 		// runs. Both are newer than anything it read, so they win over it.
-		for (const [id, meta] of this.metas) {
-			const scannedMeta = found.get(id);
-			if (!scannedMeta || scannedMeta.updatedAt < meta.updatedAt) found.set(id, meta);
-		}
-		for (const id of this.deletedDuringScan) found.delete(id);
-		this.deletedDuringScan.clear();
-		this.metas = found;
+		// The session record sees the scan as the journal corrects it: a conversation saved or deleted meanwhile counts.
+		const settled = this.journal.reconcile(report.names, report.sources);
+		this.metas = this.journal.finish(found, this.metas);
+		await this.updateProvenance({ ...report, ...settled });
 		this.scanned = true;
 		this.onChanged?.();
 		return this.snapshot();
 	}
 
+	/** The scan's part of the session record (ADR-018 Decision 1): migration, pruning and the marker. A failure is logged and ends nothing else. */
+	private async updateProvenance(report: ScanReport): Promise<void> {
+		try {
+			const { writeMarker } = await this.provenance.afterScan(report, this.seedProfile);
+			if (!writeMarker) return;
+			await this.ensureDir();
+			await this.app.vault.adapter.write(`${this.dir}/${MIGRATION_MARKER}`, String(Date.now()));
+		} catch (err) {
+			console.error("AI Agent Panel: failed to update the session record after a scan", err);
+		}
+	}
+
 	async load(id: string): Promise<StoredConversation | null> {
 		if (!isSafeConversationId(id)) return null;
+		// A write still in flight holds the newest messages: read after it, not before.
+		await this.writing.get(id)?.catch(() => undefined);
 		const conversation = await this.readFile(this.pathFor(id));
 		// Opening a conversation is not a change, so this fills the cache
 		// silently - restoring a dozen tabs must not fire a dozen re-renders.
@@ -330,6 +475,9 @@ export class HistoryStore {
 	async delete(id: string): Promise<boolean> {
 		clearTimer(this.saveTimers.get(id));
 		this.saveTimers.delete(id);
+		// Queued saves are void from here; one already writing finishes first, so it cannot recreate the file.
+		this.epochs.set(id, (this.epochs.get(id) ?? 0) + 1);
+		await this.writing.get(id);
 		try {
 			await this.app.vault.adapter.remove(this.pathFor(id));
 		} catch (err) {
@@ -345,7 +493,8 @@ export class HistoryStore {
 			}
 		}
 		this.metas.delete(id);
-		if (this.scanning) this.deletedDuringScan.add(id);
+		this.journal.noteDeleted(id);
+		this.provenance.forget(id);
 		this.onDeleted?.(id);
 		this.onChanged?.();
 		return true;
@@ -362,14 +511,27 @@ export class HistoryStore {
 		try {
 			const raw = await this.app.vault.adapter.read(path);
 			const parsed = JSON.parse(raw) as StoredConversation;
-			if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.messages))
+			if (!parsed || !isStoredVersion(parsed.version) || !Array.isArray(parsed.messages))
 				return null;
 			// Pin the id to the file name so a tampered internal id can never
 			// steer a later save() or delete() to a different path.
 			const stem = path.split("/").pop()?.replace(/\.json$/, "") ?? "";
 			if (!isSafeConversationId(stem)) return null;
 			parsed.id = stem;
-			return parsed;
+			// These reach the command line: a tampered value is read as absent.
+			// So is a title or export path that is not a string; a time that is
+			// not one takes the other's or the epoch; and a message entry or
+			// field the readers cannot take is dropped or read as absent.
+			const sent = parsed.messages.length;
+			const checked = checkStoredMessages(
+				readForkBase(dropNonStringText(checkStoredTimes(dropUnsafeArgValues(migrateStoredModel(parsed)))))
+			);
+			const dropped = sent - checked.messages.length;
+			if (dropped > 0)
+				console.warn(
+					`AI Agent Panel: left out ${dropped} damaged message${dropped === 1 ? "" : "s"} of ${path}`
+				);
+			return checked;
 		} catch (err) {
 			console.error(`AI Agent Panel: could not read ${path}`, err);
 		}
@@ -405,51 +567,44 @@ export function relativeTime(timestamp: number): string {
 }
 
 /**
- * Deleting a conversation removes its file and its checkpoints for good, and
- * unlike closing a tab there is nothing to undo it with - so it asks first,
- * wherever it is triggered from.
+ * Deleting a conversation removes its file for good, and unlike closing a
+ * tab there is nothing to undo it with - so it asks first, wherever it is
+ * triggered from. On confirm the store deletes it, which detaches every open
+ * tab showing it (`onDeleted`). `onDone` runs once: with false when the
+ * dialog is dismissed or the file stayed, with true when it went.
  */
-export class DeleteConversationModal extends Modal {
-	constructor(app: App, private title: string, private onConfirm: () => void) {
-		super(app);
-	}
-
-	onOpen(): void {
-		const { contentEl } = this;
-		contentEl.createEl("h3", { text: "Delete conversation" });
-		contentEl.createEl("p", {
+export class DeleteConversationModal extends ConfirmModal {
+	constructor(
+		app: App,
+		store: HistoryStore,
+		target: { id: string; title: string },
+		onDone?: (deleted: boolean) => void
+	) {
+		super(app, {
+			title: "Delete conversation",
 			text:
-				`"${this.title}" and everything said in it will be removed from ` +
-				"this vault, along with the file checkpoints that let its turns be " +
-				"undone. Any transcript already exported stays where it is.",
+				`"${displayTitle(target.title)}" and everything said in it will be removed from ` +
+				"this vault. Any transcript already exported, and Claude Code's own " +
+				"file checkpoints, stay where they are.",
+			confirmText: "Delete",
+			onConfirm: () => void store.delete(target.id).then(onDone),
+			afterClose: (confirmed) => {
+				if (!confirmed) onDone?.(false);
+			},
 		});
-		const buttons = contentEl.createDiv({ cls: "ai-agent-panel-permission-buttons" });
-		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => {
-			this.close();
-		});
-		const confirm = buttons.createEl("button", {
-			cls: "mod-warning",
-			text: "Delete",
-		});
-		confirm.addEventListener("click", () => {
-			this.close();
-			this.onConfirm();
-		});
-		confirm.focus();
-	}
-
-	onClose(): void {
-		this.contentEl.empty();
 	}
 }
 
 export class ConversationPickerModal extends FuzzySuggestModal<ConversationMeta> {
+	private detachTheme: (() => void) | null = null;
+
 	constructor(
 		app: App,
 		private store: HistoryStore,
 		private items: ConversationMeta[],
 		private onPick: (conversation: StoredConversation) => void,
-		private onDelete?: (id: string) => void
+		/** "Show tooltips" as the panel has it (PRD-001.R32): the delete button's tooltip follows. */
+		private showTooltips: boolean
 	) {
 		super(app);
 		this.setPlaceholder("Search previous conversations…");
@@ -459,18 +614,33 @@ export class ConversationPickerModal extends FuzzySuggestModal<ConversationMeta>
 		]);
 	}
 
+	onOpen(): void {
+		void super.onOpen();
+		this.detachTheme = themeModal(this);
+		this.modalEl.toggleClass(NO_TOOLTIPS_CLASS, hidesTooltips(this.showTooltips));
+	}
+
+	onClose(): void {
+		super.onClose();
+		this.detachTheme?.();
+		this.detachTheme = null;
+	}
+
 	getItems(): ConversationMeta[] {
 		return this.items;
 	}
 
 	getItemText(item: ConversationMeta): string {
-		return item.title;
+		return displayTitle(item.title);
 	}
 
 	renderSuggestion(match: FuzzyMatch<ConversationMeta>, el: HTMLElement): void {
 		el.addClass("ai-agent-panel-history-item");
 		const main = el.createDiv({ cls: "ai-agent-panel-history-main" });
-		main.createDiv({ cls: "ai-agent-panel-history-title", text: match.item.title });
+		main.createDiv({
+			cls: "ai-agent-panel-history-title",
+			text: displayTitle(match.item.title),
+		});
 		main.createDiv({
 			cls: "ai-agent-panel-history-meta",
 			text: `${relativeTime(match.item.updatedAt)} · ${match.item.messageCount} messages`,
@@ -483,17 +653,16 @@ export class ConversationPickerModal extends FuzzySuggestModal<ConversationMeta>
 		deleteBtn.addEventListener("click", (evt) => {
 			evt.preventDefault();
 			evt.stopPropagation();
-			void this.store.delete(match.item.id).then((deleted) => {
-				// A delete that failed leaves the conversation on disk, so the
-				// row stays and no open tab may be detached from it.
+			new DeleteConversationModal(this.app, this.store, match.item, (deleted) => {
+				// The dialog took the focus; every outcome gives it back.
+				this.inputEl.focus();
+				// Dismissed, or the delete failed: the conversation is still on
+				// disk, so the row stays.
 				if (!deleted) return;
-				// Detach any open tab first so its next save can't rewrite the
-				// file we just removed.
-				this.onDelete?.(match.item.id);
 				this.items = this.items.filter((i) => i.id !== match.item.id);
 				// Re-run the query so the list refreshes.
 				this.inputEl.dispatchEvent(new Event("input"));
-			});
+			}).open();
 		});
 	}
 

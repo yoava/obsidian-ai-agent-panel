@@ -5,7 +5,12 @@
  */
 
 import { CMD_UNSAFE, isCmdShim } from "./protocol/client";
-import type { CliProfile } from "./settings-core";
+import {
+	settingsLaunchOptions,
+	type CliProfile,
+	type LaunchSettings,
+	type SettingsLaunchOptions,
+} from "./settings-core";
 
 /**
  * Split typed arguments into argv. Whitespace separates; single or double
@@ -136,4 +141,27 @@ export function sandboxAvailable(
 	platform: NodeJS.Platform = process.platform
 ): boolean {
 	return platform !== "win32" || useWsl;
+}
+
+/**
+ * What an open conversation's CLI is restarted with when the settings tab
+ * closes (PRD-001.R25, DES-002): the options a new conversation would launch
+ * with. Null keeps the current process: `cli` is where the profile resolves
+ * now (null when nothing does), `target` where the session runs, and a CLI that
+ * moved, or arguments that cannot launch, leave the session as it is
+ * (PRD-001.R4).
+ */
+export function relaunchOptions(
+	settings: LaunchSettings,
+	profile: Pick<CliProfile, "chrome" | "sandbox" | "extraArgs">,
+	cli: { cliPath: string; useWsl: boolean } | null,
+	target: { cliPath: string; useWsl: boolean },
+	platform: NodeJS.Platform = process.platform
+): (SettingsLaunchOptions & { extraArgs: string[] }) | null {
+	if (!cli) return null;
+	const useWsl = cli.useWsl && platform === "win32";
+	if (target.cliPath !== cli.cliPath || target.useWsl !== useWsl) return null;
+	const launch = profileLaunchArgs(profile, cli, platform);
+	if (launch.error) return null;
+	return { ...settingsLaunchOptions(settings), extraArgs: launch.args };
 }

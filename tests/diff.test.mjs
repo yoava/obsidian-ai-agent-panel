@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-const { diffText, splitLines, formatDiffStat } = await import("./.build/diff.mjs");
+const { diffText, splitLines, formatDiffStat, expandGap, sidesOf, drawInChunks } =
+	await import("./.build/diff.mjs");
 
 const types = (d) => d.rows.map((r) => r.type).join("");
 const texts = (d, type) => d.rows.filter((r) => r.type === type).map((r) => r.text);
@@ -181,7 +182,7 @@ test("row output is capped and says so", () => {
 	const d = diffText(a, "", { maxRows: 50 });
 	assert.equal(d.truncated, true);
 	assert.equal(d.rows.length, 51);
-	assert.equal(d.rows[50].type, "gap");
+	assert.equal(d.rows[50].type, "cut");
 	assert.equal(d.rows[50].hidden, 250);
 	// The counts still describe the whole change, not the shown rows.
 	assert.equal(d.removed, 300);
@@ -199,4 +200,345 @@ test("blank-line-only changes are counted", () => {
 	assert.equal(d.removed, 1);
 	assert.equal(d.added, 0);
 	assert.equal(formatDiffStat(d), "-1");
+});
+
+const numbered = (n, prefix = "line") => Array.from({ length: n }, (_, i) => `${prefix}${i}`);
+
+test("PRD-002.R5: three lines of context each side by default", () => {
+	const oldText = numbered(21).join("\n");
+	const newText = oldText.replace("line10", "LINE10");
+	const d = diffText(oldText, newText);
+	assert.deepEqual(
+		d.rows.map((r) => r.text),
+		["", "line7", "line8", "line9", "line10", "LINE10", "line11", "line12", "line13", ""]
+	);
+	assert.equal(types(d), "gapcontextcontextcontextremoveaddcontextcontextcontextgap");
+	assert.equal(d.rows[0].hidden, 7);
+	assert.equal(d.rows[9].hidden, 7);
+});
+
+test("PRD-002.R5: an option set to undefined keeps its default", () => {
+	const oldText = numbered(21).join("\n");
+	const newText = oldText.replace("line10", "LINE10");
+	const unset = {
+		context: undefined,
+		maxCells: undefined,
+		maxInlineChars: undefined,
+		maxRows: undefined,
+		minSimilarity: undefined,
+	};
+	assert.deepEqual(diffText(oldText, newText, unset), diffText(oldText, newText));
+	const big = diffText(numbered(4500).join("\n"), "", unset);
+	assert.equal(big.truncated, true);
+	assert.equal(big.rows.length, 4001);
+	assert.equal(big.rows[4000].hidden, 500);
+});
+
+test("PRD-002.R5: a context of zero is a number the caller set", () => {
+	const oldText = numbered(21).join("\n");
+	const d = diffText(oldText, oldText.replace("line10", "LINE10"), { context: 0 });
+	assert.equal(types(d), "gapremoveaddgap");
+});
+
+test("PRD-002.R5: a gap carries the first line it hides on each side", () => {
+	const middle = numbered(20);
+	const shifted = diffText(
+		["a", ...middle, "z"].join("\n"),
+		["A", "A2", ...middle, "Z"].join("\n"),
+		{ context: 2 }
+	);
+	const gap = shifted.rows.find((r) => r.type === "gap");
+	// line2 is the 4th old line and the 5th new line; 16 lines are hidden.
+	assert.equal(gap.hidden, 16);
+	assert.equal(gap.oldLine, 4);
+	assert.equal(gap.newLine, 5);
+
+	const head = diffText(numbered(20).join("\n"), numbered(19).concat("last").join("\n"));
+	assert.equal(head.rows[0].type, "gap");
+	assert.equal(head.rows[0].oldLine, 1);
+	assert.equal(head.rows[0].newLine, 1);
+});
+
+test("PRD-002.R5: the row cut is a row of its own, distinct from a gap row", () => {
+	// Changes ten lines apart leave a gap between each; the cap lands after them.
+	const oldLines = numbered(100);
+	const newLines = oldLines.map((line, i) => (i % 10 === 0 ? line.toUpperCase() : line));
+	const full = diffText(oldLines.join("\n"), newLines.join("\n"), { context: 1 });
+	const shown = 12;
+	const d = diffText(oldLines.join("\n"), newLines.join("\n"), { context: 1, maxRows: shown });
+	assert.equal(d.truncated, true);
+	assert.equal(d.rows.length, shown + 1);
+	assert.deepEqual(d.rows.slice(0, shown), full.rows.slice(0, shown));
+	assert.ok(d.rows.slice(0, shown).some((r) => r.type === "gap"));
+	const cut = d.rows[shown];
+	assert.equal(cut.type, "cut");
+	assert.equal(cut.hidden, full.rows.length - shown);
+	assert.equal(cut.oldLine, undefined);
+	assert.equal(cut.newLine, undefined);
+	assert.equal(d.rows.filter((r) => r.type === "cut").length, 1);
+	assert.equal(full.truncated, false);
+	assert.equal(
+		full.rows.some((r) => r.type === "cut"),
+		false
+	);
+});
+
+test("PRD-002.R5: expanding a gap returns exactly its lines, matching a full-context diff", () => {
+	const oldText = ["head", ...numbered(20), "tail"].join("\n");
+	const newText = ["HEAD", "HEAD2", ...numbered(20), "TAIL"].join("\n");
+	const gap = diffText(oldText, newText, { context: 2 }).rows.find((r) => r.type === "gap");
+	const { rows, rest } = expandGap(gap, splitLines(oldText));
+	assert.equal(rest, null);
+	assert.equal(rows.length, gap.hidden);
+	assert.ok(rows.every((r) => r.type === "context"));
+	const expected = diffText(oldText, newText, { context: 1000 }).rows.filter(
+		(r) => r.type === "context" && r.oldLine >= gap.oldLine && r.oldLine < gap.oldLine + gap.hidden
+	);
+	assert.deepEqual(rows, expected);
+	assert.equal(rows[0].text, "line2");
+	assert.equal(rows[0].oldLine, 4);
+	assert.equal(rows[0].newLine, 5);
+});
+
+test("PRD-002.R5: a gap past the row limit leaves the rest as a gap row", () => {
+	const oldLines = numbered(30_000);
+	// One line becomes two, so the gap starts on a later line in the new text.
+	const newLines = ["added", "changed", ...oldLines.slice(1)];
+	const d = diffText(oldLines.join("\n"), newLines.join("\n"));
+	const gap = d.rows.find((r) => r.type === "gap");
+	assert.equal(gap.hidden, 29_996);
+	assert.equal(gap.oldLine, 5);
+	assert.equal(gap.newLine, 6);
+	const first = expandGap(gap, oldLines);
+	assert.equal(first.rows.length, 20_000);
+	assert.equal(first.rows[0].text, "line4");
+	assert.equal(first.rows[0].newLine, 6);
+	assert.deepEqual(first.rest, {
+		type: "gap",
+		text: "",
+		hidden: 9996,
+		oldLine: 5 + 20_000,
+		newLine: 6 + 20_000,
+	});
+	const second = expandGap(first.rest, oldLines);
+	assert.equal(second.rows.length, 9996);
+	assert.equal(second.rest, null);
+	assert.equal(second.rows[9995].text, "line29999");
+	assert.equal(second.rows[9995].oldLine, 30_000);
+	assert.equal(second.rows[9995].newLine, 30_001);
+});
+
+test("PRD-002.R5: expanding with a smaller limit chains to the whole gap", () => {
+	const oldLines = numbered(40);
+	const gap = { type: "gap", text: "", hidden: 25, oldLine: 6, newLine: 9 };
+	const all = [];
+	let next = gap;
+	while (next) {
+		const step = expandGap(next, oldLines, 10);
+		assert.ok(step.rows.length <= 10);
+		all.push(...step.rows);
+		next = step.rest;
+	}
+	assert.deepEqual(
+		all.map((r) => r.text),
+		oldLines.slice(5, 30)
+	);
+	assert.deepEqual(
+		all.map((r) => r.oldLine),
+		Array.from({ length: 25 }, (_, i) => 6 + i)
+	);
+	assert.deepEqual(
+		all.map((r) => r.newLine),
+		Array.from({ length: 25 }, (_, i) => 9 + i)
+	);
+});
+
+test("PRD-002.R5: the Rendered sides leave out gap and cut rows", () => {
+	const sides = sidesOf({
+		rows: [
+			{ type: "gap", text: "", hidden: 3, oldLine: 1, newLine: 1 },
+			{ type: "context", text: "a" },
+			{ type: "remove", text: "b" },
+			{ type: "add", text: "B" },
+			{ type: "context", text: "c" },
+			{ type: "cut", text: "", hidden: 9 },
+		],
+	});
+	assert.deepEqual(sides, { before: "a\nb\nc", after: "a\nB\nc" });
+	const real = diffText(numbered(100).join("\n"), numbered(100).join("\n").replace("line50", "L"), {
+		context: 1,
+		maxRows: 4,
+	});
+	assert.ok(real.rows.some((r) => r.type === "cut"));
+	assert.equal(sidesOf(real).before.split("\n").includes(""), false);
+});
+
+/** A scheduler that runs nothing until flushed, as the next animation frame would. */
+function fakeFrames() {
+	const queue = [];
+	return {
+		schedule: (step) => queue.push(step),
+		pending: () => queue.length,
+		flush() {
+			while (queue.length) queue.shift()();
+		},
+	};
+}
+
+const rowsOf = (n, length = 1) =>
+	Array.from({ length: n }, (_, i) => ({
+		type: "context",
+		text: "x".repeat(length),
+		oldLine: i + 1,
+		newLine: i + 1,
+	}));
+
+test("PRD-001.R29: the first chunk is drawn at once, then at most 500 rows per frame", () => {
+	const frames = fakeFrames();
+	const drawn = [];
+	const rows = rowsOf(1200);
+	drawInChunks(rows, (chunk, last) => drawn.push({ chunk, last }), frames.schedule, () => true);
+	assert.equal(drawn.length, 1);
+	assert.equal(drawn[0].chunk.length, 500);
+	assert.equal(frames.pending(), 1);
+	frames.flush();
+	assert.deepEqual(
+		drawn.map((d) => [d.chunk.length, d.last]),
+		[
+			[500, false],
+			[500, false],
+			[200, true],
+		]
+	);
+	assert.deepEqual(
+		drawn.flatMap((d) => d.chunk),
+		rows
+	);
+});
+
+test("PRD-001.R29: a chunk also ends at about 50,000 characters of row text", () => {
+	const frames = fakeFrames();
+	const sizes = [];
+	// 100 paragraph-length lines: 50 fill the budget, so two chunks, not one of 100.
+	drawInChunks(rowsOf(100, 1000), (chunk) => sizes.push(chunk.length), frames.schedule, () => true);
+	frames.flush();
+	assert.deepEqual(sizes, [50, 50]);
+
+	// One line longer than the budget still draws, alone with what came before it.
+	const long = [...rowsOf(2), { type: "context", text: "y".repeat(80_000) }, ...rowsOf(2)];
+	const sizesLong = [];
+	drawInChunks(long, (chunk) => sizesLong.push(chunk.length), frames.schedule, () => true);
+	frames.flush();
+	assert.deepEqual(sizesLong, [3, 2]);
+});
+
+test("PRD-001.R29: chunking stops when the diff has left the page", () => {
+	const frames = fakeFrames();
+	let alive = true;
+	let calls = 0;
+	drawInChunks(
+		rowsOf(1200),
+		() => {
+			calls++;
+			alive = false;
+		},
+		frames.schedule,
+		() => alive
+	);
+	assert.equal(frames.pending(), 1);
+	frames.flush();
+	assert.equal(calls, 1);
+	assert.equal(frames.pending(), 0);
+});
+
+test("PRD-001.R29: the first chunk draws before the target is on the page; later ones need it there", () => {
+	const frames = fakeFrames();
+	let onPage = false;
+	const drawn = [];
+	drawInChunks(
+		rowsOf(1200),
+		(chunk, last) => drawn.push([chunk.length, last]),
+		frames.schedule,
+		() => onPage
+	);
+	assert.deepEqual(drawn, [[500, false]]);
+	assert.equal(frames.pending(), 1);
+
+	// Attached by the next frame: drawing goes on.
+	onPage = true;
+	frames.flush();
+	assert.deepEqual(drawn, [
+		[500, false],
+		[500, false],
+		[200, true],
+	]);
+
+	// Never attached: the first chunk is all that is drawn.
+	const detached = [];
+	drawInChunks(rowsOf(1200), (chunk) => detached.push(chunk.length), frames.schedule, () => false);
+	frames.flush();
+	assert.deepEqual(detached, [500]);
+	assert.equal(frames.pending(), 0);
+});
+
+test("PRD-001.R29: a diff at the 4,000-row cap draws in eight chunks of 500 and a ninth with the cut row", () => {
+	const before = Array.from({ length: 5000 }, (_, i) => `old ${i}`).join("\n");
+	const after = Array.from({ length: 5000 }, (_, i) => `new ${i}`).join("\n");
+	const d = diffText(before, after);
+	assert.equal(d.truncated, true);
+	assert.equal(d.rows.length, 4001);
+	const frames = fakeFrames();
+	const drawn = [];
+	drawInChunks(d.rows, (chunk, last) => drawn.push({ chunk, last }), frames.schedule, () => true);
+	assert.equal(drawn.length, 1);
+	frames.flush();
+	assert.deepEqual(
+		drawn.map((x) => x.chunk.length),
+		[500, 500, 500, 500, 500, 500, 500, 500, 1]
+	);
+	assert.deepEqual(
+		drawn.map((x) => x.last),
+		[false, false, false, false, false, false, false, false, true]
+	);
+	assert.equal(drawn.at(-1).chunk[0].type, "cut");
+	assert.deepEqual(
+		drawn.flatMap((x) => x.chunk),
+		d.rows
+	);
+});
+
+test("PRD-001.R29: the leftover gap row is drawn last, in the final chunk", () => {
+	const gap = { type: "gap", text: "", hidden: 5, oldLine: 600, newLine: 600 };
+	const frames = fakeFrames();
+	const drawn = [];
+	drawInChunks(
+		[...rowsOf(600), gap],
+		(chunk, last) => drawn.push({ chunk, last }),
+		frames.schedule,
+		() => true
+	);
+	frames.flush();
+	assert.deepEqual(
+		drawn.map((d) => [d.chunk.length, d.last]),
+		[
+			[500, false],
+			[101, true],
+		]
+	);
+	assert.equal(drawn[1].chunk[100], gap);
+
+	// Exactly full chunks: the gap row alone makes the last one.
+	const exact = [];
+	drawInChunks([...rowsOf(500), gap], (chunk, last) => exact.push([chunk.length, last]), frames.schedule, () => true);
+	frames.flush();
+	assert.deepEqual(exact, [
+		[500, false],
+		[1, true],
+	]);
+});
+
+test("PRD-001.R29: nothing to draw still ends with one empty final chunk", () => {
+	const drawn = [];
+	drawInChunks([], (chunk, last) => drawn.push([chunk.length, last]), () => assert.fail("no frame needed"), () => true);
+	assert.deepEqual(drawn, [[0, true]]);
 });

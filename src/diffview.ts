@@ -1,5 +1,16 @@
 import { Modal, setIcon, type App } from "obsidian";
-import { diffText, type DiffRow, type FileDiff } from "./diff";
+import {
+	diffText,
+	drawInChunks,
+	expandGap,
+	sidesOf,
+	splitLines,
+	type DiffRow,
+	type FileDiff,
+} from "./diff";
+import { changeTotals, type ChangedFile } from "./edit-tracker";
+import { rovingIndex } from "./state/roving";
+import { themeModal } from "./theme-scope";
 
 /**
  * DOM for a diff. Kept out of view.ts, which is large enough, and out of
@@ -22,7 +33,12 @@ export interface DiffViewOptions {
 	/** Extra text after the +/- counts. */
 	badge?: string;
 	/**
-	 * Supplying this adds a "rendered" toggle, which shows the changed section
+	 * Where the Diff / Rendered tabs go, when the caller draws the heading
+	 * itself: the diff then has no heading of its own (a permission card).
+	 */
+	tabsHost?: HTMLElement;
+	/**
+	 * Supplying this adds the Diff / Rendered tabs, which shows the changed section
 	 * before and after as Obsidian would draw it. Markdown is what the vault is
 	 * made of, so a raw diff of `**bold**` or a table is not always the clearest
 	 * way to see what a change does.
@@ -30,14 +46,22 @@ export interface DiffViewOptions {
 	renderMarkdown?: (markdown: string, el: HTMLElement) => Promise<void>;
 }
 
-const EXPANDED_CONTEXT = Number.MAX_SAFE_INTEGER;
-const EXPANDED_MAX_ROWS = 20_000;
+/** What drawing rows needs: the view options and the old text's lines, split on first use. */
+interface RowContext {
+	opts: DiffViewOptions;
+	oldLines: () => string[];
+}
 
 /**
  * Render `before` → `after` as a gutter diff and return the computed diff so
  * the caller can reuse its counts. Collapsed stretches expand in place on
- * click, which re-diffs with unlimited context rather than keeping every row in
- * memory up front.
+ * click: that gap's lines are taken from the text by line range, in chunks,
+ * rather than keeping every row in memory up front.
+ *
+ * Rows after the first chunk arrive on later animation frames, so the returned
+ * diff is complete before the DOM is. Drawing stops once the diff has left the
+ * page, and a diff attached to the page after its first frame keeps only its
+ * first chunk: attach `container` before calling.
  */
 export function renderFileDiff(
 	container: HTMLElement,
@@ -46,24 +70,24 @@ export function renderFileDiff(
 	opts: DiffViewOptions = {}
 ): FileDiff {
 	const diff = diffText(before, after, { context: opts.context });
+	let oldLines: string[] | null = null;
+	const ctx: RowContext = { opts, oldLines: () => (oldLines ??= splitLines(before)) };
 	const root = container.createDiv({ cls: "ai-agent-panel-diff" });
 	if (opts.hideLineNumbers) root.addClass("is-compact");
 
-	if (opts.path || !diff.unchanged || opts.note) {
+	if (!opts.tabsHost && (opts.path || !diff.unchanged || opts.note)) {
 		const head = root.createDiv({ cls: "ai-agent-panel-diff-head" });
 		if (opts.path) head.createSpan({ cls: "ai-agent-panel-diff-path", text: opts.path });
 		const stat = head.createSpan({ cls: "ai-agent-panel-diff-stat" });
-		if (diff.added)
-			stat.createSpan({ cls: "ai-agent-panel-diff-plus", text: `+${diff.added}` });
-		if (diff.removed)
-			stat.createSpan({ cls: "ai-agent-panel-diff-minus", text: `-${diff.removed}` });
+		writeDiffStat(stat, diff.added, diff.removed);
 		if (diff.unchanged)
 			stat.createSpan({ cls: "ai-agent-panel-diff-none", text: "no change" });
 		if (opts.badge) head.createSpan({ cls: "ai-agent-panel-diff-badge", text: opts.badge });
-		if (opts.renderMarkdown && !diff.unchanged)
-			addRenderedToggle(head, root, diff, opts.renderMarkdown);
 	}
 
+	// With no heading of its own the badge is a note: "New file", "Excerpt".
+	if (opts.tabsHost && opts.badge)
+		root.createDiv({ cls: "ai-agent-panel-diff-note", text: opts.badge.charAt(0).toUpperCase() + opts.badge.slice(1) });
 	if (opts.note) root.createDiv({ cls: "ai-agent-panel-diff-note", text: opts.note });
 	if (diff.coarse)
 		root.createDiv({
@@ -71,93 +95,139 @@ export function renderFileDiff(
 			text: "Too large to align line by line - shown as a wholesale replacement.",
 		});
 
+	// The first chunk is drawn now, so a short diff looks as if drawn whole.
 	const body = root.createDiv({ cls: "ai-agent-panel-diff-body" });
-	renderRows(body, diff.rows, before, after, opts);
+	drawRows(body, diff.rows, (chunk) => renderRows(body, chunk, ctx));
+	if (opts.renderMarkdown && !diff.unchanged) {
+		const host = opts.tabsHost ?? root.querySelector<HTMLElement>(".ai-agent-panel-diff-head");
+		if (host) addDiffTabs(host, root, body, diff, opts.renderMarkdown, opts.tabsHost !== undefined);
+	}
 	return diff;
 }
 
-/** The changed region as it was, and as it will be - context rows included. */
-function sidesOf(diff: FileDiff): { before: string; after: string } {
-	const before: string[] = [];
-	const after: string[] = [];
-	for (const row of diff.rows) {
-		if (row.type === "gap") continue;
-		if (row.type !== "add") before.push(row.text);
-		if (row.type !== "remove") after.push(row.text);
-	}
-	return { before: before.join("\n"), after: after.join("\n") };
+/**
+ * Draw `rows` through `draw` a chunk per animation frame of `anchor`'s own
+ * window, the first now, so no UI-thread task passes 100 ms (PRD-001.R29).
+ * Drawing stops once `anchor` has left the page: a card removed, a view
+ * closed, a container emptied to draw its diff again.
+ */
+function drawRows(
+	anchor: HTMLElement,
+	rows: DiffRow[],
+	draw: (chunk: DiffRow[], last: boolean) => void
+): void {
+	drawInChunks(
+		rows,
+		draw,
+		(step) => anchor.win.requestAnimationFrame(step),
+		() => anchor.isConnected
+	);
 }
+
+/** The line totals "+x" and "−y" (U+2212) in `el`, each only when not zero: the one writer for every diff heading and card. */
+export function writeDiffStat(el: HTMLElement, added: number, removed: number): void {
+	if (added) el.createSpan({ cls: "ai-agent-panel-diff-plus", text: `+${added}` });
+	if (removed) el.createSpan({ cls: "ai-agent-panel-diff-minus", text: `−${removed}` });
+}
+
+let nextTabsId = 0;
 
 /**
- * "Rendered" switch in the diff header. The preview is built once, lazily, and
- * covers the shown region only - collapsed stretches are not part of it, which
- * the labels say.
+ * The Diff / Rendered switch (PRD-002.R5): a tablist in `host`, Diff over the
+ * rows and Rendered over the changed section as Obsidian would draw it. The
+ * preview is built once, lazily, and covers the shown region only -
+ * collapsed stretches are not part of it, which the labels say. Arrow keys,
+ * Home and End move between the tabs and select the one reached.
  */
-function addRenderedToggle(
-	head: HTMLElement,
+function addDiffTabs(
+	host: HTMLElement,
 	root: HTMLElement,
+	body: HTMLElement,
 	diff: FileDiff,
-	renderMarkdown: (markdown: string, el: HTMLElement) => Promise<void>
+	renderMarkdown: (markdown: string, el: HTMLElement) => Promise<void>,
+	named: boolean
 ): void {
-	const button = head.createEl("button", {
-		cls: "ai-agent-panel-diff-toggle",
-		text: "Rendered",
+	const id = `ai-agent-panel-diff-${++nextTabsId}`;
+	const list = host.createDiv({ cls: "ai-agent-panel-diff-tabs", attr: { role: "tablist" } });
+	// Named by the file's path in a heading of its own, else by hidden text; a caller that draws the heading names it.
+	if (!named) {
+		const path = host.querySelector<HTMLElement>(".ai-agent-panel-diff-path");
+		const label = path ?? host.createSpan({ cls: "ai-agent-panel-visually-hidden", text: "Diff view" });
+		label.id ||= `${id}-label`;
+		list.setAttribute("aria-labelledby", label.id);
+	}
+	body.setAttribute("role", "tabpanel");
+	body.setAttribute("aria-labelledby", `${id}-tab-0`);
+	body.id = `${id}-panel-0`;
+	const tabs = ["Diff", "Rendered"].map((name, index) => {
+		const tab = list.createEl("button", {
+			cls: "ai-agent-panel-diff-tab",
+			attr: { type: "button", role: "tab", id: `${id}-tab-${index}`, "aria-controls": `${id}-panel-${index}` },
+		});
+		if (index === 1) setIcon(tab.createSpan({ cls: "ai-agent-panel-diff-tab-icon", attr: { "aria-hidden": "true" } }), "eye");
+		tab.appendText(name);
+		return tab;
 	});
-	const icon = button.createSpan();
-	setIcon(icon, "eye");
-	let preview: HTMLElement | null = null;
-	button.addEventListener("click", () => {
-		if (!preview) {
-			const { before, after } = sidesOf(diff);
-			preview = root.createDiv({ cls: "ai-agent-panel-diff-preview" });
-			const pane = (label: string, markdown: string, cls: string) => {
-				const side = preview!.createDiv({ cls: `ai-agent-panel-diff-pane ${cls}` });
-				side.createDiv({ cls: "ai-agent-panel-diff-pane-label", text: label });
-				const body = side.createDiv({ cls: "ai-agent-panel-diff-pane-body" });
-				if (markdown.trim() === "")
-					body.createDiv({ cls: "ai-agent-panel-diff-note", text: "(nothing)" });
-				else void renderMarkdown(markdown, body).catch(() => body.setText(markdown));
-			};
-			pane("Before", before, "is-before");
-			pane("After", after, "is-after");
-		}
-		const showing = root.hasClass("is-previewing");
-		root.toggleClass("is-previewing", !showing);
-		button.toggleClass("is-active", !showing);
+	// The Rendered panel exists from the start, so the tab's aria-controls resolves; its panes are drawn on first use.
+	const preview = root.createDiv({
+		cls: "ai-agent-panel-diff-preview",
+		attr: { id: `${id}-panel-1`, role: "tabpanel", "aria-labelledby": `${id}-tab-1` },
 	});
+	let filled = false;
+	const fillPreview = (): void => {
+		filled = true;
+		const { before, after } = sidesOf(diff);
+		const pane = (label: string, markdown: string, cls: string) => {
+			const side = preview.createDiv({ cls: `ai-agent-panel-diff-pane ${cls}` });
+			side.createDiv({ cls: "ai-agent-panel-diff-pane-label", text: label });
+			const paneBody = side.createDiv({ cls: "ai-agent-panel-diff-pane-body" });
+			if (markdown.trim() === "") paneBody.createDiv({ cls: "ai-agent-panel-diff-note", text: "(nothing)" });
+			else void renderMarkdown(markdown, paneBody).catch(() => paneBody.setText(markdown));
+		};
+		pane("Before", before, "is-before");
+		pane("After", after, "is-after");
+	};
+	const select = (index: number): void => {
+		if (index === 1 && !filled) fillPreview();
+		root.toggleClass("is-previewing", index === 1);
+		tabs.forEach((tab, at) => {
+			tab.setAttribute("aria-selected", String(at === index));
+			tab.tabIndex = at === index ? 0 : -1;
+			tab.toggleClass("is-active", at === index);
+		});
+	};
+	tabs.forEach((tab, index) => {
+		tab.addEventListener("click", () => select(index));
+		tab.addEventListener("keydown", (evt) => {
+			const target = rovingIndex(evt.key, tab.closest(".mod-rtl") !== null, index, tabs.length - 1);
+			if (target === null) return;
+			evt.preventDefault();
+			select(target);
+			tabs[target].focus();
+		});
+	});
+	select(0);
 }
 
-function renderRows(
-	body: HTMLElement,
-	rows: DiffRow[],
-	before: string,
-	after: string,
-	opts: DiffViewOptions
-): void {
+function renderRows(parent: Node, rows: DiffRow[], ctx: RowContext): void {
 	for (const row of rows) {
 		if (row.type === "gap") {
-			const gap = body.createDiv({ cls: "ai-agent-panel-diff-row is-gap" });
-			const btn = gap.createEl("button", {
-				cls: "ai-agent-panel-diff-gap",
-				text: `${row.hidden ?? 0} unchanged ${row.hidden === 1 ? "line" : "lines"}`,
-			});
-			const icon = btn.createSpan({ cls: "ai-agent-panel-diff-gap-icon" });
-			setIcon(icon, "chevrons-up-down");
-			btn.addEventListener("click", () => {
-				const expanded = diffText(before, after, {
-					context: EXPANDED_CONTEXT,
-					maxRows: EXPANDED_MAX_ROWS,
-				});
-				body.empty();
-				renderRows(body, expanded.rows, before, after, opts);
+			drawGap(parent, row, ctx);
+			continue;
+		}
+		if (row.type === "cut") {
+			const n = row.hidden ?? 0;
+			parent.createDiv({
+				cls: "ai-agent-panel-diff-row is-cut",
+				text: `${n} more ${n === 1 ? "row" : "rows"} not shown`,
 			});
 			continue;
 		}
 
-		const rowEl = body.createDiv({
+		const rowEl = parent.createDiv({
 			cls: `ai-agent-panel-diff-row is-${row.type}`,
 		});
-		if (!opts.hideLineNumbers) {
+		if (!ctx.opts.hideLineNumbers) {
 			rowEl.createSpan({
 				cls: "ai-agent-panel-diff-ln",
 				text: row.oldLine === undefined ? "" : String(row.oldLine),
@@ -169,7 +239,7 @@ function renderRows(
 		}
 		rowEl.createSpan({
 			cls: "ai-agent-panel-diff-sign",
-			text: row.type === "add" ? "+" : row.type === "remove" ? "-" : " ",
+			text: row.type === "add" ? "+" : row.type === "remove" ? "−" : " ",
 		});
 		const textEl = rowEl.createSpan({ cls: "ai-agent-panel-diff-text" });
 		if (row.segments) {
@@ -186,138 +256,132 @@ function renderRows(
 	}
 }
 
+/**
+ * A button for a run of unchanged lines. A click shows those lines in its
+ * place, a chunk per animation frame so a big gap never holds the UI thread.
+ * The emptied row stays as the insertion point until the last chunk, and a gap
+ * too big to show whole is replaced by a gap row for what is left.
+ */
+function drawGap(parent: Node, row: DiffRow, ctx: RowContext): void {
+	const gap = parent.createDiv({ cls: "ai-agent-panel-diff-row is-gap" });
+	const btn = gap.createEl("button", { cls: "ai-agent-panel-diff-gap" });
+	const icon = btn.createSpan({ cls: "ai-agent-panel-diff-gap-icon", attr: { "aria-hidden": "true" } });
+	setIcon(icon, "chevrons-up-down");
+	btn.appendText(`${row.hidden ?? 0} unchanged ${row.hidden === 1 ? "line" : "lines"}`);
+	btn.addEventListener("click", () => {
+		const { rows, rest } = expandGap(row, ctx.oldLines());
+		const hadFocus = gap.doc.activeElement === btn;
+		gap.empty();
+		drawRows(gap, rest ? [...rows, rest] : rows, (chunk, last) => {
+			const fragment = createFragment();
+			renderRows(fragment, chunk, ctx);
+			if (!last) {
+				gap.before(fragment);
+				return;
+			}
+			const leftover = fragment.querySelector("button");
+			gap.replaceWith(fragment);
+			// The focused button is gone; pass focus on unless the user moved it.
+			const { activeElement, body } = gap.doc;
+			if (hadFocus && activeElement === body) leftover?.focus();
+		});
+	});
+}
+
 // ---------------------------------------------------------------------------
 // "Changes this session"
 // ---------------------------------------------------------------------------
 
-/** One file the conversation touched, tracked from its first pre-image on. */
-export interface FileChange {
-	/** Vault-relative path, or the reported path when it is outside the vault. */
+/** One file a restore would rewind, as Claude Code reported it. */
+export interface RestoreFile {
 	path: string;
-	/** Whether `path` resolved inside the vault (only those can be opened). */
-	inVault: boolean;
-	/** Content before the conversation's first edit to this file. */
-	before: string;
-	/** Content after its most recent edit. */
-	after: string;
-	/** True when the file did not exist before the conversation touched it. */
-	created: boolean;
-	/** Number of edit tool calls applied to it. */
-	edits: number;
+	/** The path lies outside this vault. */
+	outside: boolean;
 }
 
-export interface ChangeTotals {
-	files: number;
-	added: number;
-	removed: number;
-}
-
-export function changeTotals(changes: Iterable<FileChange>): ChangeTotals {
-	let files = 0;
-	let added = 0;
-	let removed = 0;
-	for (const change of changes) {
-		const diff = diffText(change.before, change.after);
-		if (diff.unchanged) continue;
-		files++;
-		added += diff.added;
-		removed += diff.removed;
-	}
-	return { files, added, removed };
-}
-
-/** One file a restore would touch, with the change it would undo. */
-export interface RestorePreview {
-	path: string;
-	/** Contents on disk now, or null when the file is gone. */
-	before: string | null;
-	/** Contents the restore would write ("" for a file it will delete). */
-	after: string;
-	/** The file was created by the turn, so restoring removes it. */
-	removing: boolean;
-}
-
-/** Confirmation for "restore files to before this turn". */
+/**
+ * Confirmation for "restore files to before this turn" (DES-004): the files
+ * Claude Code's dry run listed, the line totals, and what the rewind loses.
+ * Closing it any way but Restore files cancels.
+ */
 export class RestoreConfirmModal extends Modal {
+	private confirmed = false;
+	private detachTheme: (() => void) | null = null;
+
 	constructor(
 		app: App,
-		private previews: RestorePreview[],
-		private skipped: string[],
-		private onConfirm: () => void
+		private files: RestoreFile[],
+		private totals: { insertions: number; deletions: number },
+		private onConfirm: () => void,
+		private onCancel: () => void
 	) {
 		super(app);
 	}
 
 	onOpen(): void {
+		this.detachTheme = themeModal(this);
 		const { contentEl } = this;
 		contentEl.addClass("ai-agent-panel-changes-modal");
 		contentEl.createEl("h3", { text: "Restore files to before this turn" });
+		const summary = contentEl.createDiv({ cls: "ai-agent-panel-changes-summary" });
+		summary.createSpan({ text: `${this.files.length} ${this.files.length === 1 ? "file" : "files"}` });
+		summary.createSpan({ cls: "ai-agent-panel-diff-plus", text: `+${this.totals.insertions}` });
+		summary.createSpan({ cls: "ai-agent-panel-diff-minus", text: `-${this.totals.deletions}` });
+		for (const file of this.files) {
+			const row = contentEl.createDiv({ cls: "ai-agent-panel-changes-file ai-agent-panel-restore-file" });
+			row.createSpan({ cls: "ai-agent-panel-changes-path", text: file.path });
+			if (file.outside) row.createSpan({ cls: "ai-agent-panel-changes-tag is-warning", text: "outside this vault" });
+		}
 		contentEl.createDiv({
 			cls: "ai-agent-panel-changes-empty",
 			text:
-				this.previews.length === 0
-					? "Nothing from this turn can be restored."
-					: "These files go back to how they were when the turn started. Anything you changed yourself since then goes too.",
+				"Later edits to these files are lost, whether by later turns, by you, in another tab or by another tool. " +
+				"Listed files that did not exist before this turn are deleted permanently.",
 		});
 
-		for (const preview of this.previews) {
-			const item = contentEl.createEl("details", { cls: "ai-agent-panel-changes-file" });
-			const head = item.createEl("summary");
-			head.createSpan({ cls: "ai-agent-panel-changes-path", text: preview.path });
-			head.createSpan({
-				cls: "ai-agent-panel-changes-tag",
-				text: preview.removing ? "will be deleted" : "will be rewritten",
-			});
-			renderFileDiff(item.createDiv(), preview.before ?? "", preview.after);
-		}
-
-		if (this.skipped.length > 0) {
-			contentEl.createDiv({
-				cls: "ai-agent-panel-diff-note",
-				text: `Not restorable (too large to snapshot): ${this.skipped.join(", ")}`,
-			});
-		}
-
-		const buttons = contentEl.createDiv({ cls: "ai-agent-panel-permission-buttons" });
-		const confirm = buttons.createEl("button", {
-			cls: "mod-warning",
-			text: "Restore files",
-		});
-		confirm.disabled = this.previews.length === 0;
-		confirm.addEventListener("click", () => {
-			this.close();
-			this.onConfirm();
-		});
+		const buttons = contentEl.createDiv({ cls: "ai-agent-panel-modal-buttons" });
 		buttons
-			.createEl("button", { text: "Cancel" })
-			.addEventListener("click", () => this.close());
+			.createEl("button", { cls: "mod-warning", text: "Restore files" })
+			.addEventListener("click", () => {
+				this.confirmed = true;
+				this.close();
+				this.onConfirm();
+			});
+		buttons.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
 	}
 
 	onClose(): void {
+		this.detachTheme?.();
+		this.detachTheme = null;
 		this.contentEl.empty();
+		if (!this.confirmed) this.onCancel();
 	}
 }
 
-/** Every file the conversation changed, with its net diff and a link to open. */
+/**
+ * Every file the conversation changed, with its net diff and a link to open.
+ * The list arrives with each file's lines counted (`ChangeList`), so opening
+ * computes no diff; a file's rows are diffed and drawn when its section first
+ * opens (PRD-001.R29).
+ */
 export class SessionChangesModal extends Modal {
+	private detachTheme: (() => void) | null = null;
+
 	constructor(
 		app: App,
-		private changes: FileChange[],
+		private changes: readonly ChangedFile[],
 		private onOpenFile: (path: string) => void
 	) {
 		super(app);
 	}
 
 	onOpen(): void {
+		this.detachTheme = themeModal(this);
 		const { contentEl } = this;
 		contentEl.addClass("ai-agent-panel-changes-modal");
 		contentEl.createEl("h3", { text: "Changes this conversation" });
 
-		const net = this.changes
-			.map((change) => ({ change, diff: diffText(change.before, change.after) }))
-			.filter((entry) => !entry.diff.unchanged);
-
-		if (net.length === 0) {
+		if (this.changes.length === 0) {
 			contentEl.createDiv({
 				cls: "ai-agent-panel-changes-empty",
 				text: "No file changes yet. Edits Claude makes in this conversation show up here, including ones it later reverted.",
@@ -325,7 +389,7 @@ export class SessionChangesModal extends Modal {
 			return;
 		}
 
-		const totals = changeTotals(net.map((e) => e.change));
+		const totals = changeTotals(this.changes);
 		const summary = contentEl.createDiv({ cls: "ai-agent-panel-changes-summary" });
 		summary.createSpan({
 			text: `${totals.files} ${totals.files === 1 ? "file" : "files"}`,
@@ -335,7 +399,7 @@ export class SessionChangesModal extends Modal {
 		if (totals.removed)
 			summary.createSpan({ cls: "ai-agent-panel-diff-minus", text: `-${totals.removed}` });
 
-		for (const { change, diff } of net) {
+		for (const change of this.changes) {
 			const item = contentEl.createEl("details", { cls: "ai-agent-panel-changes-file" });
 			const head = item.createEl("summary");
 			const name = head.createSpan({ cls: "ai-agent-panel-changes-path", text: change.path });
@@ -352,16 +416,22 @@ export class SessionChangesModal extends Modal {
 			if (change.created)
 				head.createSpan({ cls: "ai-agent-panel-changes-tag", text: "new" });
 			const stat = head.createSpan({ cls: "ai-agent-panel-diff-stat" });
-			if (diff.added)
-				stat.createSpan({ cls: "ai-agent-panel-diff-plus", text: `+${diff.added}` });
-			if (diff.removed)
-				stat.createSpan({ cls: "ai-agent-panel-diff-minus", text: `-${diff.removed}` });
+			writeDiffStat(stat, change.added, change.removed);
 
-			renderFileDiff(item.createDiv(), change.before, change.after);
+			// Diffed and drawn once, when the section first opens; the container is attached first (renderFileDiff).
+			const body = item.createDiv();
+			let drawn = false;
+			item.addEventListener("toggle", () => {
+				if (drawn || !item.open) return;
+				drawn = true;
+				renderFileDiff(body, change.before, change.after);
+			});
 		}
 	}
 
 	onClose(): void {
+		this.detachTheme?.();
+		this.detachTheme = null;
 		this.contentEl.empty();
 	}
 }

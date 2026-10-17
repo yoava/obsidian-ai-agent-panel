@@ -4,153 +4,27 @@
 [![CodeQL](https://github.com/yoava/obsidian-ai-agent-panel/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/yoava/obsidian-ai-agent-panel/security/code-scanning)
 [![Release](https://img.shields.io/github/v/release/yoava/obsidian-ai-agent-panel?sort=semver&label=release)](https://github.com/yoava/obsidian-ai-agent-panel/releases/latest)
 
-Chat with an AI coding agent inside your Obsidian vault - a native panel that drives an agent CLI you have already installed and logged in to yourself.
+A chat panel in Obsidian for the [Claude Code](https://code.claude.com) CLI you have installed, with your vault as its working directory.
 
-The agent gets your vault as its working directory: it can search notes, answer questions about them, refactor and link notes, draft new ones, and run any of its tools - always behind Obsidian-native permission prompts.
+Unofficial: not affiliated with, endorsed by, or sponsored by Anthropic, OpenAI or Obsidian. "Claude" and "Claude Code" are trademarks of Anthropic, PBC; "Codex" and "ChatGPT" of OpenAI; "Obsidian" of Dynalist Inc. They appear only to say what the panel works with.
 
-## Agent integrations
-
-| Agent | Status |
-| --- | --- |
-| [Claude Code](https://code.claude.com) (Anthropic) | **Available** - the first integration, and the only one today |
-| Codex / ChatGPT (OpenAI) | **Planned for the next major release (1.0)** - not implemented |
-
-The panel requires Claude Code, so everything below describes that integration.
-Codex support is not coming in any 0.x release; do not expect it before 1.0.
-
-> **Unofficial and independent.** This community plugin is not affiliated with,
-> endorsed by, or sponsored by Anthropic or OpenAI. It implements no login and
-> handles no credentials: it launches whichever agent CLI *you* installed, on
-> your machine, under your own account with that vendor. "Claude" and "Claude
-> Code" are trademarks of Anthropic, PBC; "Codex" and "ChatGPT" are trademarks
-> of OpenAI; "Obsidian" is a trademark of Dynalist Inc. Those names appear here
-> only to say which agent the panel works with.
-
-Obsidian has more than thirty plugins that put an agent in your vault, several
-of them very large. The one thing this one does that none of them do is give the
-agent real vault operations - a rename that rewrites every backlink, frontmatter
-properties as properties, search by tag and property - instead of a folder of
-text files. [docs/current/COMPARISON.md](docs/current/COMPARISON.md) sets that out plugin by
-plugin, including the cases where you should install one of the others.
-
-## What runs on your machine
-
-A plugin that hosts a coding agent needs capabilities most plugins don't, and
-Obsidian's review flags every one of them. Rather than leave you to find that
-list on a review page, here it is, with the reason for each.
-
-| Capability | Why it is needed |
-| --- | --- |
-| **Starts a program** (Node `child_process`) | This is the plugin. It launches the `claude` CLI *you* installed, with your vault as its working directory, and talks to it over stdin/stdout. Arguments are passed as an array with `shell: false`, so nothing is re-parsed by a shell. Under WSL the arguments reach a `sh` as positional parameters, which it never parses; npm's `claude.cmd` on Windows must go through cmd.exe, so an argument it would interpret is refused. Also used for the `!` escape, where you are the one typing the command. |
-| **Reads files outside the vault** (Node `fs`) | Only to *find* that CLI: a few standard install locations under your home directory, plus `which` / `where`. The plugin writes nothing outside the vault. What the agent itself reads or writes, with your approval, is bounded by your user account - as it would be in a terminal. |
-| **Lists the vault's files** (`getFiles`, `getMarkdownFiles`) | `@`-mention completions, the transcript-folder autocomplete, and the `obsidian_search` tool's tag/property search. This reads Obsidian's file index; note *contents* are read only by a tool call you approved. |
-| **Writes to the clipboard** (`navigator.clipboard.writeText`) | The copy buttons on messages and tool output. The plugin never **reads** the clipboard - images you paste arrive through the paste event you triggered, which is not clipboard access. |
-
-And what it does not do:
-
-- **No network requests of its own.** Not one, including plan usage - that is
-  asked of the CLI over the pipe the plugin already owns.
-- **No credentials.** No API keys, no tokens, no reading `~/.claude`'s login.
-  Authentication is entirely your CLI's, under your own Anthropic account.
-- **No telemetry.** Nothing is collected and the maintainer receives nothing.
-- **Nothing sensitive runs unasked.** In the default mode every file edit,
-  shell command and web fetch shows an Allow/Deny card in the chat first.
-
-Desktop only (`isDesktopOnly: true`) - a mobile Obsidian cannot spawn a
-process. The full picture is under [Disclosures](#disclosures) and in
-[docs/current/SECURITY.md](docs/current/SECURITY.md).
-
-## Features
-
-- **Native chat panel** in the right sidebar with streamed responses, rendered as Obsidian Markdown. Transcript text is selectable, and every prompt and reply has a hover copy button. Links work as they do in a note: a link to a vault file opens it (Ctrl/Cmd-click for a new tab, hover for a page preview), external links open in your browser. Your own messages get a fixed amber/gold tint, border, and left bar - deliberately not the vault theme's accent color, so they stand out consistently and stay distinguishable under deuteranopia.
-- **Multiple conversations via tabs** - drag to reorder, middle-click to close, hover for conversation metadata, busy indicator per tab (steady orange when Claude is waiting for a permission or question answer). More tabs than fit? They shrink, then the strip scrolls (mouse wheel, or drag a tab to an edge), and a chevron next to **+** lists every open conversation by name. Messages sent mid-turn steer or queue into the running turn. Open tabs are restored when Obsidian reloads (per device - the layout never syncs). Put the tabs **on top** as a strip, **on the side** as a column of conversation rows (easier to read when you keep many), or leave it on **automatic**, which uses the side column whenever the panel is wide enough for one and the strip when it is not. The side column is **resizable** - drag its inner edge, double-click to reset - and the width is remembered per device, never synced, since how wide a column fits is a property of the screen.
-- **The side column is the whole conversation list**, not just the open tabs: one scrolling list with **Pinned**, **Open** (drag-reorderable, busy dot, **×** closes) and **Recent** (everything in history that isn't open - muted, with a relative time and no **×**, grouped under *Today* / *Yesterday* / *Previous 7 days* / *Older*). Sections are collapsible and remember their state per device, a filter field at the top narrows every section by title, and clicking a Recent row opens it - so in this layout you never need the *Previous conversations* picker. Right-click (or long-press) any row for **Open · Export · Close · Delete**; deleting asks first, and it is the only place that can, so **×** never means "delete forever".
-- **Pin the conversations you keep coming back to** - from the row's context menu or the pin that appears on hover. Pinned rows head the column in their own section, ordered oldest pin first so the list stays put as you add more, and a pinned conversation renders *only* there whether or not it is open, keeping its close button and busy dot. In the top strip, pinned tabs sort to the front with a small pin glyph. Pinning is stored in the conversation file, so it follows the conversation between devices with the vault - and pinning one from history doesn't open it.
-- **Conversation history**: every conversation is saved locally and can be reopened later, resuming the CLI session where it left off.
-- **Undo a turn, or branch off one**: every finished turn offers **Restore files** - putting the notes it changed back exactly as they were, after showing you the diff it would undo - and **Branch from here**, which opens a new tab continuing from just before that turn while leaving the original conversation intact.
-- **Note context**: the active note's path and your current selection are attached to your message (toggle per message via the context chips); attach more files/folders via the **+** button, `@`-mentions, or the file explorer's right-click menu. A **links & properties** chip (off by default) additionally sends the note's outgoing links, backlinks, broken links and frontmatter - for when the question is about where a note sits in the vault rather than what it says.
-- **Images**: paste or drag a screenshot into the composer and Claude sees it. Each one gets a thumbnail chip you can click to remove.
-- **`!` shell escape**: type `!git status` to run a command yourself, with the vault as the working directory, and get stdout/stderr in a monospace card. It is *your* command, so it doesn't go through Claude's permission prompts - and Claude doesn't see it, or its output, unless you press **Add output to chat**. Can be switched off in settings.
-- **Permission prompts in the chat**: every sensitive tool call (edits, shell commands, web access) shows an Allow / Always allow / Deny card. Nothing runs without your consent in the default mode.
-- **See the diff before you approve it**: an edit's permission card shows the actual proposed change - green/red gutters, line numbers, and the *words* that differ highlighted inside a rewritten line - with unchanged stretches collapsed and expandable. Flip any diff to **Rendered** to see the changed section before and after as Obsidian actually draws it. Finished edits keep the diff on their activity card, and a **N files +x -y** link in the header opens everything the conversation has changed, per file, with a click through to the note.
-- **Interactive questions**: when Claude asks you to choose between options (the `AskUserQuestion` tool), the panel renders a proper form - clickable options with descriptions, multi-select where allowed, and a free-text "Other" answer - instead of a raw permission prompt.
-- **Permission modes**: *Ask before acting*, *Accept edits*, *Plan (read-only)*, *Auto-approve everything* - switchable mid-conversation. Auto-approve is answered by the plugin, not by the CLI standing down: Claude Code's own rules and hooks still run and anything they deny never happens, but everything they'd ask you about is allowed without a card, so the control row marks it in red. A *Bypass permissions* mode, which switches the CLI's permission system off entirely, also exists but stays hidden unless you explicitly enable it in settings. With the *Default permission mode* setting on *Claude Code default*, a new conversation starts in the mode your Claude Code settings set (`permissions.defaultMode`). The control shows the mode the CLI reports, including its own switches such as leaving plan mode once you approve a plan; before a conversation's CLI has started it shows the mode that profile last started in, or *Default* when that isn't known yet.
-- **A control row under the composer**, CLI status-line style: **model · effort · permissions · profile**, each a one-click menu, switchable mid-conversation. The context meter and plan usage share the row above it, so the whole composer costs two compact lines. The model entries are the ones *your* CLI and account actually accept - the CLI reports them at session start, and the menu offers exactly that list, with unsupported effort levels greyed out. New model releases and effort levels are selectable without a plugin update, and each entry re-labels itself with the version the CLI resolved it to.
-- **CLI profiles**: keep several ways to launch the CLI (e.g. a Windows install and a WSL one) as named profiles with a default, and pick one per conversation from the row's **Profile** control. Both are invisible while you have just one profile - which is the normal case.
-- **Per-profile launch options**: each profile can turn **Claude in Chrome** and the **Bash sandbox** on or off, and pass **additional arguments** to the CLI (e.g. `--add-dir /path/to/projects`). Both toggles default to *Claude Code default*, which passes nothing and leaves the choice to your Claude Code settings. Arguments the panel sets itself (`--model`, `--resume`, the stream-JSON flags, …) are refused with a message saying why. Changes reach open conversations when you close settings: each restarts its CLI after the current turn and carries on where it was.
-- **Browse with Claude in Chrome**: with Chrome on for the profile and the [Claude in Chrome extension](https://code.claude.com/docs/en/chrome) installed, Claude can open pages, click, type and read them in your browser, signed in as you. Browser actions show as *Chrome · navigate*-style cards, and screenshots a tool returns appear in its card.
-- **Choose which settings sync**: every settings row has a cloud badge - click it to flip that setting between the synced plugin data and this-device-only storage. CLI paths/profiles are device-only by default, so machines with different install locations stop overwriting each other through Obsidian Sync. On Obsidian 1.13+ every one of these settings is also reachable from Obsidian's own settings search.
-- **Slash commands** with autocomplete - Claude Code's built-ins plus your custom commands and skills, with their descriptions and argument hints.
-- **Claude Code's info commands, answered in the panel**: `/context` (a bar of what fills the window, by category, plus memory files and MCP tools), `/mcp` (every server with its status, and Reconnect / Enable / Disable buttons; `/mcp reconnect|enable|disable <server>|all` works too), `/status`, `/memory`, `/hooks`, `/permissions`, `/skills`, `/chrome`, `/sandbox`, `/cost` and `/help` render as cards in the chat, and `/clear` opens a new conversation. Over the pipe Claude Code answers most of these in plain text or not at all ("isn't available in this environment"); the panel asks it for the data instead, which costs no tokens. The cards are saved with the conversation and its exported note (one run while Claude is mid-turn stays on screen only, so the transcript keeps its order).
-- **Plan usage at a glance**: an optional usage strip in the row below the composer with configurable warning/critical highlighting, a detailed popup with progress bars, and local `/usage`, `/usage-credits`, `/extra-usage` commands. The numbers are asked of the running CLI session over the pipe the plugin already owns, so they cost no tokens and the plugin never touches a credential - they appear once a conversation is under way.
-- **Markdown transcript export** (opt-in): auto-exported notes with linked context files, configurable folder, note-name pattern, and date format; a small *transcript* header link opens the note.
-- **Tool activity cards** show what Claude is doing (file edited, command run, …) with expandable inputs and results.
-- **Subagents are visible**: when Claude delegates to a subagent, its whole transcript nests as a collapsed thread under the Task card - the agent's own replies, its tool calls, its model, token count and duration - instead of vanishing behind a one-line summary.
-- **Background tasks**: work Claude pushes to the background shows as a strip above the composer while it runs, each with a stop button.
-- **Per-conversation context meter** in the composer: how full the context window is and what the conversation has cost so far, with a hover breakdown of input/output/cache tokens by category.
-- **Obsidian-native tools** (the thing no editor integration can give you): Claude gets six tools that run *inside* Obsidian, so it can work with your vault as a vault rather than as a folder of text files.
-  - **Rename or move a note without breaking a single backlink** - Obsidian rewrites every link pointing at it.
-  - **Ask what links where**: outgoing links, embeds, backlinks, and links that point nowhere.
-  - **Search by metadata**, not text: `tag:project -prop:status=done`, `heading:"Open questions"`, `folder:daily`, `prop:due`. (Text search is what Grep is for.)
-  - **Read and set frontmatter properties**, with Obsidian rewriting the block so your formatting survives.
-  - **Know what you're looking at** - the active note, your cursor, your selection - so "summarize this section" means the right section.
-  - **Open a note** in your window when you ask to be taken somewhere.
-
-  Every one of these still asks permission first, and they run over the connection the plugin already has: no port, no config file, no extra process. Needs Claude Code 2.1.210+; can be switched off in settings.
-- **Vault instructions**: per-vault system-prompt additions - or just keep a `CLAUDE.md` in your vault root, which Claude Code reads natively.
-- **Uses whatever login your Claude Code installation already has**, subscription or API key, and stores no keys or tokens of its own. How Anthropic counts sessions started from a third-party panel is Anthropic's decision; see Requirements.
+Claude Code is the only agent today. Codex is planned for a later release.
 
 ## Requirements
 
-- Obsidian **desktop** 1.8.7+ (the plugin spawns a local process; mobile is not supported).
-- [Claude Code](https://code.claude.com) **2.x** installed and logged in (`claude` must work in your terminal).
+- Obsidian desktop 1.8.7 or later. Mobile is not supported.
+- Claude Code installed and logged in; `claude` must work in your terminal. The vault tools need 2.1.210 or later.
 - A vault on the local file system.
 
-Sessions started by this plugin run the CLI in its non-interactive stream-JSON
-mode, the same mode Anthropic's Agent SDK uses. Anthropic distinguishes such
-sessions from interactive terminal use and has said it may meter them
-differently or draw them from usage credits; check
-[Anthropic's current policy](https://support.claude.com/en/articles/13189465-log-in-to-your-claude-account)
-for your plan. If an `ANTHROPIC_API_KEY` environment variable is set when
-Obsidian starts, the CLI bills that key instead of your subscription.
-
-## Disclosures
-
-Obsidian asks plugin authors to state these things plainly.
-
-- **Account required.** You need a Claude Code installation that is logged in
-  to an Anthropic account, on a free or paid plan, or an Anthropic API key
-  configured for it.
-- **Network use.** The plugin opens no connection of its own. The Claude Code
-  process it starts sends your prompts, attached note context, anything Claude
-  reads with your permission, pasted images, and plan-usage lookups to
-  Anthropic's API under your account. Replies are rendered as Markdown, so an
-  image link in a reply is fetched from that URL when displayed, as in any
-  note.
-- **Files outside the vault.** To find the CLI, the plugin checks a few
-  standard install locations in your home directory and runs `which` or
-  `where`. The CLI keeps its own settings, sessions and login under
-  `~/.claude`. Commands you run with the `!` escape, and tools Claude runs with
-  your approval, can read and write anywhere your user account can.
-- **Data on disk.** Conversation history (including full tool inputs and
-  outputs), per-turn checkpoints of notes before Claude edited them, and
-  optional transcript exports are stored under
-  `.obsidian/plugins/ai-agent-panel/` and, for exports, in your vault. Obsidian
-  Sync does not copy the history and checkpoint folders; tools that mirror the
-  whole vault folder do. Uninstalling the plugin deletes its folder.
-- **Telemetry.** None. The plugin collects nothing and the maintainer receives
-  nothing.
-- **Defaults.** The `!` shell escape and the Obsidian vault tools are on;
-  *Bypass permissions* is off until you enable it in settings.
-- **Warning.** With your approval the agent can rewrite and delete notes and
-  run shell commands. Keep backups. The default mode asks before every such
-  action. *Auto-approve everything* answers every permission request for you
-  without showing a card, and *Bypass permissions* turns the CLI's own checks
-  off; both are marked in red while active.
+Sessions run the CLI in its non-interactive stream-JSON mode. Anthropic may count such sessions differently from terminal use; see [its sign-in article](https://support.claude.com/en/articles/13189465-logging-in-to-your-claude-account) for your plan. If `ANTHROPIC_API_KEY` is set when Obsidian starts, the CLI bills that key.
 
 ## Install
 
-### From source
+Community plugins: *Settings > Community plugins > Browse*, search **AI Agent Panel**, install, enable.
+
+BRAT: add `yoava/obsidian-ai-agent-panel` in [BRAT](https://github.com/TfTHacker/obsidian42-brat).
+
+From source:
 
 ```bash
 git clone https://github.com/yoava/obsidian-ai-agent-panel.git
@@ -159,87 +33,106 @@ npm ci
 npm run build
 ```
 
-Then copy `manifest.json`, `main.js`, and `styles.css` into `<your vault>/.obsidian/plugins/ai-agent-panel/` and enable **AI Agent Panel** in *Settings → Community plugins*.
-
-### Via BRAT
-
-Install the [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin and add this repository (`yoava/obsidian-ai-agent-panel`). BRAT installs release builds and keeps them updated.
+Copy `manifest.json`, `main.js` and `styles.css` to `<vault>/.obsidian/plugins/ai-agent-panel/` and enable the plugin.
 
 ### Verifying a release
 
-`main.js` and `styles.css` are built by the release workflow and carry a signed
-build-provenance attestation, so you can confirm a downloaded asset came from
-this repository rather than from someone's laptop:
+`main.js` and `styles.css` carry a build-provenance attestation: `gh attestation verify main.js --repo yoava/obsidian-ai-agent-panel`.
 
-```bash
-gh attestation verify main.js --repo yoava/obsidian-ai-agent-panel
-```
+## Use
 
-The build is also reproducible: `npm ci && npm run build` at the release tag produces a byte-identical `main.js`.
+1. Open the panel from the ribbon icon or **AI Agent Panel: Open chat**.
+2. Type a message. The active note is attached as context; click its chip to leave it out. `@` mentions files and folders; `/` lists commands.
+3. Approve or deny the cards that appear.
 
-## Usage
+Other commands: **New conversation**, **Previous conversations**, **Add selection to chat**, **Export conversation to Markdown**, **Focus prompt box**, **Stop Claude's turn**, **Next conversation tab**, **Previous conversation tab**. None has a default hotkey; set one under *Settings > Hotkeys*.
 
-1. Open the panel: click the chat-bubble icon in the ribbon, or run **AI Agent Panel: Open chat**.
-2. Type a question - the active note is attached as context by default (click the chip to toggle). `@` mentions files/folders, `/` lists commands.
-3. When the agent wants to edit a file or run a command, approve or deny the request card in the chat.
-4. Useful commands (Ctrl/Cmd-P):
-   - **AI Agent Panel: Open chat**
-   - **AI Agent Panel: New conversation**
-   - **AI Agent Panel: Previous conversations**
-   - **AI Agent Panel: Add selection to chat**
-   - **AI Agent Panel: Export conversation to Markdown**
-5. In the chat, `/usage` shows your plan limits without spending tokens (once a conversation is running); clicking the usage strip opens a detailed popup.
+Windows: a native `claude.exe` or `claude.cmd` install works as is, except that a `claude.cmd` path containing `&`, `^`, `%`, `!` or a quote is refused (use the native build). For a WSL install, **Detect** in settings switches on **Run via WSL**. **Add CLI profile** keeps one launch configuration per install.
 
-### Windows
+## Features
 
-A native Windows install of the CLI works out of the box - both the standalone installer's `claude.exe` and an `npm install -g` (npm installs a `claude.cmd` shim, which the plugin launches through `cmd.exe`, as Windows requires).
+### Conversation
 
-If Claude Code is installed inside WSL instead, auto-detection handles it: **Detect** (and the automatic lookup when no path is set) probes both Windows and your default WSL distro, and switches **Run via WSL** on when the CLI is only found in WSL. You can also configure it manually - enable **Run via WSL** and set the CLI path to the Linux-side path (e.g. `/home/you/.local/bin/claude`). The plugin launches it through `wsl.exe` with your vault as the working directory.
+- Streamed replies rendered as Obsidian Markdown; a working line at the end of the conversation while Claude works; collapsible thinking; a divider where Claude Code compacts the conversation, with its summary; tool calls grouped into step cards; subagent rows; background tasks with Stop.
+- Each turn is headed by the panel's agent mark, which stays still: the working line at the end of the conversation is the moving cue while Claude works. A finished turn shows its duration and cost, a copy button, and **Restore files** and **Branch** where they apply. Cost and context come from the CLI at no token cost.
+- Tabs drawn as Obsidian tabs on top, a side column (Pinned, Open, Recent) or, by default, automatic by panel width. Drag to reorder, pin, rename, filter, resume; an open-tabs list, with state marks and close buttons, opens from All conversations and the narrow switcher.
+- Messages sent mid-turn queue or steer the running turn. Esc or **Stop** interrupts.
+- Status line under the composer: model, effort, permissions, CLI profile, context window with the prompt cache's estimated time left, plan usage (5-hour and weekly limits).
+- Context: active note, selection, `@` files and folders, pasted images (8 per message, 4 MB each), optional links and properties, optional active folder.
+- `!command` runs a shell command yourself; Claude does not see it unless you add its output to the chat.
+- `/context`, `/mcp`, `/status`, `/memory`, `/hooks`, `/permissions`, `/skills`, `/chrome`, `/sandbox`, `/cost`, `/usage` and `/help` render as report cards at no token cost.
+- `/clear` clears Claude's context in the same conversation: a divider marks the point, the messages above stay, and the next message starts a new Claude Code session. "Undo" on the divider takes the latest clear back until you send another message.
+- Per-profile Claude in Chrome, Sandbox and extra CLI arguments.
 
-Have Claude Code installed on both sides? **Add CLI profile** in settings keeps a named launch configuration for each (e.g. *Windows* and *WSL*), with one as the default; every conversation can then pick its CLI from the **Profile** control under the composer. With a single profile none of this UI appears.
+### Prompts
 
-## Security model
+- Prompt style: Card (default) or Bubble, in a prompt color: Clear, Sand (default), Stone, Sage, Sea, Mist, Lavender, Rose, Accent or a Custom CSS color. The current turn's prompt stays pinned while you scroll. In Card, prompts are numbered and a jump rail has one tick per prompt.
+- A new conversation offers starters: with a note open, *Summarize* and *Find notes that should link here*; with text selected, *Draft a follow-up from the selection*.
+- Vault instructions: per-vault system-prompt additions, or a `CLAUDE.md` in the vault root.
 
-- The plugin runs Claude Code **locally**, with the vault root as its working directory. Model traffic is the CLI's, under your existing Claude account.
-- **The plugin itself makes no network requests at all.** Even plan usage is asked of the running CLI over the existing stdio channel, and the CLI makes any authenticated call itself with its own login. The plugin reads no credential file, opens no socket, and holds no token.
-- The plugin stores no API keys or credentials of its own; its `data.json` holds only settings.
-- Tool use is governed by Claude Code's permission system; in the default mode every sensitive action requires your explicit approval in the chat. "Always allow" persists a rule via Claude Code's own settings mechanism.
-- **Claude in Chrome** (off unless you or your Claude Code settings turn it on) lets Claude act in your browser with your logged-in sessions; which sites it may use is managed in the extension. **The sandbox** confines Claude's shell commands to the files and hosts your Claude Code settings allow - and, by Claude Code's default, runs sandboxed commands without a permission card.
-- Note content you attach as context (and anything Claude reads from the vault with your permission) is sent to Anthropic's API by the CLI - same as using Claude Code on any folder.
-- Conversation history is stored locally under the plugin folder; optional transcript exports are notes in your vault. Both can contain anything said in the chat - treat them like any other note.
+### Permissions
 
-See [docs/current/SECURITY.md](docs/current/SECURITY.md) for details and reporting.
+- In the default mode, every request Claude Code sends for approval shows a card: Allow, Always allow or Deny. Your Claude Code allow rules, and sandboxed commands under `sandbox.autoAllowBashIfSandboxed`, run without one.
+- Edit cards show a word-level diff and a rendered-Markdown view.
+- Modes: Ask before acting, Accept edits, Plan (read-only), Auto-approve everything. *Bypass permissions* is off and hidden until enabled in settings.
+- `AskUserQuestion` renders as a form.
 
-**Privacy.** Nothing leaves your machine except what the Claude Code process
-sends to Anthropic under your own account, as described under Disclosures. The
-plugin has no server and the maintainer receives nothing. What Anthropic does
-with the content it receives, including whether it is used for training, is
-governed by your Anthropic account settings and Anthropic's terms, not by this
-plugin.
+### Vault tools
 
-Your use of Claude Code itself is governed by [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance); this plugin simply launches your own installation and implements no login or credential handling of its own. Licensing and trademark details: [docs/current/LEGAL.md](docs/current/LEGAL.md).
+Six tools that run inside Obsidian; they can be switched off:
 
-## How it works
+- Rename or move a note; Obsidian updates links as your link-update setting directs.
+- List outgoing links, embeds, backlinks and broken links.
+- Search by tag, property, heading or folder.
+- Read and set frontmatter properties.
+- Read the active note, cursor and selection.
+- Open a note.
 
-The plugin spawns your installed `claude` CLI with `--input-format stream-json --output-format stream-json` and talks to it over stdio - the same interface the official Claude Agent SDK uses. The protocol client is a small original implementation (no Anthropic code is bundled), which keeps this repository fully MIT. See [docs/current/design/DES-001-system-overview.md](docs/current/design/DES-001-system-overview.md).
+Each call asks for permission first. Design: [DES-006](docs/current/design/DES-006-vault-tools.md).
 
-## Development
+### History and export
 
-See [docs/current/DEVELOPMENT.md](docs/current/DEVELOPMENT.md). Quick start:
+- Every conversation is saved locally and resumes its Claude Code session on a device that ran it, with the same CLI profile. Anywhere else it keeps its messages and starts a fresh session.
+- **Restore files** rewinds the files Claude edited, after listing them, using Claude Code's checkpoints. **Branch** continues from before a turn.
+- Optional Markdown export: folder, note-name pattern and date format are configurable.
 
-```bash
-npm ci
-npm run dev    # watch mode
-npm run build  # type-check + production build
-```
+### Settings
 
-## Support
+- One page in six sections under a bar of section links, with a search field and a *Modified* filter; reset one setting, a section or all, with Undo.
+- *Appearance*: theme (Auto, Light or Dark), conversation tabs, tooltips, prompt style and color, pinned prompt, jump rail.
+- Default permission mode, plan-usage thresholds, export, CLI profiles stacked under one heading each, with a banner and alert icons when a profile's Claude Code is not found.
+- Each setting syncs or stays on this device. CLI paths and profiles, default permission mode, bypass, vault instructions, `!` and vault tools are device-only by default.
 
-The plugin is free and MIT-licensed, and it stays that way. If it saves you
-time, you can [sponsor on GitHub](https://github.com/sponsors/yoava) or
-[buy me a coffee](https://buymeacoffee.com/yoava) - entirely optional, and no
-feature is ever gated behind it.
+## What runs on your machine
+
+| Capability | Why |
+| --- | --- |
+| Starts a program (`child_process`) | Launches your `claude` CLI over stdin/stdout, and runs the `!` commands you type. `shell: false` with array arguments wherever the platform allows. |
+| Reads files outside the vault (`fs`) | Only to find the CLI: standard install locations under your home directory, plus `which` or `where`. |
+| Lists vault files (`getFiles`, `getMarkdownFiles`) | `@` completion, the transcript-folder suggester, and the vault tools' tag and property search. Reads Obsidian's index, not note bodies. |
+| Writes the clipboard | Copy buttons. The plugin never reads the clipboard. |
+
+## Disclosures
+
+- **Network.** The plugin makes no network requests and holds no credentials. The Claude Code process it starts sends your prompts, attached context, anything Claude reads, pasted images and plan-usage lookups to Anthropic. Claude Code's read-only tools run in the vault without a card by default. With your approval Claude Code can also reach other hosts: web fetch, shell commands, and Claude in Chrome with your browser sessions. Remote images and embeds in replies are shown as their address and not fetched. What Anthropic does with the data is governed by your account settings and its terms.
+- **Account.** A Claude Code installation logged in to your own Anthropic account (free or paid plan) or configured with your own API key. The plugin stores no keys or tokens.
+- **Telemetry.** None.
+- **Files outside the vault.** The plugin writes nothing outside the vault. The CLI keeps its settings, sessions and login in `~/.claude`. The panel turns on Claude Code's file checkpoints: before an edit the CLI copies the file, files outside the vault included, to `~/.claude/file-history/`, where *Restore files* reads it. The copies stay until Claude Code's own cleanup, not until you delete the conversation. Commands you run with `!`, and tools Claude runs with your approval, can read and write anywhere your user account can.
+- **Fonts.** The panel is set in Geist and Geist Mono, © 2024 The Geist Project Authors, bundled in `main.js` under the SIL Open Font License 1.1 ([notice](docs/current/LEGAL.md#third-party-components)). Nothing is fetched.
+- **External CLI.** The plugin starts your installed `claude` as a child process. It does not bundle, download or patch it.
+- **Data on disk.** History (tool inputs in full, results cut to 1500 characters) is stored in `.obsidian/plugins/ai-agent-panel/`; exports go in your vault. Both can hold anything said in the chat. Obsidian Sync does not copy the history folder; tools that mirror the whole vault folder do. This device also keeps, in Obsidian's local storage, a record of the Claude Code sessions it ran for each conversation, and a `.session-provenance-migrated` marker file in the history folder; a conversation that arrives from another device starts a fresh Claude Code session. Uninstalling the plugin deletes its folder.
+- **Defaults.** `!` and the vault tools are on; the default permission mode is *Claude Code default* (your Claude Code settings decide).
+- **Risk.** With your approval the agent can rewrite and delete notes and run shell commands. Keep backups. Auto-approve answers requests without a card, except those Claude Code escalates, and Bypass turns the CLI's checks off; both show in red.
+
+## More
+
+- Threat model, permission modes and what each skips: [docs/current/SECURITY.md](docs/current/SECURITY.md). Report a vulnerability as [SECURITY.md](SECURITY.md) describes.
+- Other agent plugins, dated: [docs/current/COMPARISON.md](docs/current/COMPARISON.md).
+- Licensing and trademarks: [docs/current/LEGAL.md](docs/current/LEGAL.md).
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md); build and test: [docs/current/DEVELOPMENT.md](docs/current/DEVELOPMENT.md). Release history: [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE).
+
+Optional support: [GitHub Sponsors](https://github.com/sponsors/yoava), [Buy Me a Coffee](https://buymeacoffee.com/yoava). No feature is gated behind it.

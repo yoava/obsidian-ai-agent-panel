@@ -75,6 +75,15 @@ export interface DetectedCli {
 	useWsl: boolean;
 }
 
+/** Locate claude on this device only, never in WSL: well-known install locations first, then PATH. */
+export async function detectNativeCli(): Promise<DetectedCli | null> {
+	for (const candidate of candidatePaths()) {
+		if (existsSync(candidate)) return { path: candidate, useWsl: false };
+	}
+	const found = await lookupInPath();
+	return found ? { path: found, useWsl: false } : null;
+}
+
 /**
  * Locate the claude executable. Checks well-known install locations first
  * (GUI apps often launch without the user's full shell PATH), then PATH.
@@ -82,13 +91,7 @@ export interface DetectedCli {
  * is checked first.
  */
 export async function detectClaudeCli(preferWsl = false): Promise<DetectedCli | null> {
-	const native = async (): Promise<DetectedCli | null> => {
-		for (const candidate of candidatePaths()) {
-			if (existsSync(candidate)) return { path: candidate, useWsl: false };
-		}
-		const found = await lookupInPath();
-		return found ? { path: found, useWsl: false } : null;
-	};
+	const native = detectNativeCli;
 	const wsl = async (): Promise<DetectedCli | null> => {
 		if (process.platform !== "win32") return null;
 		const found = await lookupInWsl();
@@ -99,4 +102,22 @@ export async function detectClaudeCli(preferWsl = false): Promise<DetectedCli | 
 		if (result) return result;
 	}
 	return null;
+}
+
+/**
+ * Whether a configured native path points at nothing where a launch looks (DES-002 Missing CLI): a relative path from
+ * `cwd`, the CLI's working directory (the vault), and on Windows also with ".com" or ".exe" appended, as the spawn
+ * tries. An empty path and a bare command name, which PATH resolves at launch, are never reported. A relative POSIX path
+ * is joined, not normalized: the file system follows a symlink before a `..`; Windows normalizes `..` by text itself.
+ */
+export function configuredPathMissing(
+	cliPath: string,
+	cwd: string,
+	platform: NodeJS.Platform = process.platform,
+	exists: (path: string) => boolean = existsSync
+): boolean {
+	const win = platform === "win32";
+	if (cliPath === "" || !(win ? /[\\/]/ : /\//).test(cliPath)) return false;
+	const full = win ? path.win32.resolve(cwd, cliPath) : cliPath.startsWith("/") ? cliPath : `${cwd}/${cliPath}`;
+	return !(win ? [full, `${full}.com`, `${full}.exe`] : [full]).some((candidate) => exists(candidate));
 }
