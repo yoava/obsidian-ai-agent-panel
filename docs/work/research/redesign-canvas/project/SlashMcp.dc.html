@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MCP and status reports</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit;text-decoration:none}a:hover{color:inherit}
+.app{--bg:#141417;--bg-2:#18181c;--surface:#1d1d22;--surface-2:#26262c;--surface-3:#2f2f36;--line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.12);--text:#ededf0;--muted:#a6a6b0;--faint:#8c8c96;--user-bg:#2a241c;--user-line:rgba(245,180,90,.36);--green:#4fc58c;--red:#f2706f;--orange:#f5a04a;--green-soft:rgba(79,197,140,.13);--red-soft:rgba(242,112,111,.13);--orange-soft:rgba(245,160,74,.13);--accent:#a99cfa;--accent-fill:#6d5ce7;--accent-soft:rgba(139,124,246,.15);--accent-line:rgba(139,124,246,.5);color-scheme:dark;font-family:'Geist',system-ui,-apple-system,sans-serif;font-size:13.5px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;box-sizing:border-box}
+.app.t-light{--bg:#fbfbfa;--bg-2:#f4f4f2;--surface:#ffffff;--surface-2:#f0f0ed;--surface-3:#e6e6e2;--line:rgba(24,24,32,.08);--line-2:rgba(24,24,32,.14);--text:#1b1b20;--muted:#53535d;--faint:#696973;--user-bg:#fdf3e4;--user-line:#ecca95;--green:#16864f;--red:#cc3b3a;--orange:#a85a08;--green-soft:rgba(22,134,79,.09);--red-soft:rgba(204,59,58,.08);--orange-soft:rgba(168,90,8,.09);--accent:#5847d4;--accent-fill:#6352e0;--accent-soft:rgba(99,82,224,.09);--accent-line:rgba(99,82,224,.4);color-scheme:light}
+.app.acc-blue{--accent:#82aeff;--accent-fill:#2f6fe0;--accent-soft:rgba(80,140,255,.15);--accent-line:rgba(80,140,255,.5)}
+.app.t-light.acc-blue{--accent:#1d5cc9;--accent-fill:#2463d6;--accent-soft:rgba(36,99,214,.09);--accent-line:rgba(36,99,214,.4)}
+.app.acc-teal{--accent:#5fd4c6;--accent-fill:#0f7c74;--accent-soft:rgba(60,200,185,.14);--accent-line:rgba(60,200,185,.5)}
+.app.t-light.acc-teal{--accent:#0b6c65;--accent-fill:#0e7a72;--accent-soft:rgba(14,122,114,.09);--accent-line:rgba(14,122,114,.4)}
+.app *{box-sizing:border-box}
+:where(.app button,.app input){font:inherit;color:inherit;background:none;border:0;margin:0;padding:0}
+:where(.app button){cursor:pointer}
+.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.i12{width:12px;height:12px}
+.mono{font-family:'Geist Mono',ui-monospace,SFMono-Regular,monospace;font-size:.92em}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.grow{flex:1;min-width:0}
+.ub{align-self:flex-end;font-family:'Geist Mono',ui-monospace,monospace;font-size:12.5px;background:var(--user-bg);border:1px solid var(--user-line);border-radius:12px 12px 4px 12px;padding:5px 11px;flex:none}
+.rc{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;flex:none}
+.rc-h{display:flex;align-items:center;gap:9px;padding:12px 10px 0 12px}
+.rc-ic{width:26px;height:26px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.rc-t{font-weight:600}
+.free{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:999px;font-size:10.5px;font-weight:500;color:var(--green);background:var(--green-soft);flex:none}
+.rc-a{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;color:var(--faint);flex:none}
+.rc-a:hover{background:var(--surface-2);color:var(--text)}
+.rc-lead{padding:2px 14px 0 47px;font-size:12px;color:var(--faint)}
+.rc-b{padding:10px 14px 14px 14px;display:flex;flex-direction:column;gap:14px}
+.sh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.rc-f{display:flex;align-items:flex-start;gap:8px;padding:9px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);background:var(--bg-2)}
+.rows{display:flex;flex-direction:column}
+.r{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--line);font-size:12.5px}
+.rows .r:first-child{border-top:0;padding-top:4px}
+.pl{display:inline-flex;align-items:center;height:19px;padding:0 7px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap;flex:none}
+.pl.ok{color:var(--green);background:var(--green-soft)}
+.pl.warn{color:var(--orange);background:var(--orange-soft)}
+.pl.err{color:var(--red);background:var(--red-soft)}
+.pl.off{color:var(--faint);background:var(--surface-2)}
+.pl.acc{color:var(--accent);background:var(--accent-soft)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;padding:0 9px;border-radius:7px;font-size:11.5px;font-weight:500;white-space:nowrap;flex:none;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--text)}
+.btn:hover{background:var(--surface-2)}
+.meta{font-size:11.5px;color:var(--faint)}
+.kv{display:grid;grid-template-columns:128px minmax(0,1fr);column-gap:12px;font-size:12.5px;margin:0}
+.kv dt{color:var(--muted);padding:5px 0;border-top:1px solid var(--line)}
+.kv dd{margin:0;padding:5px 0;border-top:1px solid var(--line);min-width:0}
+.kv .f{border-top:0}
+</style>
+</helmet>
+<div class="app {{mods}}" style="width:440px;height:1360px;overflow:hidden;padding:20px 16px;display:flex;flex-direction:column;gap:12px;border-left:1px solid var(--line)">
+
+  <div class="ub">/mcp</div>
+  <article class="rc">
+    <div class="rc-h">
+      <span class="rc-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-5"></path><path d="M9 8V2"></path><path d="M15 8V2"></path><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"></path></svg></span>
+      <span class="rc-t">MCP servers</span>
+      <span class="free">no tokens</span>
+      <span class="grow"></span>
+      <button class="rc-a" aria-label="Refresh"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg></button>
+      <button class="rc-a" aria-label="Copy as Markdown"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button>
+    </div>
+    <div class="rc-lead">6 servers: 3 connected, 1 needs sign-in, 1 failed, 1 disabled</div>
+    <div class="rc-b">
+      <div class="rows">
+        <div class="r">
+          <div class="grow" style="display:flex;flex-direction:column;gap:2px">
+            <span style="display:flex;align-items:center;gap:7px"><span style="font-weight:500">postgres</span><span class="pl err">failed</span></span>
+            <span class="meta">stdio · Project settings</span>
+            <span class="mono ell" style="font-size:11px;color:var(--red)">spawn uvx ENOENT</span>
+          </div>
+          <button class="btn"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>Reconnect</button>
+          <button class="rc-a" aria-label="Disable postgres" title="Disable"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.77.04"></path></svg></button>
+        </div>
+        <div class="r">
+          <div class="grow" style="display:flex;flex-direction:column;gap:2px">
+            <span style="display:flex;align-items:center;gap:7px"><span style="font-weight:500">linear</span><span class="pl warn">needs sign-in</span></span>
+            <span class="meta">http · User settings</span>
+          </div>
+          <button class="btn"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>Reconnect</button>
+          <button class="rc-a" aria-label="Disable linear" title="Disable"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.77.04"></path></svg></button>
+        </div>
+        <div class="r">
+          <div class="grow" style="display:flex;flex-direction:column;gap:2px">
+            <span style="display:flex;align-items:center;gap:7px"><span style="font-weight:500">github</span><span class="pl ok">connected</span></span>
+            <span class="meta">stdio · User settings · 26 tools</span>
+          </div>
+          <button class="rc-a" aria-label="Reconnect github" title="Reconnect"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg></button>
+          <button class="rc-a" aria-label="Disable github" title="Disable"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.77.04"></path></svg></button>
+        </div>
+        <div class="r">
+          <div class="grow" style="display:flex;flex-direction:column;gap:2px">
+            <span style="display:flex;align-items:center;gap:7px"><span style="font-weight:500">context7</span><span class="pl ok">connected</span></span>
+            <span class="meta">http · claude.ai · 2 tools</span>
+          </div>
+          <button class="rc-a" aria-label="Reconnect context7" title="Reconnect"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg></button>
+          <button class="rc-a" aria-label="Disable context7" title="Disable"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.77.04"></path></svg></button>
+        </div>
+        <div class="r">
+          <div class="grow" style="display:flex;flex-direction:column;gap:2px">
+            <span style="display:flex;align-items:center;gap:7px"><span style="font-weight:500">obsidian</span><span class="pl ok">connected</span><span class="pl acc">this panel</span></span>
+            <span class="meta">sdk · 7 tools · on/off in Settings → AI Agent Panel</span>
+          </div>
+        </div>
+        <div class="r">
+          <div class="grow" style="display:flex;flex-direction:column;gap:2px">
+            <span style="display:flex;align-items:center;gap:7px"><span style="font-weight:500;color:var(--muted)">figma</span><span class="pl off">disabled</span></span>
+            <span class="meta">http · User settings</span>
+          </div>
+          <button class="btn"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.77.04"></path></svg>Enable</button>
+        </div>
+      </div>
+    </div>
+    <div class="rc-f">
+      <svg class="i" style="margin-top:2px;color:var(--faint)" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" x2="20" y1="19" y2="19"></line></svg>
+      <span>Servers that need sign-in authenticate in a terminal: run <span class="mono">claude</span> there and use <span class="mono">/mcp</span>.</span>
+    </div>
+  </article>
+
+  <div class="ub">/status</div>
+  <article class="rc">
+    <div class="rc-h">
+      <span class="rc-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg></span>
+      <span class="rc-t">Status</span>
+      <span class="free">no tokens</span>
+      <span class="grow"></span>
+      <button class="rc-a" aria-label="Refresh"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg></button>
+      <button class="rc-a" aria-label="Copy as Markdown"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button>
+    </div>
+    <div class="rc-b" style="padding-top:14px">
+      <div>
+        <div class="sh">Panel</div>
+        <dl class="kv">
+          <dt class="f">Plugin</dt><dd class="f">AI Agent Panel 0.5.0</dd>
+          <dt>Profile</dt><dd>Default</dd>
+          <dt>CLI</dt><dd class="mono ell">~/.local/bin/claude</dd>
+          <dt>Permission mode</dt><dd>Accept edits</dd>
+          <dt>Effort</dt><dd>High</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="sh">Session</div>
+        <dl class="kv">
+          <dt class="f">Version</dt><dd class="f mono">2.4.1</dd>
+          <dt>Session ID</dt><dd class="mono ell">8f3c2a1e-77b0-4c1d-9e52-a91e</dd>
+          <dt>Model</dt><dd>Opus 5.5</dd>
+          <dt>Working directory</dt><dd class="mono ell">~/Vaults/Second Brain</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="sh">Account</div>
+        <dl class="kv">
+          <dt class="f">Login method</dt><dd class="f">Claude account</dd>
+          <dt>Plan</dt><dd>[YOUR PLAN]</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="sh">Environment</div>
+        <dl class="kv">
+          <dt class="f">MCP servers</dt><dd class="f">3 connected, 1 failed <a href="#" style="color:var(--accent)">· open /mcp</a></dd>
+          <dt>Memory</dt><dd>2 files</dd>
+          <dt>Setting sources</dt><dd>User, Project</dd>
+        </dl>
+      </div>
+    </div>
+  </article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"accent":{"editor":"enum","options":["violet","blue","teal"],"default":"violet"},"$preview":{"width":440,"height":1360}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'dark';
+    const accent = this.props.accent ?? 'violet';
+    return { mods: 't-' + theme + ' acc-' + accent };
+  }
+}
+</script>
+</body>
+</html>

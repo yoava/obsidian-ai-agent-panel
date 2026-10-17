@@ -1,0 +1,1 @@
+document.addEventListener('DOMContentLoaded',()=>{const q=new URLSearchParams(location.search);document.querySelectorAll('.app').forEach(a=>{a.className=a.className.replace('{{mods}}','t-'+(q.get('theme')||'dark')+' acc-violet')});document.body.innerHTML=document.body.innerHTML.replaceAll('{{now}}',(q.get('theme')||'dark')==='dark'?'Dark':'Light')});

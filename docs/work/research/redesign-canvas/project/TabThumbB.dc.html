@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Conversation tabs thumbnails, option B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit;text-decoration:none}a:hover{color:inherit}
+.app{--bg:#141417;--bg-2:#18181c;--strip:#1a1a1f;--surface:#1d1d22;--surface-2:#26262c;--surface-3:#2f2f36;--line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.12);--text:#ededf0;--muted:#a6a6b0;--faint:#8c8c96;--user-bg:#2a241c;--user-line:rgba(245,180,90,.36);--amber:#f5b45a;--accent:#a99cfa;--accent-fill:#6d5ce7;--accent-soft:rgba(139,124,246,.15);--accent-line:rgba(139,124,246,.5);--host:#1e1e1e;--host-2:#262626;--host-line:rgba(255,255,255,.08);color-scheme:dark;font-family:'Geist',system-ui,-apple-system,sans-serif;font-size:13.5px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;box-sizing:border-box}
+.app.t-light{--bg:#fbfbfa;--bg-2:#f4f4f2;--strip:#efefec;--surface:#ffffff;--surface-2:#f0f0ed;--surface-3:#e3e3de;--line:rgba(24,24,32,.08);--line-2:rgba(24,24,32,.14);--text:#1b1b20;--muted:#53535d;--faint:#696973;--user-bg:#fdf3e4;--user-line:#ecca95;--amber:#d98a1c;--accent:#5847d4;--accent-fill:#6352e0;--accent-soft:rgba(99,82,224,.09);--accent-line:rgba(99,82,224,.4);--host:#ffffff;--host-2:#f6f6f6;--host-line:rgba(0,0,0,.09);color-scheme:light}
+.app *{box-sizing:border-box}
+:where(.app button,.app input){font:inherit;color:inherit;background:none;border:0;margin:0;padding:0}
+.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.name{font-size:15px;font-weight:500}
+.desc{font-size:13px;color:var(--muted);margin-top:4px;max-width:560px}
+.cloud{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;color:var(--faint);flex:none}
+.picks{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:14px}
+.pick{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;border:1px solid var(--line-2);cursor:pointer;min-width:0}
+.pick.on{border-color:var(--accent-line);background:var(--accent-soft)}
+.pick input{accent-color:var(--accent-fill);margin:0;width:16px;height:16px}
+.cap{display:flex;align-items:center;gap:10px}
+.cap .nm{display:flex;flex-direction:column;line-height:1.3}
+.cap .n{font-weight:500;font-size:14px}
+.cap .c{font-size:12.5px;color:var(--faint)}
+.pv{height:156px;border-radius:8px;background:var(--bg-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:10px;overflow:hidden;position:relative}
+.lab{font-size:9px;color:var(--faint);text-align:center;line-height:1.2;margin-top:4px;white-space:nowrap}
+.fig{display:flex;flex-direction:column;align-items:center}
+/* mini panel */
+.mp{background:var(--bg);border:1px solid var(--line-2);border-radius:6px;display:flex;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12);flex:none;position:relative}
+.mp.v{flex-direction:column}
+.ms{display:flex;align-items:flex-end;height:17px;padding:3px 5px 0 5px;background:var(--strip);border-bottom:1px solid var(--line-2);flex:none;gap:0}
+.mt{display:flex;align-items:center;gap:3px;height:13px;padding:0 5px;border-radius:4px 4px 0 0;font-size:6.5px;color:var(--muted);white-space:nowrap;overflow:hidden;min-width:0;flex:0 1 auto}
+.mt.on{background:var(--bg);color:var(--text);font-weight:600;height:14px;margin-bottom:-1px;flex-shrink:0}
+.mt .x{font-size:6px;color:var(--faint);margin-left:1px}
+.mb{flex:1;min-width:0;padding:6px;display:flex;flex-direction:column;gap:4px}
+.mpr{height:13px;border-radius:3px;background:var(--user-bg);border:1px solid var(--user-line);display:flex;align-items:center;padding:0 4px;flex:none}
+.mpr span{height:3px;border-radius:2px;background:var(--amber);opacity:.5}
+.ml{height:3px;border-radius:2px;background:var(--surface-3);flex:none}
+.mc{margin-top:auto;height:15px;border-radius:4px;border:1px solid var(--line-2);background:var(--surface);flex:none}
+.mcol{background:var(--bg-2);border-left:1px solid var(--line);padding:5px 4px;display:flex;flex-direction:column;gap:2px;flex:none}
+.mnew{height:11px;border-radius:3px;border:1px solid var(--line-2);font-size:6px;display:flex;align-items:center;padding:0 4px;color:var(--muted);margin-bottom:3px;flex:none}
+.msec{font-size:5.5px;color:var(--faint);padding:2px 3px 0 3px;flex:none}
+.mrow{height:11px;border-radius:3px;display:flex;align-items:center;gap:3px;padding:0 3px;font-size:6px;color:var(--muted);white-space:nowrap;overflow:hidden;flex:none}
+.mrow.on{background:var(--surface);color:var(--text);box-shadow:inset 0 0 0 1px var(--line-2)}
+.dot{width:4px;height:4px;border-radius:50%;flex:none;background:transparent}
+.dot.busy{background:var(--accent)}
+.dot.wait{background:var(--amber)}
+.tb{height:3px;border-radius:2px;background:currentColor;opacity:.55;flex:none}
+/* highlight variant */
+.hl .ms{background:var(--accent-soft);border-bottom-color:var(--accent-line);box-shadow:inset 0 0 0 1px var(--accent-line)}
+.hl .mt{color:var(--accent)}
+.hl .mt.on{background:var(--bg);color:var(--accent)}
+.hl .mcol{background:var(--accent-soft);border-left-color:var(--accent-line);box-shadow:inset 0 0 0 1px var(--accent-line);color:var(--accent)}
+.hl .mrow,.hl .mnew,.hl .msec{color:var(--accent)}
+.hl .mnew{border-color:var(--accent-line)}
+.hl .mrow.on{background:var(--bg);box-shadow:inset 0 0 0 1px var(--accent-line)}
+.hl .mpr{background:var(--surface-2);border-color:var(--line-2)}
+.hl .mpr span{background:var(--surface-3);opacity:1}
+.arr{color:var(--faint);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:8px}
+/* host window */
+.win{background:var(--host);border:1px solid var(--line-2);border-radius:6px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12);flex:none}
+.wbar{height:9px;background:var(--host-2);border-bottom:1px solid var(--host-line);display:flex;align-items:center;gap:2px;padding:0 4px;flex:none}
+.wbar i{width:3px;height:3px;border-radius:50%;background:var(--surface-3);display:block}
+.wbody{flex:1;display:flex;min-height:0}
+.rib{width:9px;background:var(--host-2);border-right:1px solid var(--host-line);display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:5px;flex:none}
+.rib i{width:4px;height:4px;border-radius:1px;background:var(--surface-3);display:block}
+.tree{background:var(--host-2);border-right:1px solid var(--host-line);padding:5px 4px;display:flex;flex-direction:column;gap:3px;flex:none}
+.note{flex:1;min-width:0;padding:7px 8px;display:flex;flex-direction:column;gap:3px}
+.note .h{height:5px;width:55%;border-radius:2px;background:var(--surface-3);margin-bottom:3px}
+.wpanel{display:flex;border-left:1px solid var(--host-line);flex:none;padding:3px}
+.wpanel .mp{border-radius:4px;box-shadow:none;outline:1.5px solid var(--accent-line);outline-offset:0}
+/* animation */
+@keyframes grow{0%,18%{width:112px}42%,70%{width:270px}94%,100%{width:112px}}
+@keyframes stripOn{0%,29%{opacity:1}31%,81%{opacity:0}83%,100%{opacity:1}}
+@keyframes colOn{0%,29%{opacity:0;width:0;padding:0}31%,81%{opacity:1;width:92px;padding:5px 4px}83%,100%{opacity:0;width:0;padding:0}}
+@keyframes rule{0%,18%{left:112px}42%,70%{left:270px}94%,100%{left:112px}}
+@keyframes nar{0%,29%{opacity:1}31%,81%{opacity:0}83%,100%{opacity:1}}
+@keyframes wid{0%,29%{opacity:0}31%,81%{opacity:1}83%,100%{opacity:0}}
+.anim .mp{animation:grow 6s ease-in-out infinite;height:118px}
+.anim .ms{animation:stripOn 6s steps(1,end) infinite}
+.anim .mcol{animation:colOn 6s ease-in-out infinite;overflow:hidden}
+.anim .w1{animation:nar 6s steps(1,end) infinite}
+.anim .w2{animation:wid 6s steps(1,end) infinite}
+@media (prefers-reduced-motion: reduce){.anim *{animation:none !important}.anim .mp{width:270px}.anim .ms{opacity:0}.anim .mcol{width:92px}.anim .w1{opacity:0}}
+</style>
+</helmet>
+<div class="app {{mods}}" style="width:1040px;height:372px;padding:26px 28px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:flex-start;gap:20px"><div style="flex:1"><div class="name">Conversation tabs</div><div class="desc">Where the open conversations are listed. Automatic uses the side column whenever the panel is wide enough for one.</div></div><button class="cloud" aria-label="Synced across devices. Click to store on this device only."><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg></button></div>
+<div class="picks" role="radiogroup" aria-label="Conversation tabs">
+<label class="pick"><div class="pv" aria-hidden="true"><div class="mp v hl" style="width:176px;height:128px"><div class="ms"><span class="mt on"><span class="tb" style="width:22px"></span></span><span class="mt"><span class="tb" style="width:16px"></span></span><span class="mt"><span class="tb" style="width:18px"></span></span></div><div class="mb"><div class="mpr"><span style="width:55%"></span></div><div class="ml" style="width:92%"></div><div class="ml" style="width:78%"></div><div class="ml" style="width:85%"></div><div class="ml" style="width:60%"></div><div class="mc"></div></div></div></div><span class="cap"><input type="radio" name="tp"><span class="nm"><span class="n">Top</span><span class="c">strip above</span></span></span></label>
+<label class="pick"><div class="pv" aria-hidden="true"><div class="mp hl" style="width:276px;height:128px"><div class="mb"><div class="mpr"><span style="width:55%"></span></div><div class="ml" style="width:92%"></div><div class="ml" style="width:78%"></div><div class="ml" style="width:85%"></div><div class="ml" style="width:60%"></div><div class="mc"></div></div><div class="mcol" style="width:92px"><div class="mnew"><span class="tb" style="width:26px"></span></div><div class="mrow on"><span class="dot busy"></span><span class="tb" style="width:34px"></span></div><div class="mrow"><span class="dot wait"></span><span class="tb" style="width:28px"></span></div><div class="mrow"><span class="dot"></span><span class="tb" style="width:31px"></span></div><div class="mrow" style="margin-top:3px"><span class="dot"></span><span class="tb" style="width:24px"></span></div></div></div></div><span class="cap"><input type="radio" name="tp"><span class="nm"><span class="n">Side</span><span class="c">column beside</span></span></span></label>
+<label class="pick on"><div class="pv" aria-hidden="true"><div class="fig"><div class="mp v hl" style="width:100px;height:112px"><div class="ms"><span class="mt on"><span class="tb" style="width:22px"></span></span><span class="mt"><span class="tb" style="width:16px"></span></span><span class="mt"><span class="tb" style="width:18px"></span></span></div><div class="mb"><div class="mpr"><span style="width:55%"></span></div><div class="ml" style="width:92%"></div><div class="ml" style="width:78%"></div><div class="ml" style="width:85%"></div><div class="ml" style="width:60%"></div><div class="mc"></div></div></div><div class="lab">narrow</div></div><div class="arr"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>wider</div><div class="fig"><div class="mp hl" style="width:150px;height:112px"><div class="mb"><div class="mpr"><span style="width:55%"></span></div><div class="ml" style="width:92%"></div><div class="ml" style="width:78%"></div><div class="ml" style="width:85%"></div><div class="ml" style="width:60%"></div><div class="mc"></div></div><div class="mcol" style="width:56px"><div class="mnew"><span class="tb" style="width:26px"></span></div><div class="mrow on"><span class="dot busy"></span><span class="tb" style="width:34px"></span></div><div class="mrow"><span class="dot wait"></span><span class="tb" style="width:28px"></span></div><div class="mrow"><span class="dot"></span><span class="tb" style="width:31px"></span></div><div class="mrow" style="margin-top:3px"><span class="dot"></span><span class="tb" style="width:24px"></span></div></div></div><div class="lab">wide</div></div></div><span class="cap"><input type="radio" name="tp" checked><span class="nm"><span class="n">Automatic</span><span class="c">by panel width</span></span></span></label>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1040,"height":372}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { mods: 't-' + (this.props.theme ?? 'light') };
+  }
+}
+</script>
+</body>
+</html>

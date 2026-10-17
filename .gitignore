@@ -1,5 +1,4 @@
-# claude
-.claude/settings.json
+# claude: settings.json is shared and committed; machine-local parts stay here
 .claude/settings.local.json
 .claude/hooks/
 
@@ -12,13 +11,27 @@ node_modules/
 # Build output (published via GitHub releases, not the repo)
 main.js
 *.js.map
+build/
+dist/
+target/
+coverage/
 
 # Plugin runtime data - contains user settings, never commit
 data.json
 
-# Secrets / environment
+# Secrets and machine-local configuration
 .env
 .env.*
+!.env.example
+secrets/
+*.local.*
+
+# Python bytecode from the governance scripts
+__pycache__/
+
+# Scratch data
+tmp/
+*.snapshot
 
 # OS noise
 .DS_Store
@@ -26,6 +39,7 @@ Thumbs.db
 
 # Editor state
 .idea/
+.vscode/*.local.*
 
 # Logs
 *.log

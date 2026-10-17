@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(make help)",
+      "Bash(make toolchain)",
+      "Bash(make build)",
+      "Bash(make format)",
+      "Bash(make docs)",
+      "Bash(make lint)",
+      "Bash(make lint-fast)",
+      "Bash(make test)",
+      "Bash(make verify)",
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(npm test)"
+    ],
+    "ask": [
+      "Bash(git push *)"
+    ],
+    "deny": [
+      "Bash(git push *--force*)",
+      "Bash(git push -f*)",
+      "Bash(git * push *--force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git rebase *)",
+      "Bash(git commit --amend*)",
+      "Bash(rm -rf *)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/**/credentials*)"
+    ],
+    "disableBypassPermissionsMode": "disable"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/check_protected_paths.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && out=$(make lint-fast 2>&1) || { printf '%s\\n' \"$out\" >&2; exit 1; }",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

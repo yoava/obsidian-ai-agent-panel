@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Skills, Chrome and sandbox reports</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit;text-decoration:none}a:hover{color:inherit}
+.app{--bg:#141417;--bg-2:#18181c;--surface:#1d1d22;--surface-2:#26262c;--surface-3:#2f2f36;--line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.12);--text:#ededf0;--muted:#a6a6b0;--faint:#8c8c96;--user-bg:#2a241c;--user-line:rgba(245,180,90,.36);--green:#4fc58c;--red:#f2706f;--orange:#f5a04a;--green-soft:rgba(79,197,140,.13);--red-soft:rgba(242,112,111,.13);--orange-soft:rgba(245,160,74,.13);--accent:#a99cfa;--accent-fill:#6d5ce7;--accent-soft:rgba(139,124,246,.15);--accent-line:rgba(139,124,246,.5);color-scheme:dark;font-family:'Geist',system-ui,-apple-system,sans-serif;font-size:13.5px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;box-sizing:border-box}
+.app.t-light{--bg:#fbfbfa;--bg-2:#f4f4f2;--surface:#ffffff;--surface-2:#f0f0ed;--surface-3:#e6e6e2;--line:rgba(24,24,32,.08);--line-2:rgba(24,24,32,.14);--text:#1b1b20;--muted:#53535d;--faint:#696973;--user-bg:#fdf3e4;--user-line:#ecca95;--green:#16864f;--red:#cc3b3a;--orange:#a85a08;--green-soft:rgba(22,134,79,.09);--red-soft:rgba(204,59,58,.08);--orange-soft:rgba(168,90,8,.09);--accent:#5847d4;--accent-fill:#6352e0;--accent-soft:rgba(99,82,224,.09);--accent-line:rgba(99,82,224,.4);color-scheme:light}
+.app.acc-blue{--accent:#82aeff;--accent-fill:#2f6fe0;--accent-soft:rgba(80,140,255,.15);--accent-line:rgba(80,140,255,.5)}
+.app.t-light.acc-blue{--accent:#1d5cc9;--accent-fill:#2463d6;--accent-soft:rgba(36,99,214,.09);--accent-line:rgba(36,99,214,.4)}
+.app.acc-teal{--accent:#5fd4c6;--accent-fill:#0f7c74;--accent-soft:rgba(60,200,185,.14);--accent-line:rgba(60,200,185,.5)}
+.app.t-light.acc-teal{--accent:#0b6c65;--accent-fill:#0e7a72;--accent-soft:rgba(14,122,114,.09);--accent-line:rgba(14,122,114,.4)}
+.app *{box-sizing:border-box}
+:where(.app button,.app input){font:inherit;color:inherit;background:none;border:0;margin:0;padding:0}
+:where(.app button){cursor:pointer}
+.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.i12{width:12px;height:12px}
+.mono{font-family:'Geist Mono',ui-monospace,SFMono-Regular,monospace;font-size:.92em}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.grow{flex:1;min-width:0}
+.ub{align-self:flex-end;font-family:'Geist Mono',ui-monospace,monospace;font-size:12.5px;background:var(--user-bg);border:1px solid var(--user-line);border-radius:12px 12px 4px 12px;padding:5px 11px;flex:none}
+.rc{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;flex:none}
+.rc-h{display:flex;align-items:center;gap:9px;padding:12px 10px 0 12px}
+.rc-ic{width:26px;height:26px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.rc-t{font-weight:600}
+.free{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:999px;font-size:10.5px;font-weight:500;color:var(--green);background:var(--green-soft);flex:none}
+.rc-a{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;color:var(--faint);flex:none}
+.rc-a:hover{background:var(--surface-2);color:var(--text)}
+.rc-lead{padding:2px 14px 0 47px;font-size:12px;color:var(--faint)}
+.rc-b{padding:12px 14px 14px 14px;display:flex;flex-direction:column;gap:12px}
+.sh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
+.rc-f{display:flex;align-items:flex-start;gap:8px;padding:9px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);background:var(--bg-2)}
+.rows{display:flex;flex-direction:column}
+.r{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;min-width:0}
+.rows .r:first-child{border-top:0}
+.pl{display:inline-flex;align-items:center;height:19px;padding:0 7px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap;flex:none}
+.pl.ok{color:var(--green);background:var(--green-soft)}
+.pl.warn{color:var(--orange);background:var(--orange-soft)}
+.pl.off{color:var(--faint);background:var(--surface-2)}
+.meta{font-size:11.5px;color:var(--faint)}
+.kv{display:grid;grid-template-columns:150px minmax(0,1fr);column-gap:12px;font-size:12.5px;margin:0}
+.kv dt{color:var(--muted);padding:6px 0;border-top:1px solid var(--line)}
+.kv dd{margin:0;padding:6px 0;border-top:1px solid var(--line);min-width:0;display:flex;align-items:center;gap:7px}
+.kv .f{border-top:0}
+.st{width:7px;height:7px;border-radius:50%;flex:none;display:inline-block}
+.st.ok{background:var(--green)}.st.warn{background:var(--orange)}.st.off{box-shadow:inset 0 0 0 1.5px var(--faint)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 10px;border-radius:7px;font-size:12px;font-weight:500;white-space:nowrap;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--text)}
+.btn:hover{background:var(--surface-2)}
+.btn.p{background:var(--accent-fill);color:#fff;box-shadow:none}
+.tok{font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--faint);width:44px;text-align:right;flex:none}
+.warnbox{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:9px;background:var(--orange-soft);color:var(--text);font-size:12px}
+</style>
+</helmet>
+<div class="app {{mods}}" style="width:440px;height:1360px;overflow:hidden;padding:20px 16px;display:flex;flex-direction:column;gap:12px;border-left:1px solid var(--line)">
+
+  <div class="ub">/skills</div>
+  <article class="rc">
+    <div class="rc-h">
+      <span class="rc-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path></svg></span>
+      <span class="rc-t">Skills</span>
+      <span class="free">no tokens</span>
+      <span class="grow"></span>
+      <button class="rc-a" aria-label="Copy as Markdown"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button>
+    </div>
+    <div class="rc-lead">7 skills; 5 listed to Claude, ~1.7k tokens of descriptions</div>
+    <div class="rc-b">
+      <div role="img" aria-label="Description tokens per listed skill" style="display:flex;gap:2px;height:6px">
+        <span style="width:25%;background:var(--accent);border-radius:3px 1px 1px 3px"></span>
+        <span style="width:21%;background:var(--accent);opacity:.8;border-radius:1px"></span>
+        <span style="width:18%;background:var(--accent);opacity:.65;border-radius:1px"></span>
+        <span style="width:17%;background:var(--accent);opacity:.5;border-radius:1px"></span>
+        <span style="width:16%;background:var(--accent);opacity:.38;border-radius:1px 3px 3px 1px"></span>
+      </div>
+      <div class="rows">
+        <div class="r"><span class="st ok"></span><span class="mono ell grow">obsidian-plugin</span><span class="meta">Project</span><span class="tok">~420</span><span class="pl ok">on</span></div>
+        <div class="r"><span class="st ok"></span><span class="mono ell grow">pdf</span><span class="meta">Plugin</span><span class="tok">~350</span><span class="pl ok">on</span></div>
+        <div class="r"><span class="st ok"></span><span class="mono ell grow">git-conventions</span><span class="meta">User</span><span class="tok">~310</span><span class="pl ok">on</span></div>
+        <div class="r"><span class="st ok"></span><span class="mono ell grow">docx</span><span class="meta">Plugin</span><span class="tok">~290</span><span class="pl ok">on</span></div>
+        <div class="r"><span class="st ok"></span><span class="mono ell grow">codex</span><span class="meta">User</span><span class="tok">~280</span><span class="pl ok">on</span></div>
+        <div class="r"><span class="st off"></span><span class="mono ell grow" style="color:var(--muted)">usage-check</span><span class="meta">User</span><span class="tok"></span><span class="pl off">when you invoke it</span></div>
+        <div class="r"><span class="st off"></span><span class="mono ell grow" style="color:var(--muted)">slack-gif-creator</span><span class="meta">Plugin</span><span class="tok"></span><span class="pl off">off</span></div>
+      </div>
+    </div>
+  </article>
+
+  <div class="ub">/chrome</div>
+  <article class="rc">
+    <div class="rc-h">
+      <span class="rc-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg></span>
+      <span class="rc-t">Claude in Chrome</span>
+      <span class="free">no tokens</span>
+      <span class="grow"></span>
+      <button class="rc-a" aria-label="Refresh"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg></button>
+    </div>
+    <div class="rc-b">
+      <dl class="kv">
+        <dt class="f">Extension installed</dt><dd class="f"><span class="st ok"></span>yes</dd>
+        <dt>Extension connected</dt><dd><span class="st warn"></span>no</dd>
+        <dt>On in this session</dt><dd><span class="st off"></span>no</dd>
+        <dt>Claude Code default</dt><dd>off</dd>
+        <dt>Profile setting</dt><dd>Claude Code default</dd>
+      </dl>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <a href="#" class="btn p">Reconnect the extension<svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg></a>
+        <a href="#" class="btn">Site permissions<svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg></a>
+      </div>
+    </div>
+    <div class="rc-f">
+      <svg class="i" style="margin-top:2px;color:var(--faint)" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      <span>Turn it on or off per CLI profile in <a href="#" style="color:var(--accent)">Settings → AI Agent Panel</a>.</span>
+    </div>
+  </article>
+
+  <div class="ub">/sandbox</div>
+  <article class="rc">
+    <div class="rc-h">
+      <span class="rc-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg></span>
+      <span class="rc-t">Sandbox</span>
+      <span class="free">no tokens</span>
+      <span class="grow"></span>
+      <button class="rc-a" aria-label="Refresh"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg></button>
+    </div>
+    <div class="rc-b">
+      <div class="warnbox"><svg class="i" style="color:var(--orange);margin-top:1px" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg><span>Missing: <span class="mono">socat</span>. Network filtering is off until it is installed.</span></div>
+      <dl class="kv">
+        <dt class="f">Supported here</dt><dd class="f"><span class="st ok"></span>yes</dd>
+        <dt>On in this session</dt><dd><span class="st ok"></span>yes <span class="meta">(auto-allow)</span></dd>
+        <dt>Claude Code settings</dt><dd>on</dd>
+        <dt>Profile setting</dt><dd>Claude Code default</dd>
+      </dl>
+      <div>
+        <div class="sh">Restrictions</div>
+        <dl class="kv">
+          <dt class="f">Writable paths</dt><dd class="f mono ell" style="font-size:11.5px">., /tmp</dd>
+          <dt>Allowed domains</dt><dd class="mono ell" style="font-size:11.5px">github.com, registry.npmjs.org</dd>
+          <dt>Write-protected paths</dt><dd class="mono ell" style="font-size:11.5px">.obsidian/</dd>
+        </dl>
+      </div>
+    </div>
+  </article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"accent":{"editor":"enum","options":["violet","blue","teal"],"default":"violet"},"$preview":{"width":440,"height":1360}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'dark';
+    const accent = this.props.accent ?? 'violet';
+    return { mods: 't-' + theme + ' acc-' + accent };
+  }
+}
+</script>
+</body>
+</html>

@@ -30,7 +30,7 @@ Obsidian has more than thirty plugins that put an agent in your vault, several
 of them very large. The one thing this one does that none of them do is give the
 agent real vault operations - a rename that rewrites every backlink, frontmatter
 properties as properties, search by tag and property - instead of a folder of
-text files. [docs/COMPARISON.md](docs/COMPARISON.md) sets that out plugin by
+text files. [docs/current/COMPARISON.md](docs/current/COMPARISON.md) sets that out plugin by
 plugin, including the cases where you should install one of the others.
 
 ## What runs on your machine
@@ -58,7 +58,7 @@ And what it does not do:
 
 Desktop only (`isDesktopOnly: true`) - a mobile Obsidian cannot spawn a
 process. The full picture is under [Disclosures](#disclosures) and in
-[docs/SECURITY.md](docs/SECURITY.md).
+[docs/current/SECURITY.md](docs/current/SECURITY.md).
 
 ## Features
 
@@ -208,7 +208,7 @@ Have Claude Code installed on both sides? **Add CLI profile** in settings keeps 
 - Note content you attach as context (and anything Claude reads from the vault with your permission) is sent to Anthropic's API by the CLI - same as using Claude Code on any folder.
 - Conversation history is stored locally under the plugin folder; optional transcript exports are notes in your vault. Both can contain anything said in the chat - treat them like any other note.
 
-See [docs/SECURITY.md](docs/SECURITY.md) for details and reporting.
+See [docs/current/SECURITY.md](docs/current/SECURITY.md) for details and reporting.
 
 **Privacy.** Nothing leaves your machine except what the Claude Code process
 sends to Anthropic under your own account, as described under Disclosures. The
@@ -217,15 +217,15 @@ with the content it receives, including whether it is used for training, is
 governed by your Anthropic account settings and Anthropic's terms, not by this
 plugin.
 
-Your use of Claude Code itself is governed by [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance); this plugin simply launches your own installation and implements no login or credential handling of its own. Licensing and trademark details: [docs/LEGAL.md](docs/LEGAL.md).
+Your use of Claude Code itself is governed by [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance); this plugin simply launches your own installation and implements no login or credential handling of its own. Licensing and trademark details: [docs/current/LEGAL.md](docs/current/LEGAL.md).
 
 ## How it works
 
-The plugin spawns your installed `claude` CLI with `--input-format stream-json --output-format stream-json` and talks to it over stdio - the same interface the official Claude Agent SDK uses. The protocol client is a small original implementation (no Anthropic code is bundled), which keeps this repository fully MIT. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The plugin spawns your installed `claude` CLI with `--input-format stream-json --output-format stream-json` and talks to it over stdio - the same interface the official Claude Agent SDK uses. The protocol client is a small original implementation (no Anthropic code is bundled), which keeps this repository fully MIT. See [docs/current/design/DES-001-system-overview.md](docs/current/design/DES-001-system-overview.md).
 
 ## Development
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). Quick start:
+See [docs/current/DEVELOPMENT.md](docs/current/DEVELOPMENT.md). Quick start:
 
 ```bash
 npm ci

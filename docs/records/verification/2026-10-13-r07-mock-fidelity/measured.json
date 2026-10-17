@@ -1,0 +1,7738 @@
+{
+ "measuredAt": "20c0472e7b83e078cd43d9e08fd03671e68a719b",
+ "units": "x, y, w, h in px relative to the frame; delta = panel minus board; items: composer card, textarea, status line, model segment, changes chip, new-conversation button; an item missing on a side is omitted",
+ "boards": [
+  {
+   "board": "Agents",
+   "fixture": "Agents",
+   "theme": "dark",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {},
+   "diffPercentGeist": 14.9,
+   "diffPercentSystemFont": 15.0,
+   "image": "Agents-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "known: run bar, agent rows and workflow card not built (change 003)",
+   "name": "Agents"
+  },
+  {
+   "board": "Approve",
+   "fixture": "Approve",
+   "theme": "dark",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {
+    "promptStyle": "bubble"
+   },
+   "diffPercentGeist": 18.7,
+   "diffPercentSystemFont": 18.8,
+   "image": "Approve-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "color(srgb 0.113725 0.113725 0.133333 / 0.92)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.8,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.8,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; frame: pinned-prompt bar shows because the live panel is scrolled, composer focused; fixture: mode and chips; accepted: word highlights per token against the board's hand-authored runs (065), 3 px composer focus ring (063), cache countdown (change 002)",
+   "name": "Approve"
+  },
+  {
+   "board": "ClearStates",
+   "fixture": "ClearStates",
+   "theme": "dark",
+   "size": [
+    440,
+    1040
+   ],
+   "settings": {},
+   "diffPercentGeist": 10.9,
+   "diffPercentSystemFont": 11.0,
+   "image": "ClearStates-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 867.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 30,
+      "y": 688,
+      "w": 385,
+      "h": 20.3,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 910.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -5,
+      "y": 222.5,
+      "w": 9,
+      "h": 20.2
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1004,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1004,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "known: /clear stays in the conversation not built (SPEC D1, pending decision)",
+   "name": "ClearStates"
+  },
+  {
+   "board": "Commands",
+   "fixture": "Commands",
+   "theme": "dark",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {},
+   "diffPercentGeist": 16.8,
+   "diffPercentSystemFont": 16.7,
+   "image": "Commands-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; accepted: Refresh and Copy on each card (065, 066); fixture: figures; frame: pinned-prompt bar shows because the live panel is scrolled",
+   "name": "Commands"
+  },
+  {
+   "board": "ContextCache",
+   "fixture": "ContextCache",
+   "theme": "dark",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {},
+   "diffPercentGeist": 12.4,
+   "diffPercentSystemFont": 12.6,
+   "image": "ContextCache-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "known: cache zap, countdown and popover cache section not built (change 002; 070 motion audit)",
+   "name": "ContextCache"
+  },
+  {
+   "board": "ContextEvents",
+   "fixture": "ContextEvents",
+   "theme": "dark",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {},
+   "diffPercentGeist": 13.4,
+   "diffPercentSystemFont": 13.5,
+   "image": "ContextEvents-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": {
+      "x": 372,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -43,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "known: context dividers not built (SPEC D1, pending decision)",
+   "name": "ContextEvents"
+  },
+  {
+   "board": "Empty",
+   "fixture": "Empty",
+   "theme": "dark",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {},
+   "diffPercentGeist": 8.5,
+   "diffPercentSystemFont": 8.7,
+   "image": "Empty-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "accepted: the hero sits about 126 px lower than the board, whose 250 px bottom reserve only clears its open @ list (074); fixture: status line reads \"usage unavailable\", the stub reports no usage; open: hero icon is the plugin's own bubble with a prompt, the board's a plain chat bubble; starters, @ list and composer match",
+   "name": "Empty"
+  },
+  {
+   "board": "Main",
+   "fixture": "Main",
+   "theme": "dark",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {
+    "promptStyle": "bubble"
+   },
+   "diffPercentGeist": 10.5,
+   "diffPercentSystemFont": 11.0,
+   "image": "Main-dark.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 13,
+      "y": 787.5,
+      "w": 415,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px rgba(255, 255, 255, 0.12)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 13,
+      "y": 44,
+      "w": 117.5,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": -8.9,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; fixture: step labels and file counts (061 leaves tool-label wording), no exported note so the Transcript control is hidden; accepted: 3 px composer focus ring against the board's 1 px (063), cache countdown absent (change 002); frame: the capture focuses the composer, the static board has no focus",
+   "name": "Main"
+  },
+  {
+   "board": "Medium",
+   "fixture": "Medium",
+   "theme": "dark",
+   "size": [
+    680,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 5.6,
+   "diffPercentSystemFont": 9.0,
+   "image": "Medium-dark.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 16,
+      "y": 725.5,
+      "w": 648,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px rgba(255, 255, 255, 0.12)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 16,
+      "y": 725.5,
+      "w": 648,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 29,
+      "y": 768.5,
+      "w": 626,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 29,
+      "y": 768.5,
+      "w": 626,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 16,
+      "y": 862,
+      "w": 648,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 16,
+      "y": 862,
+      "w": 648,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 18,
+      "y": 862,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 18,
+      "y": 862,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 12,
+      "y": 44,
+      "w": 124.1,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": -15.5,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 569,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 569,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; fixture: no exported note, so the Transcript control is hidden",
+   "name": "Medium"
+  },
+  {
+   "board": "Narrow",
+   "fixture": "Narrow",
+   "theme": "dark",
+   "size": [
+    300,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 7.2,
+   "diffPercentSystemFont": 16.1,
+   "image": "Narrow-dark.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 8,
+      "y": 729.5,
+      "w": 284,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px rgba(255, 255, 255, 0.12)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 8,
+      "y": 729.5,
+      "w": 284,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 21,
+      "y": 772.5,
+      "w": 262,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 21,
+      "y": 772.5,
+      "w": 262,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 8,
+      "y": 866,
+      "w": 284,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 8,
+      "y": 866,
+      "w": 284,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 10,
+      "y": 866,
+      "w": 80.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 10,
+      "y": 866,
+      "w": 80.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 12,
+      "y": 44,
+      "w": 83.7,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 77,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": -6.7,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 232,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 232,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; fixture: the second chip wraps to a second row, the board's \"no due date\" tint is hand-authored markup (Markdown has no such form); accepted: cache zap absent (change 002), context percent kept (063)",
+   "name": "Narrow"
+  },
+  {
+   "board": "PopAgents",
+   "fixture": "PopAgents",
+   "theme": "dark",
+   "size": [
+    440,
+    640
+   ],
+   "settings": {},
+   "diffPercentGeist": 13.8,
+   "diffPercentSystemFont": 13.8,
+   "image": "PopAgents-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 525.8,
+      "w": 416,
+      "h": 72.3,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 510.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 534.8,
+      "w": 394,
+      "h": 20.3,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 24.3,
+      "w": 1,
+      "h": -20.2
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 604,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 604,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "known: agents popover not built (change 003)",
+   "name": "PopAgents"
+  },
+  {
+   "board": "PopModel",
+   "fixture": "PopModel",
+   "theme": "dark",
+   "size": [
+    440,
+    600
+   ],
+   "settings": {},
+   "diffPercentGeist": 17.5,
+   "diffPercentSystemFont": 17.6,
+   "image": "PopModel-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 485.8,
+      "w": 416,
+      "h": 72.3,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px rgba(255, 255, 255, 0.12)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 470.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 494.8,
+      "w": 394,
+      "h": 20.3,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 24.3,
+      "w": 1,
+      "h": -20.2
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 564,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 564,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgb(38, 38, 44)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches; fixture: the stub lists 4 models against the board's 6 (popover 340 against 440 px, so it sits about 100 px lower), \"usage unavailable\"; frame: the board has no header or tab strip; open: footer reads \"Applies from your next message\" without \"· this conversation only\"",
+   "name": "PopModel"
+  },
+  {
+   "board": "PopUsage",
+   "fixture": "PopUsage",
+   "theme": "dark",
+   "size": [
+    440,
+    600
+   ],
+   "settings": {},
+   "diffPercentGeist": 10.6,
+   "diffPercentSystemFont": 10.6,
+   "image": "PopUsage-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 485.8,
+      "w": 416,
+      "h": 72.3,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px rgba(255, 255, 255, 0.12)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 470.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 494.8,
+      "w": 394,
+      "h": 20.3,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 24.3,
+      "w": 1,
+      "h": -20.2
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 564,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 564,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches; accepted: popover and /usage keep the full titles (064, OV30); fixture: extra-usage row needs data the stub lacks",
+   "name": "PopUsage"
+  },
+  {
+   "board": "PromptStyleBubble",
+   "fixture": "PromptStyleBubble",
+   "theme": "dark",
+   "size": [
+    440,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 10.1,
+   "diffPercentSystemFont": 12.6,
+   "image": "PromptStyleBubble-dark.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px rgba(255, 255, 255, 0.12)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 12,
+      "y": 44,
+      "w": 124.1,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": -15.5,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; fixture: the board's \"no due date\" tint is hand-authored markup (Markdown has no such form); accepted: cache zap (change 002)",
+   "name": "PromptStyleBubble"
+  },
+  {
+   "board": "PromptStylePopout",
+   "fixture": "PromptStylePopout",
+   "theme": "dark",
+   "size": [
+    440,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 7.3,
+   "diffPercentSystemFont": 11.3,
+   "image": "PromptStylePopout-dark.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px rgba(255, 255, 255, 0.12)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 12,
+      "y": 44,
+      "w": 124.1,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": -15.5,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; known: cache zap (change 002)",
+   "name": "PromptStylePopout"
+  },
+  {
+   "board": "PromptStyleQuiet",
+   "fixture": "PromptStyleQuiet",
+   "theme": "dark",
+   "size": [
+    440,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 7.4,
+   "diffPercentSystemFont": 11.5,
+   "image": "PromptStyleQuiet-dark.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px rgba(255, 255, 255, 0.12)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 12,
+      "y": 44,
+      "w": 124.1,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": -15.5,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; frame: pinned prompt shows because the live panel is scrolled; fixture: tab content",
+   "name": "PromptStyleQuiet"
+  },
+  {
+   "board": "Question",
+   "fixture": "Question",
+   "theme": "dark",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {
+    "promptStyle": "bubble"
+   },
+   "diffPercentGeist": 21.3,
+   "diffPercentSystemFont": 21.4,
+   "image": "Question-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 757.5,
+      "w": 416,
+      "h": 160.5,
+      "rad": "14px",
+      "bg": "color(srgb 0.113725 0.113725 0.133333 / 0.92)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 1 1 1 / 0.111843)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "accepted: one \"Other…\" per question (065, CA14), cache countdown (change 002); fixture: three context chips in two rows against the board's one, the card footer is reachable by scrolling and is cropped under the composer at the chosen offset; open: the \"Sections\" legend sits on the fieldset border instead of under a divider and its options start 14 px lower, option description 2 px lower (styles.css question rules)",
+   "name": "Question"
+  },
+  {
+   "board": "Responsive",
+   "fixture": "Responsive",
+   "theme": "dark",
+   "size": [
+    1040,
+    900
+   ],
+   "settings": {
+    "tabPosition": "auto"
+   },
+   "diffPercentGeist": 7.2,
+   "diffPercentSystemFont": 8.1,
+   "image": "Responsive-dark.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 16,
+      "y": 725.5,
+      "w": 737.6,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px rgba(255, 255, 255, 0.12)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 31,
+      "y": 725.5,
+      "w": 708,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 15,
+      "y": 0.0,
+      "w": -29.6,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 29,
+      "y": 768.5,
+      "w": 715.6,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 44,
+      "y": 768.5,
+      "w": 686,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 15,
+      "y": 0.0,
+      "w": -29.6,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 16,
+      "y": 862,
+      "w": 737.6,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 31,
+      "y": 862,
+      "w": 708,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 15,
+      "y": 0,
+      "w": -29.6,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 18,
+      "y": 862,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 33,
+      "y": 862,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 15,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 621.4,
+      "y": 12.8,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": {
+      "x": 1002,
+      "y": 11,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": null
+    }
+   },
+   "verdict": "matches; captured with Conversation tabs set to Automatic (the board shows the list column; default is Top, decision list CE2); header 11.8 against 12.2 px",
+   "name": "Responsive"
+  },
+  {
+   "board": "Settings",
+   "fixture": "Settings",
+   "theme": "dark",
+   "size": [
+    680,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 18.9,
+   "diffPercentSystemFont": 18.9,
+   "image": "Settings-dark.png",
+   "measured": {},
+   "verdict": "matches; known: 068 (breadcrumb, \"Auto\" label, Theme text), Show tooltips row (not on the board), cards 1 to 4 px higher from Obsidian's 1.3 line height (074)",
+   "name": "Settings"
+  },
+  {
+   "board": "Short",
+   "fixture": "Short",
+   "theme": "dark",
+   "size": [
+    440,
+    600
+   ],
+   "settings": {},
+   "diffPercentGeist": 10.0,
+   "diffPercentSystemFont": 13.2,
+   "image": "Short-dark.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 12,
+      "y": 485,
+      "w": 416,
+      "h": 73,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px rgba(255, 255, 255, 0.12)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 485.8,
+      "w": 416,
+      "h": 72.3,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.8,
+      "w": 0,
+      "h": -0.7
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 25,
+      "y": 494,
+      "w": 394,
+      "h": 21,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 494.8,
+      "w": 394,
+      "h": 20.3,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.8,
+      "w": 0,
+      "h": -0.7
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 12,
+      "y": 564,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 564,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 14,
+      "y": 564,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 564,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 216.4,
+      "y": 8,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; fixture: tab strip content; frame: pinned-prompt bar shows because the live panel is scrolled",
+   "name": "Short"
+  },
+  {
+   "board": "SlashConfig",
+   "fixture": "SlashConfig",
+   "theme": "dark",
+   "size": [
+    440,
+    1360
+   ],
+   "settings": {},
+   "diffPercentGeist": 11.1,
+   "diffPercentSystemFont": 11.1,
+   "image": "SlashConfig-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1187.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1230.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1324,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1324,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches in card styling; fixture: stub CLI data; frame: taller than the viewport, no header or tab strip",
+   "name": "SlashConfig"
+  },
+  {
+   "board": "SlashHelp",
+   "fixture": "SlashHelp",
+   "theme": "dark",
+   "size": [
+    440,
+    1360
+   ],
+   "settings": {},
+   "diffPercentGeist": 10.1,
+   "diffPercentSystemFont": 10.2,
+   "image": "SlashHelp-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1187.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1230.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1324,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1324,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches in card styling; fixture: stub CLI data; frame: taller than the viewport, no header or tab strip",
+   "name": "SlashHelp"
+  },
+  {
+   "board": "SlashMcp",
+   "fixture": "SlashMcp",
+   "theme": "dark",
+   "size": [
+    440,
+    1360
+   ],
+   "settings": {},
+   "diffPercentGeist": 11.1,
+   "diffPercentSystemFont": 11.1,
+   "image": "SlashMcp-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1187.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1230.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1324,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1324,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches in card styling; fixture: the stub CLI reports one server; frame: the board is taller than the viewport and has no header or tab strip",
+   "name": "SlashMcp"
+  },
+  {
+   "board": "SlashTools",
+   "fixture": "SlashTools",
+   "theme": "dark",
+   "size": [
+    440,
+    1360
+   ],
+   "settings": {},
+   "diffPercentGeist": 14.1,
+   "diffPercentSystemFont": 14.0,
+   "image": "SlashTools-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1187.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1230.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1324,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1324,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches in card styling; fixture: stub CLI data; frame: taller than the viewport, no header or tab strip",
+   "name": "SlashTools"
+  },
+  {
+   "board": "SlashUsage",
+   "fixture": "SlashUsage",
+   "theme": "dark",
+   "size": [
+    440,
+    1360
+   ],
+   "settings": {},
+   "diffPercentGeist": 9.7,
+   "diffPercentSystemFont": 9.7,
+   "image": "SlashUsage-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1187.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1230.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1324,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1324,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches in card styling; fixture: figures and rows from the stub CLI; frame: the board is taller than the viewport and has no header or tab strip",
+   "name": "SlashUsage"
+  },
+  {
+   "board": "Tooltips",
+   "fixture": "Tooltips",
+   "theme": "dark",
+   "size": [
+    440,
+    1200
+   ],
+   "settings": {},
+   "diffPercentGeist": 14.8,
+   "diffPercentSystemFont": 14.0,
+   "image": "Tooltips-dark.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1027.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(29, 29, 34)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "1px color(srgb 0.54032 0.3608 0.9592 / 0.5)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1070.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1164,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1164,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "changesChip": {
+     "board": {
+      "x": 17,
+      "y": 772.1,
+      "w": 117.5,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgb(38, 38, 44)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -5,
+      "y": -728.1,
+      "w": -8.9,
+      "h": 0
+     },
+     "sameRadiusAndFill": false
+    },
+    "hdrNew": {
+     "board": {
+      "x": 17,
+      "y": 42.8,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgb(38, 38, 44)",
+      "col": "rgb(237, 237, 240)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(166, 166, 176)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 312,
+      "y": -35.8,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": false
+    }
+   },
+   "verdict": "not comparable: the board is a specimen sheet of static tooltips, the panel shows one live tooltip; Obsidian draws tooltips (064, OV26 and OV27)",
+   "name": "Tooltips"
+  },
+  {
+   "board": "LightAgents",
+   "fixture": "Agents",
+   "theme": "light",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {},
+   "diffPercentGeist": 15.3,
+   "diffPercentSystemFont": 15.3,
+   "image": "Agents-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "known: run bar, agent rows and workflow card not built (change 003)",
+   "name": "Agents"
+  },
+  {
+   "board": "LightApprove",
+   "fixture": "Approve",
+   "theme": "light",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {
+    "promptStyle": "bubble"
+   },
+   "diffPercentGeist": 14.4,
+   "diffPercentSystemFont": 14.4,
+   "image": "Approve-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "color(srgb 1 1 1 / 0.92)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.8,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.8,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; frame: pinned-prompt bar shows because the live panel is scrolled, composer focused; fixture: mode and chips; accepted: word highlights per token against the board's hand-authored runs (065), 3 px composer focus ring (063), cache countdown (change 002)",
+   "name": "Approve"
+  },
+  {
+   "board": "LightClearStates",
+   "fixture": "ClearStates",
+   "theme": "light",
+   "size": [
+    440,
+    1040
+   ],
+   "settings": {},
+   "diffPercentGeist": 10.0,
+   "diffPercentSystemFont": 10.1,
+   "image": "ClearStates-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 867.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 30,
+      "y": 688,
+      "w": 385,
+      "h": 20.3,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 910.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -5,
+      "y": 222.5,
+      "w": 9,
+      "h": 20.2
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1004,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1004,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "known: /clear stays in the conversation not built (SPEC D1, pending decision)",
+   "name": "ClearStates"
+  },
+  {
+   "board": "LightCommands",
+   "fixture": "Commands",
+   "theme": "light",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {},
+   "diffPercentGeist": 16.9,
+   "diffPercentSystemFont": 16.8,
+   "image": "Commands-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; accepted: Refresh and Copy on each card (065, 066); fixture: figures; frame: pinned-prompt bar shows because the live panel is scrolled",
+   "name": "Commands"
+  },
+  {
+   "board": "LightContextCache",
+   "fixture": "ContextCache",
+   "theme": "light",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {},
+   "diffPercentGeist": 14.4,
+   "diffPercentSystemFont": 14.6,
+   "image": "ContextCache-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "known: cache zap, countdown and popover cache section not built (change 002; 070 motion audit)",
+   "name": "ContextCache"
+  },
+  {
+   "board": "LightContextEvents",
+   "fixture": "ContextEvents",
+   "theme": "light",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {},
+   "diffPercentGeist": 12.6,
+   "diffPercentSystemFont": 12.6,
+   "image": "ContextEvents-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": {
+      "x": 372,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -43,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "known: context dividers not built (SPEC D1, pending decision)",
+   "name": "ContextEvents"
+  },
+  {
+   "board": "LightEmpty",
+   "fixture": "Empty",
+   "theme": "light",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {},
+   "diffPercentGeist": 6.4,
+   "diffPercentSystemFont": 6.7,
+   "image": "Empty-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "accepted: the hero sits about 126 px lower than the board, whose 250 px bottom reserve only clears its open @ list (074); fixture: status line reads \"usage unavailable\", the stub reports no usage; open: hero icon is the plugin's own bubble with a prompt, the board's a plain chat bubble; starters, @ list and composer match",
+   "name": "Empty"
+  },
+  {
+   "board": "LightMain",
+   "fixture": "Main",
+   "theme": "light",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {
+    "promptStyle": "bubble"
+   },
+   "diffPercentGeist": 9.5,
+   "diffPercentSystemFont": 10.1,
+   "image": "Main-light.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 13,
+      "y": 787.5,
+      "w": 415,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px rgba(24, 24, 32, 0.14)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 787.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 13,
+      "y": 44,
+      "w": 117.5,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": -8.9,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; fixture: step labels and file counts (061 leaves tool-label wording), no exported note so the Transcript control is hidden; accepted: 3 px composer focus ring against the board's 1 px (063), cache countdown absent (change 002); frame: the capture focuses the composer, the static board has no focus",
+   "name": "Main"
+  },
+  {
+   "board": "LightMedium",
+   "fixture": "Medium",
+   "theme": "light",
+   "size": [
+    680,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 4.6,
+   "diffPercentSystemFont": 8.1,
+   "image": "Medium-light.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 16,
+      "y": 725.5,
+      "w": 648,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px rgba(24, 24, 32, 0.14)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 16,
+      "y": 725.5,
+      "w": 648,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 29,
+      "y": 768.5,
+      "w": 626,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 29,
+      "y": 768.5,
+      "w": 626,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 16,
+      "y": 862,
+      "w": 648,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 16,
+      "y": 862,
+      "w": 648,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 18,
+      "y": 862,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 18,
+      "y": 862,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 12,
+      "y": 44,
+      "w": 124.1,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": -15.5,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 569,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 569,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; fixture: no exported note, so the Transcript control is hidden",
+   "name": "Medium"
+  },
+  {
+   "board": "LightNarrow",
+   "fixture": "Narrow",
+   "theme": "light",
+   "size": [
+    300,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 6.0,
+   "diffPercentSystemFont": 12.8,
+   "image": "Narrow-light.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 8,
+      "y": 729.5,
+      "w": 284,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px rgba(24, 24, 32, 0.14)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 8,
+      "y": 729.5,
+      "w": 284,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 21,
+      "y": 772.5,
+      "w": 262,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 21,
+      "y": 772.5,
+      "w": 262,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 8,
+      "y": 866,
+      "w": 284,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 8,
+      "y": 866,
+      "w": 284,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 10,
+      "y": 866,
+      "w": 80.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 10,
+      "y": 866,
+      "w": 80.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 12,
+      "y": 44,
+      "w": 83.7,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 77,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": -6.7,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 232,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 232,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; fixture: the second chip wraps to a second row, the board's \"no due date\" tint is hand-authored markup (Markdown has no such form); accepted: cache zap absent (change 002), context percent kept (063)",
+   "name": "Narrow"
+  },
+  {
+   "board": "LightPopAgents",
+   "fixture": "PopAgents",
+   "theme": "light",
+   "size": [
+    440,
+    640
+   ],
+   "settings": {},
+   "diffPercentGeist": 22.1,
+   "diffPercentSystemFont": 22.2,
+   "image": "PopAgents-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 525.8,
+      "w": 416,
+      "h": 72.3,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 510.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 534.8,
+      "w": 394,
+      "h": 20.3,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 24.3,
+      "w": 1,
+      "h": -20.2
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 604,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 604,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "known: agents popover not built (change 003)",
+   "name": "PopAgents"
+  },
+  {
+   "board": "LightPopModel",
+   "fixture": "PopModel",
+   "theme": "light",
+   "size": [
+    440,
+    600
+   ],
+   "settings": {},
+   "diffPercentGeist": 9.8,
+   "diffPercentSystemFont": 9.8,
+   "image": "PopModel-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 485.8,
+      "w": 416,
+      "h": 72.3,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px rgba(24, 24, 32, 0.14)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 470.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 494.8,
+      "w": 394,
+      "h": 20.3,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 24.3,
+      "w": 1,
+      "h": -20.2
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 564,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 564,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgb(240, 240, 237)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches; fixture: the stub lists 4 models against the board's 6 (popover 340 against 440 px, so it sits about 100 px lower), \"usage unavailable\"; frame: the board has no header or tab strip; open: footer reads \"Applies from your next message\" without \"· this conversation only\"",
+   "name": "PopModel"
+  },
+  {
+   "board": "LightPopUsage",
+   "fixture": "PopUsage",
+   "theme": "light",
+   "size": [
+    440,
+    600
+   ],
+   "settings": {},
+   "diffPercentGeist": 15.7,
+   "diffPercentSystemFont": 15.7,
+   "image": "PopUsage-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 485.8,
+      "w": 416,
+      "h": 72.3,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px rgba(24, 24, 32, 0.14)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 470.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 494.8,
+      "w": 394,
+      "h": 20.3,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 24.3,
+      "w": 1,
+      "h": -20.2
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 564,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 564,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches; accepted: popover and /usage keep the full titles (064, OV30); fixture: extra-usage row needs data the stub lacks",
+   "name": "PopUsage"
+  },
+  {
+   "board": "LightPromptStyleBubble",
+   "fixture": "PromptStyleBubble",
+   "theme": "light",
+   "size": [
+    440,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 9.0,
+   "diffPercentSystemFont": 11.5,
+   "image": "PromptStyleBubble-light.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px rgba(24, 24, 32, 0.14)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 12,
+      "y": 44,
+      "w": 124.1,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": -15.5,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; fixture: the board's \"no due date\" tint is hand-authored markup (Markdown has no such form); accepted: cache zap (change 002)",
+   "name": "PromptStyleBubble"
+  },
+  {
+   "board": "LightPromptStylePopout",
+   "fixture": "PromptStylePopout",
+   "theme": "light",
+   "size": [
+    440,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 6.3,
+   "diffPercentSystemFont": 10.3,
+   "image": "PromptStylePopout-light.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px rgba(24, 24, 32, 0.14)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 12,
+      "y": 44,
+      "w": 124.1,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": -15.5,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; known: cache zap (change 002)",
+   "name": "PromptStylePopout"
+  },
+  {
+   "board": "LightPromptStyleQuiet",
+   "fixture": "PromptStyleQuiet",
+   "theme": "light",
+   "size": [
+    440,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 6.4,
+   "diffPercentSystemFont": 10.5,
+   "image": "PromptStyleQuiet-light.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px rgba(24, 24, 32, 0.14)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 727.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 770.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.0,
+      "w": 0,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 864,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 864,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": {
+      "x": 12,
+      "y": 44,
+      "w": 124.1,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": -15.5,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; frame: pinned prompt shows because the live panel is scrolled; fixture: tab content",
+   "name": "PromptStyleQuiet"
+  },
+  {
+   "board": "LightQuestion",
+   "fixture": "Question",
+   "theme": "light",
+   "size": [
+    440,
+    960
+   ],
+   "settings": {
+    "promptStyle": "bubble"
+   },
+   "diffPercentGeist": 13.6,
+   "diffPercentSystemFont": 13.6,
+   "image": "Question-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 757.5,
+      "w": 416,
+      "h": 160.5,
+      "rad": "14px",
+      "bg": "color(srgb 1 1 1 / 0.92)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.0941176 0.0941176 0.12549 / 0.129882)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": {
+      "x": 26,
+      "y": 830.5,
+      "w": 393,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 830.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0.0,
+      "w": 1,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 13,
+      "y": 924,
+      "w": 415,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 924,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 1,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 15,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 924,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -1,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "accepted: one \"Other…\" per question (065, CA14), cache countdown (change 002); fixture: three context chips in two rows against the board's one, the card footer is reachable by scrolling and is cropped under the composer at the chosen offset; open: the \"Sections\" legend sits on the fieldset border instead of under a divider and its options start 14 px lower, option description 2 px lower (styles.css question rules)",
+   "name": "Question"
+  },
+  {
+   "board": "LightResponsive",
+   "fixture": "Responsive",
+   "theme": "light",
+   "size": [
+    1040,
+    900
+   ],
+   "settings": {
+    "tabPosition": "auto"
+   },
+   "diffPercentGeist": 6.3,
+   "diffPercentSystemFont": 7.1,
+   "image": "Responsive-light.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 16,
+      "y": 725.5,
+      "w": 737.6,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px rgba(24, 24, 32, 0.14)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 31,
+      "y": 725.5,
+      "w": 708,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 15,
+      "y": 0.0,
+      "w": -29.6,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 29,
+      "y": 768.5,
+      "w": 715.6,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 44,
+      "y": 768.5,
+      "w": 686,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 15,
+      "y": 0.0,
+      "w": -29.6,
+      "h": 0.0
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 16,
+      "y": 862,
+      "w": 737.6,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 31,
+      "y": 862,
+      "w": 708,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 15,
+      "y": 0,
+      "w": -29.6,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 18,
+      "y": 862,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 33,
+      "y": 862,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 15,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 621.4,
+      "y": 12.8,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": {
+      "x": 1002,
+      "y": 11,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": null
+    }
+   },
+   "verdict": "matches; captured with Conversation tabs set to Automatic (the board shows the list column; default is Top, decision list CE2); header 11.8 against 12.2 px",
+   "name": "Responsive"
+  },
+  {
+   "board": "LightSettings",
+   "fixture": "Settings",
+   "theme": "light",
+   "size": [
+    680,
+    900
+   ],
+   "settings": {},
+   "diffPercentGeist": 13.9,
+   "diffPercentSystemFont": 13.8,
+   "image": "Settings-light.png",
+   "measured": {},
+   "verdict": "matches; known: 068 (breadcrumb, \"Auto\" label, Theme text), Show tooltips row (not on the board), cards 1 to 4 px higher from Obsidian's 1.3 line height (074)",
+   "name": "Settings"
+  },
+  {
+   "board": "LightShort",
+   "fixture": "Short",
+   "theme": "light",
+   "size": [
+    440,
+    600
+   ],
+   "settings": {},
+   "diffPercentGeist": 8.3,
+   "diffPercentSystemFont": 11.6,
+   "image": "Short-light.png",
+   "measured": {
+    "composer": {
+     "board": {
+      "x": 12,
+      "y": 485,
+      "w": 416,
+      "h": 73,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px rgba(24, 24, 32, 0.14)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 485.8,
+      "w": 416,
+      "h": 72.3,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.8,
+      "w": 0,
+      "h": -0.7
+     },
+     "sameRadiusAndFill": true
+    },
+    "textarea": {
+     "board": {
+      "x": 25,
+      "y": 494,
+      "w": 394,
+      "h": 21,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 25,
+      "y": 494.8,
+      "w": 394,
+      "h": 20.3,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.8,
+      "w": 0,
+      "h": -0.7
+     },
+     "sameRadiusAndFill": true
+    },
+    "statusLine": {
+     "board": {
+      "x": 12,
+      "y": 564,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 564,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "segModel": {
+     "board": {
+      "x": 14,
+      "y": 564,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 14,
+      "y": 564,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0,
+      "w": 0.0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 216.4,
+      "y": 8,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": {
+      "x": 329,
+      "y": 6.5,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 0,
+      "y": 0.5,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": true
+    }
+   },
+   "verdict": "matches; fixture: tab strip content; frame: pinned-prompt bar shows because the live panel is scrolled",
+   "name": "Short"
+  },
+  {
+   "board": "LightSlashConfig",
+   "fixture": "SlashConfig",
+   "theme": "light",
+   "size": [
+    440,
+    1360
+   ],
+   "settings": {},
+   "diffPercentGeist": 14.2,
+   "diffPercentSystemFont": 14.1,
+   "image": "SlashConfig-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1187.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1230.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1324,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1324,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches in card styling; fixture: stub CLI data; frame: taller than the viewport, no header or tab strip",
+   "name": "SlashConfig"
+  },
+  {
+   "board": "LightSlashHelp",
+   "fixture": "SlashHelp",
+   "theme": "light",
+   "size": [
+    440,
+    1360
+   ],
+   "settings": {},
+   "diffPercentGeist": 8.0,
+   "diffPercentSystemFont": 8.0,
+   "image": "SlashHelp-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1187.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1230.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1324,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1324,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches in card styling; fixture: stub CLI data; frame: taller than the viewport, no header or tab strip",
+   "name": "SlashHelp"
+  },
+  {
+   "board": "LightSlashMcp",
+   "fixture": "SlashMcp",
+   "theme": "light",
+   "size": [
+    440,
+    1360
+   ],
+   "settings": {},
+   "diffPercentGeist": 13.1,
+   "diffPercentSystemFont": 13.0,
+   "image": "SlashMcp-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1187.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1230.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1324,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1324,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches in card styling; fixture: the stub CLI reports one server; frame: the board is taller than the viewport and has no header or tab strip",
+   "name": "SlashMcp"
+  },
+  {
+   "board": "LightSlashTools",
+   "fixture": "SlashTools",
+   "theme": "light",
+   "size": [
+    440,
+    1360
+   ],
+   "settings": {},
+   "diffPercentGeist": 14.8,
+   "diffPercentSystemFont": 14.8,
+   "image": "SlashTools-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1187.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1230.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1324,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1324,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches in card styling; fixture: stub CLI data; frame: taller than the viewport, no header or tab strip",
+   "name": "SlashTools"
+  },
+  {
+   "board": "LightSlashUsage",
+   "fixture": "SlashUsage",
+   "theme": "light",
+   "size": [
+    440,
+    1360
+   ],
+   "settings": {},
+   "diffPercentGeist": 12.8,
+   "diffPercentSystemFont": 12.7,
+   "image": "SlashUsage-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1187.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1230.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1324,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1324,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "changesChip": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "hdrNew": {
+     "board": null,
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     }
+    }
+   },
+   "verdict": "matches in card styling; fixture: figures and rows from the stub CLI; frame: the board is taller than the viewport and has no header or tab strip",
+   "name": "SlashUsage"
+  },
+  {
+   "board": "LightTooltips",
+   "fixture": "Tooltips",
+   "theme": "light",
+   "size": [
+    440,
+    1200
+   ],
+   "settings": {},
+   "diffPercentGeist": 19.8,
+   "diffPercentSystemFont": 21.8,
+   "image": "Tooltips-light.png",
+   "measured": {
+    "composer": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1027.5,
+      "w": 416,
+      "h": 130.5,
+      "rad": "14px",
+      "bg": "rgb(255, 255, 255)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "1px color(srgb 0.597615 0.451304 0.967696 / 0.4)",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "textarea": {
+     "board": null,
+     "panel": {
+      "x": 25,
+      "y": 1070.5,
+      "w": 394,
+      "h": 40.5,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     }
+    },
+    "statusLine": {
+     "board": null,
+     "panel": {
+      "x": 12,
+      "y": 1164,
+      "w": 416,
+      "h": 26,
+      "rad": "0px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "segModel": {
+     "board": null,
+     "panel": {
+      "x": 14,
+      "y": 1164,
+      "w": 82.4,
+      "h": 26,
+      "rad": "7px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     }
+    },
+    "changesChip": {
+     "board": {
+      "x": 17,
+      "y": 772.1,
+      "w": 117.5,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgb(240, 240, 237)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 12,
+      "y": 44,
+      "w": 108.6,
+      "h": 26,
+      "rad": "999px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "12px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": -5,
+      "y": -728.1,
+      "w": -8.9,
+      "h": 0
+     },
+     "sameRadiusAndFill": false
+    },
+    "hdrNew": {
+     "board": {
+      "x": 17,
+      "y": 42.8,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgb(240, 240, 237)",
+      "col": "rgb(27, 27, 32)",
+      "bd": "none",
+      "fs": "13.5px",
+      "fw": "400"
+     },
+     "panel": {
+      "x": 329,
+      "y": 7,
+      "w": 28,
+      "h": 28,
+      "rad": "8px",
+      "bg": "rgba(0, 0, 0, 0)",
+      "col": "rgb(83, 83, 93)",
+      "bd": "none",
+      "fs": "13px",
+      "fw": "400"
+     },
+     "delta": {
+      "x": 312,
+      "y": -35.8,
+      "w": 0,
+      "h": 0
+     },
+     "sameRadiusAndFill": false
+    }
+   },
+   "verdict": "not comparable: the board is a specimen sheet of static tooltips, the panel shows one live tooltip; Obsidian draws tooltips (064, OV26 and OV27)",
+   "name": "Tooltips"
+  }
+ ]
+}

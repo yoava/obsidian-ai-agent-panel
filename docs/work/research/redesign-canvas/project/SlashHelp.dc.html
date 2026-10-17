@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Help, clear, loading and error states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit;text-decoration:none}a:hover{color:inherit}
+@keyframes shimmer{0%{background-position:-240px 0}100%{background-position:240px 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.app{--bg:#141417;--bg-2:#18181c;--surface:#1d1d22;--surface-2:#26262c;--surface-3:#2f2f36;--line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.12);--text:#ededf0;--muted:#a6a6b0;--faint:#8c8c96;--user-bg:#2a241c;--user-line:rgba(245,180,90,.36);--green:#4fc58c;--red:#f2706f;--orange:#f5a04a;--green-soft:rgba(79,197,140,.13);--red-soft:rgba(242,112,111,.13);--red-line:rgba(242,112,111,.45);--accent:#a99cfa;--accent-fill:#6d5ce7;--accent-soft:rgba(139,124,246,.15);--accent-line:rgba(139,124,246,.5);color-scheme:dark;font-family:'Geist',system-ui,-apple-system,sans-serif;font-size:13.5px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;box-sizing:border-box}
+.app.t-light{--bg:#fbfbfa;--bg-2:#f4f4f2;--surface:#ffffff;--surface-2:#f0f0ed;--surface-3:#e6e6e2;--line:rgba(24,24,32,.08);--line-2:rgba(24,24,32,.14);--text:#1b1b20;--muted:#53535d;--faint:#696973;--user-bg:#fdf3e4;--user-line:#ecca95;--green:#16864f;--red:#cc3b3a;--orange:#a85a08;--green-soft:rgba(22,134,79,.09);--red-soft:rgba(204,59,58,.08);--red-line:rgba(204,59,58,.4);--accent:#5847d4;--accent-fill:#6352e0;--accent-soft:rgba(99,82,224,.09);--accent-line:rgba(99,82,224,.4);color-scheme:light}
+.app.acc-blue{--accent:#82aeff;--accent-fill:#2f6fe0;--accent-soft:rgba(80,140,255,.15);--accent-line:rgba(80,140,255,.5)}
+.app.t-light.acc-blue{--accent:#1d5cc9;--accent-fill:#2463d6;--accent-soft:rgba(36,99,214,.09);--accent-line:rgba(36,99,214,.4)}
+.app.acc-teal{--accent:#5fd4c6;--accent-fill:#0f7c74;--accent-soft:rgba(60,200,185,.14);--accent-line:rgba(60,200,185,.5)}
+.app.t-light.acc-teal{--accent:#0b6c65;--accent-fill:#0e7a72;--accent-soft:rgba(14,122,114,.09);--accent-line:rgba(14,122,114,.4)}
+.app *{box-sizing:border-box}
+:where(.app button,.app input){font:inherit;color:inherit;background:none;border:0;margin:0;padding:0}
+:where(.app button){cursor:pointer}
+.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.i12{width:12px;height:12px}
+.mono{font-family:'Geist Mono',ui-monospace,SFMono-Regular,monospace;font-size:.92em}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.grow{flex:1;min-width:0}
+.ub{align-self:flex-end;font-family:'Geist Mono',ui-monospace,monospace;font-size:12.5px;background:var(--user-bg);border:1px solid var(--user-line);border-radius:12px 12px 4px 12px;padding:5px 11px;flex:none}
+.rc{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;flex:none}
+.rc-h{display:flex;align-items:center;gap:9px;padding:12px 10px 0 12px}
+.rc-ic{width:26px;height:26px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.rc-t{font-weight:600}
+.free{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:999px;font-size:10.5px;font-weight:500;color:var(--green);background:var(--green-soft);flex:none;letter-spacing:0;text-transform:none}
+.rc-a{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;color:var(--faint);flex:none}
+.rc-a:hover{background:var(--surface-2);color:var(--text)}
+.rc-b{padding:12px 14px 14px 14px;display:flex;flex-direction:column;gap:12px}
+.sh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
+.rc-f{display:flex;align-items:flex-start;gap:8px;padding:9px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);background:var(--bg-2)}
+.cmd{display:grid;grid-template-columns:112px minmax(0,1fr);column-gap:10px;align-items:baseline;padding:4px 6px;margin:0 -6px;border-radius:7px;font-size:12.5px;text-align:left;width:calc(100% + 12px)}
+.cmd:hover{background:var(--surface-2)}
+.cmd .n{font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--accent);white-space:nowrap}
+.cmd .d{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmd .h{font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--faint)}
+.grp{font-size:11.5px;color:var(--faint);margin:6px 0 2px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 10px;border-radius:7px;font-size:12px;font-weight:500;white-space:nowrap;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--text)}
+.btn:hover{background:var(--surface-2)}
+.btn.p{background:var(--accent-fill);color:#fff;box-shadow:none}
+.sk{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--surface-2) 0,var(--surface-3) 50%,var(--surface-2) 100%);background-size:240px 100%;animation:shimmer 1.4s linear infinite}
+.app{--wv:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' viewBox='0 0 16 8'%3E%3Cpath d='M0 4 Q4 0.6 8 4 T16 4' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E")}
+@keyframes wv{to{-webkit-mask-position:16px center;mask-position:16px center}}
+.wave{flex:1;min-width:16px;height:8px;background:currentColor;opacity:.55;-webkit-mask:var(--wv) repeat-x left center/16px 8px;mask:var(--wv) repeat-x left center/16px 8px}
+.wave.go{animation:wv .9s linear infinite}
+.wave.go.r{animation-direction:reverse}
+.evt{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}
+.evt-l{display:flex;align-items:center;gap:8px;width:100%}
+.evt-p{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;background:color-mix(in srgb,currentColor 9%,var(--bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 42%,transparent)}
+.evt-p > span{color:var(--text)}
+.evt-s{font-size:11.5px;color:var(--faint);text-align:center;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
+.dim{opacity:.42}
+</style>
+</helmet>
+<div class="app {{mods}}" style="width:440px;height:1360px;overflow:hidden;padding:20px 16px;display:flex;flex-direction:column;gap:12px;border-left:1px solid var(--line)">
+
+  <div class="ub">/help</div>
+  <article class="rc">
+    <div class="rc-h">
+      <span class="rc-ic"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m9 15 6-6"></path></svg></span>
+      <span class="rc-t">Commands</span>
+      <span class="grow"></span>
+      <button class="rc-a" aria-label="Copy as Markdown"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button>
+    </div>
+    <div class="rc-b">
+      <div>
+        <div class="sh">Answered by the panel <span class="free">no tokens</span></div>
+        <div class="grp">Usage &amp; cost</div>
+        <button class="cmd"><span class="n">/usage</span><span class="d">Show plan usage limits</span></button>
+        <button class="cmd"><span class="n">/usage-credits</span><span class="d">Show extra-usage credit status <span class="h">· also /extra-usage</span></span></button>
+        <button class="cmd"><span class="n">/cost</span><span class="d">This conversation’s token use and cost</span></button>
+        <button class="cmd"><span class="n">/context</span><span class="d">What is using the context window</span></button>
+        <div class="grp">Setup</div>
+        <button class="cmd"><span class="n">/status</span><span class="d">Version, account, model and MCP status</span></button>
+        <button class="cmd"><span class="n">/mcp</span><span class="d"><span class="h">[reconnect|enable|disable &lt;server&gt;|all]</span> MCP servers</span></button>
+        <button class="cmd"><span class="n">/memory</span><span class="d">Instruction and memory files Claude Code loads</span></button>
+        <button class="cmd"><span class="n">/permissions</span><span class="d">Allow, ask and deny rules in effect</span></button>
+        <button class="cmd"><span class="n">/hooks</span><span class="d">Hooks Claude Code runs</span></button>
+        <button class="cmd"><span class="n">/skills</span><span class="d">Skills and their context cost</span></button>
+        <button class="cmd"><span class="n">/chrome</span><span class="d">Claude in Chrome status</span></button>
+        <button class="cmd"><span class="n">/sandbox</span><span class="d">Bash sandbox status</span></button>
+        <div class="grp">Conversation</div>
+        <button class="cmd"><span class="n">/clear</span><span class="d">Clear Claude’s context; messages above stay, dimmed</span></button>
+        <button class="cmd"><span class="n">/help</span><span class="d">This list</span></button>
+      </div>
+      <div style="padding-top:10px;border-top:1px solid var(--line)">
+        <div class="sh">Claude Code commands &amp; skills</div>
+        <button class="cmd"><span class="n" style="color:var(--text)">/compact</span><span class="d"><span class="h">[instructions]</span> Free up context by summarizing</span></button>
+        <button class="cmd"><span class="n" style="color:var(--text)">/init</span><span class="d">Create a CLAUDE.md with documentation</span></button>
+        <button class="cmd"><span class="n" style="color:var(--text)">/security-review</span><span class="d">Security review of pending changes</span></button>
+        <button class="btn" style="margin-top:8px;height:26px;font-size:11.5px">Show all 23<svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button>
+      </div>
+    </div>
+    <div class="rc-f">
+      <svg class="i" style="margin-top:2px;color:var(--faint)" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+      <span>Anything else starting with <span class="mono">/</span> goes to Claude Code. <span class="mono">!</span> runs a shell command.</span>
+    </div>
+  </article>
+
+  <div class="ub">/clear</div>
+  <div class="evt" role="separator" aria-label="Context cleared at 14:02" style="color:var(--orange)">
+    <div class="evt-l"><span class="wave"></span><span class="evt-p"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path><path d="M22 21H7"></path><path d="m5 11 9 9"></path></svg><span>Context cleared</span></span><span class="wave"></span></div>
+    <div class="evt-s"><span>14:02</span><span>·</span><span>Claude can’t see anything above</span></div>
+  </div>
+
+  <div class="ub">/mcp</div>
+  <article class="rc" aria-busy="true">
+    <div class="rc-h">
+      <span class="rc-ic"><svg class="i" style="animation:spin 1s linear infinite" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg></span>
+      <span class="rc-t">MCP servers</span>
+      <span style="font-size:12px;color:var(--faint)">Asking Claude Code…</span>
+    </div>
+    <div class="rc-b" style="gap:10px">
+      <span class="sk" style="width:62%"></span>
+      <span class="sk" style="width:88%"></span>
+      <span class="sk" style="width:74%"></span>
+    </div>
+  </article>
+
+  <div class="ub">/status</div>
+  <article class="rc" role="alert" style="border-color:var(--red-line)">
+    <div class="rc-h">
+      <span class="rc-ic" style="background:var(--red-soft);color:var(--red)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></span>
+      <span class="rc-t">Status</span>
+      <span style="font-size:12px;color:var(--red)">Couldn’t load</span>
+    </div>
+    <div class="rc-b">
+      <p style="margin:0;font-size:12.5px;color:var(--muted)">Claude Code could not answer: <span class="mono" style="color:var(--text)">Control request timed out: get_status</span>. Updating it may help.</p>
+      <div style="display:flex;gap:6px">
+        <button class="btn p"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>Try again</button>
+        <button class="btn">Copy error</button>
+      </div>
+    </div>
+  </article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"accent":{"editor":"enum","options":["violet","blue","teal"],"default":"violet"},"$preview":{"width":440,"height":1360}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'dark';
+    const accent = this.props.accent ?? 'violet';
+    return { mods: 't-' + theme + ' acc-' + accent };
+  }
+}
+</script>
+</body>
+</html>

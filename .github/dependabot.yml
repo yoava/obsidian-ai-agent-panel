@@ -1,7 +1,7 @@
 version: 2
 
 updates:
-  # Workflow actions are pinned to commit SHAs (see docs/SECURITY.md), which is
+  # Workflow actions are pinned to commit SHAs (see docs/current/SECURITY.md), which is
   # only safe if something keeps the pins current. Dependabot rewrites both the
   # SHA and the trailing version comment.
   - package-ecosystem: github-actions
@@ -19,32 +19,29 @@ updates:
       prefix: ci
     open-pull-requests-limit: 3
 
-  # Dev-only: the plugin ships zero runtime dependencies, so nothing here
-  # reaches an installed vault - it is the build toolchain that rots. Grouped
-  # and monthly, so this is one pull request to review rather than six.
+  # One npm entry (Dependabot rejects two for the same directory). Runtime
+  # packages (what main.js bundles: the two fonts, ADR-007 and ADR-017) are
+  # outside any group, so each arrives as its own pull request and re-runs the
+  # dependency screen's security and legal rows, the 7-day rule, the notices
+  # and the size change. The build toolchain, which never reaches a vault, is
+  # one grouped pull request. Weekly, so a runtime update is seen within a week.
+  # Ranges in package.json are updated too: runtime packages and obsidian are
+  # pinned exactly, and a lockfile-only update could never move a pin.
   - package-ecosystem: npm
     directory: "/"
     schedule:
-      interval: monthly
-    # Update the lockfile only, never the ranges in package.json. Dependabot
-    # otherwise normalises "obsidian": "latest" to "*" whenever it rewrites the
-    # manifest for some other package - equivalent today, but not the spec that
-    # was written on purpose. The cost is that majors are no longer proposed at
-    # all, since those need a manifest change; take those deliberately.
-    versioning-strategy: lockfile-only
+      interval: weekly
     groups:
       dev-dependencies:
-        patterns: ["*"]
-        # Same rule, and it earns its keep here: the first grouped run bundled
-        # four majors including typescript 5 -> 7, which fails the build
-        # outright (7 no longer picks up @types/node without an explicit
-        # "types" field in tsconfig).
+        dependency-type: development
+        # Majors stay out of the group, each its own pull request: the first
+        # grouped run bundled four majors including typescript 5 -> 7, which
+        # fails the build outright.
         update-types: ["minor", "patch"]
     commit-message:
       prefix: build
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
     ignore:
-      # Deliberately tracks "latest": the API typings follow the Obsidian app,
-      # not semver, and a pinned range would silently fall behind the app the
-      # plugin is compiled against.
+      # Pinned exactly (1.13.1): the API typings follow the Obsidian app, not
+      # semver, so the owner moves the pin deliberately.
       - dependency-name: obsidian

@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workflow view</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit;text-decoration:none}a:hover{color:inherit}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+@keyframes wv{to{-webkit-mask-position:16px center;mask-position:16px center}}
+@keyframes blink{50%{opacity:0}}
+.app{--bg:#141417;--bg-2:#18181c;--surface:#1d1d22;--surface-2:#26262c;--surface-3:#2f2f36;--line:rgba(255,255,255,.07);--line-2:rgba(255,255,255,.12);--text:#ededf0;--muted:#a6a6b0;--faint:#8c8c96;--user-bg:#2a241c;--user-line:rgba(245,180,90,.36);--amber:#f5b45a;--green:#4fc58c;--red:#f2706f;--orange:#f5a04a;--green-soft:rgba(79,197,140,.13);--red-soft:rgba(242,112,111,.13);--red-line:rgba(242,112,111,.45);--orange-soft:rgba(245,160,74,.13);--orange-line:rgba(245,160,74,.45);--shadow:0 18px 40px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.3);--tip-bg:#3b3b44;--tip-text:#f4f4f6;--accent:#a99cfa;--accent-fill:#6d5ce7;--accent-soft:rgba(139,124,246,.15);--accent-line:rgba(139,124,246,.5);--wv:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' viewBox='0 0 16 8'%3E%3Cpath d='M0 4 Q4 0.6 8 4 T16 4' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E");color-scheme:dark;font-family:'Geist',system-ui,-apple-system,sans-serif;font-size:13.5px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;box-sizing:border-box}
+.app.t-light{--bg:#fbfbfa;--bg-2:#f4f4f2;--surface:#ffffff;--surface-2:#f0f0ed;--surface-3:#e6e6e2;--line:rgba(24,24,32,.08);--line-2:rgba(24,24,32,.14);--text:#1b1b20;--muted:#53535d;--faint:#696973;--user-bg:#fdf3e4;--user-line:#ecca95;--amber:#d98a1c;--green:#16864f;--red:#cc3b3a;--orange:#a85a08;--green-soft:rgba(22,134,79,.09);--red-soft:rgba(204,59,58,.08);--red-line:rgba(204,59,58,.4);--orange-soft:rgba(168,90,8,.08);--orange-line:rgba(168,90,8,.4);--shadow:0 18px 40px rgba(24,24,48,.10),0 2px 8px rgba(24,24,48,.06);--tip-bg:#26262c;--tip-text:#ffffff;--accent:#5847d4;--accent-fill:#6352e0;--accent-soft:rgba(99,82,224,.09);--accent-line:rgba(99,82,224,.4);color-scheme:light}
+.app.acc-blue{--accent:#82aeff;--accent-fill:#2f6fe0;--accent-soft:rgba(80,140,255,.15);--accent-line:rgba(80,140,255,.5)}
+.app.t-light.acc-blue{--accent:#1d5cc9;--accent-fill:#2463d6;--accent-soft:rgba(36,99,214,.09);--accent-line:rgba(36,99,214,.4)}
+.app.acc-teal{--accent:#5fd4c6;--accent-fill:#0f7c74;--accent-soft:rgba(60,200,185,.14);--accent-line:rgba(60,200,185,.5)}
+.app.t-light.acc-teal{--accent:#0b6c65;--accent-fill:#0e7a72;--accent-soft:rgba(14,122,114,.09);--accent-line:rgba(14,122,114,.4)}
+.app{--strip:#222227}.app.t-light{--strip:#ebebe7}
+.app *{box-sizing:border-box}
+:where(.app button,.app input,.app textarea){font:inherit;color:inherit;background:none;border:0;margin:0;padding:0}
+:where(.app button){cursor:pointer}
+.i{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.i12{width:12px;height:12px}.i16{width:16px;height:16px}
+.mono{font-family:'Geist Mono',ui-monospace,SFMono-Regular,monospace;font-size:.92em}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.grow{flex:1;min-width:0}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;color:var(--muted);flex:none}
+.ib:hover{background:var(--surface-2);color:var(--text)}
+.tab{display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:9px 9px 0 0;font-size:12.5px;color:var(--muted);white-space:nowrap;min-width:0;position:relative;flex:0 1 auto}
+.tab + .tab::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:1px;background:var(--line-2)}
+.tab.on + .tab::before,.tab:not(.on):hover::before,.tab:not(.on):hover + .tab::before{display:none}
+.tab.on{background:var(--bg);color:var(--text);font-weight:600;z-index:1}
+.tab.on::before,.tab.on::after{content:"";position:absolute;top:auto;bottom:0;width:9px;height:9px;background:radial-gradient(circle at 0 0,transparent 8.5px,var(--bg) 9px)}
+.tab.on::before{left:-9px}
+.tab.on::after{right:-9px;background:radial-gradient(circle at 100% 0,transparent 8.5px,var(--bg) 9px)}
+.dot{width:6px;height:6px;border-radius:50%;flex:none;display:inline-block}
+.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);font-size:12px;white-space:nowrap}
+.seg{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px;border-radius:7px;color:var(--muted);font-size:12px;white-space:nowrap}
+.seg:hover,.seg.on{background:var(--surface-2);color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:28px;padding:0 10px;border-radius:8px;font-size:12px;font-weight:500;white-space:nowrap}
+.btn-p{background:var(--accent-fill);color:#fff}
+.btn-s{box-shadow:inset 0 0 0 1px var(--line-2);color:var(--text)}
+.btn-s:hover{background:var(--surface-2)}
+.btn-d{color:var(--red)}
+.btn-d:hover{background:var(--red-soft)}
+.btn-g{color:var(--muted)}
+.btn-g:hover{background:var(--surface-2);color:var(--text)}
+.mark{width:22px;height:22px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.spin{animation:spin 1s linear infinite}
+.ta{width:100%;resize:none;outline:none;font-size:13.5px;line-height:1.5;color:var(--text);display:block}
+.ta::placeholder{color:var(--faint)}
+.ub{align-self:flex-end;max-width:86%;background:var(--user-bg);border:1px solid var(--user-line);border-radius:14px 14px 4px 14px;padding:9px 12px;line-height:1.55;flex:none}
+.md{font-size:14px;line-height:1.62}
+.md p{margin:0 0 10px}.md > :last-child{margin-bottom:0}.md ul{margin:0 0 10px;padding-left:18px}.md li{margin:3px 0}.md li::marker{color:var(--faint)}
+.md a{color:var(--accent);text-decoration:underline;text-decoration-color:var(--accent-line);text-underline-offset:2px}
+.md strong{font-weight:600}
+.lbl{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
+.bar{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden;display:flex}
+.bar > span{display:block;height:100%;border-radius:3px}
+.pop{background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--shadow);font-size:12.5px;overflow:hidden}
+.pop-h{display:flex;align-items:center;gap:8px;padding:11px 8px 0 12px}
+.pop-t{font-weight:600;font-size:13px}
+.pop-b{padding:10px 12px 12px 12px;display:flex;flex-direction:column;gap:10px}
+.pop-s{border-top:1px solid var(--line)}
+.pop-f{display:flex;align-items:center;gap:4px;padding:6px 6px 6px 12px;border-top:1px solid var(--line);background:var(--bg-2)}
+.hc{background:var(--surface);border:1px solid var(--line-2);border-radius:10px;box-shadow:var(--shadow);padding:9px 11px;font-size:12px;display:flex;flex-direction:column;gap:6px}
+.tip{display:inline-flex;align-items:center;gap:8px;padding:5px 9px;border-radius:7px;background:var(--tip-bg);color:var(--tip-text);font-size:12px;line-height:1.35;box-shadow:0 6px 18px rgba(0,0,0,.28);white-space:nowrap}
+.kbd{font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.14);color:inherit}
+.kv{display:flex;align-items:baseline;gap:8px;font-size:12px}
+.kv .k{color:var(--muted);white-space:nowrap}
+.kv .v{margin-left:auto;white-space:nowrap}
+.wave{flex:1;min-width:16px;height:8px;background:currentColor;opacity:.55;-webkit-mask:var(--wv) repeat-x left center/16px 8px;mask:var(--wv) repeat-x left center/16px 8px}
+.wave.go{animation:wv .9s linear infinite}
+.wave.go.r{animation-direction:reverse}
+.evt{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}
+.evt-l{display:flex;align-items:center;gap:8px;width:100%}
+.evt-p{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;background:color-mix(in srgb,currentColor 9%,var(--bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 42%,transparent)}
+.evt-p > span{color:var(--text)}
+.evt-s{font-size:11.5px;color:var(--faint);text-align:center;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
+.ctx{display:inline-flex;align-items:center;gap:5px}
+.cdiv{width:1px;height:12px;background:var(--line-2);margin:0 1px;flex:none}
+.wh{display:flex;align-items:center;gap:12px;padding:14px 12px 14px 20px;border-bottom:1px solid var(--line);flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:500;background:var(--accent-soft);color:var(--accent);flex:none}
+.stats{display:flex;align-items:stretch}
+.stat{display:flex;flex-direction:column;justify-content:center;line-height:1.25;padding:0 14px;border-left:1px solid var(--line)}
+.stat .v{font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;color:var(--text);white-space:nowrap}
+.wp{display:flex;align-items:center;gap:8px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--bg-2);flex:none}
+.phase{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);min-width:0;flex:1}
+.phase.on{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
+.phase.wait{background:transparent;border-style:dashed;border-color:var(--line-2)}
+.pnum{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none}
+.conn{width:20px;height:1px;background:var(--line-2);flex:none}
+.wbody{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 360px}
+.wl{display:flex;flex-direction:column;min-height:0;min-width:0}
+.lanes{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(3,minmax(200px,1fr));gap:16px;padding:16px 20px;align-content:start}
+.lane{display:flex;flex-direction:column;gap:8px;min-width:0}
+.lane-h{display:flex;align-items:center;gap:6px;height:22px;font-size:12px;color:var(--muted)}
+.ac{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 8px 9px 12px;display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden;text-align:left;width:100%}
+.ac:hover{border-color:var(--line-2)}
+.ac.sel{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
+.ac.err{border-color:var(--red-line)}
+.ac.q{background:transparent;border-style:dashed;border-color:var(--line-2)}
+.ac .r1{display:flex;align-items:center;gap:7px;min-height:20px}
+.ac .nm{font-weight:500;font-size:12.5px}
+.ac .act{font-size:11.5px;color:var(--faint)}
+.ac .meta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--faint)}
+.model{font-size:10.5px;padding:0 6px;height:18px;border-radius:5px;background:var(--surface-2);color:var(--muted);display:inline-flex;align-items:center;white-space:nowrap;flex:none}
+.ac.run::after{content:"";position:absolute;left:0;bottom:0;width:40%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:slide 1.8s ease-in-out infinite}
+.stp{width:22px;height:22px;border-radius:6px;color:var(--faint);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.stp:hover{background:var(--red-soft);color:var(--red)}
+.tl{flex:none;border-top:1px solid var(--line);padding:12px 20px 14px 20px;display:flex;flex-direction:column}
+.tl-r{display:grid;grid-template-columns:170px minmax(0,1fr);align-items:center;column-gap:12px;height:20px;font-size:11.5px;color:var(--muted)}
+.tl-t{position:relative;height:100%}
+.tl-t::before{content:"";position:absolute;left:89.33%;top:0;bottom:0;width:1px;background:var(--accent-line)}
+.tl-bar{position:absolute;top:6px;height:8px;border-radius:4px}
+.tl-ax{position:relative;height:16px;font-size:10.5px;color:var(--faint)}
+.tl-ax span{position:absolute;transform:translateX(-50%);font-family:'Geist Mono',ui-monospace,monospace}
+.wd{border-left:1px solid var(--line);background:var(--bg-2);display:flex;flex-direction:column;min-height:0;min-width:0}
+.sg{display:inline-flex;padding:2px;border-radius:8px;background:var(--surface-2);gap:2px}
+.sg button{height:24px;padding:0 10px;border-radius:6px;font-size:12px;color:var(--muted)}
+.sg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.2),inset 0 0 0 1px var(--line-2)}
+.step{display:flex;align-items:center;gap:9px;height:30px;padding:0 4px;font-size:12px;position:relative}
+.tile{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--surface-2);color:var(--muted);flex:none;position:relative;z-index:1}
+@container wf (max-width: 1080px){
+  .wbody{grid-template-columns:minmax(0,1fr)}
+  .wd{display:none}
+}
+@container wf (max-width: 880px){
+  .stat.opt,.phase .pd{display:none}
+}
+@container wf (max-width: 640px){
+  .lanes{grid-template-columns:minmax(0,1fr)}
+  .tl,.ttl-sub,.stats{display:none}
+  .wp{padding:10px 12px;gap:4px}
+  .conn{width:6px}
+  .wh{padding-left:14px}
+}
+@container wf (max-height: 680px){
+  .tl{display:none}
+}
+</style>
+</helmet>
+<div class="app {{mods}}" style="width:100%;height:100vh;container:wf / size;display:flex;flex-direction:column;overflow:hidden">
+
+  <header class="wh">
+    <span style="width:34px;height:34px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;justify-content:center;flex:none"><svg class="i i16" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="8" x="3" y="3" rx="2"></rect><path d="M7 11v4a2 2 0 0 0 2 2h4"></path><rect width="8" height="8" x="13" y="13" rx="2"></rect></svg></span>
+    <div class="grow" style="display:flex;flex-direction:column;line-height:1.3">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0"><span class="ell" style="font-size:16px;font-weight:600;letter-spacing:-.01em">Link &amp; due-date audit</span><span class="pill"><span class="dot" style="background:var(--accent);animation:pulse 1.4s ease-in-out infinite"></span>Running</span></div>
+      <span class="ell ttl-sub" style="font-size:12px;color:var(--faint)">Workflow from <a href="#" style="color:var(--muted);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:2px">Vault audit</a> · started 14:31 · 2 agents at a time</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="lbl">Elapsed</span><span class="v">2m 14s</span></div>
+      <div class="stat"><span class="lbl">Agents</span><span class="v">3 / 7</span></div>
+      <div class="stat opt"><span class="lbl">Tokens</span><span class="v">86.2k</span></div>
+      <div class="stat opt"><span class="lbl">Cost</span><span class="v">$0.31</span></div>
+    </div>
+    <button class="btn btn-d" style="box-shadow:inset 0 0 0 1px var(--red-line);height:30px;margin-left:6px"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" style="fill:currentColor;stroke:none"></rect></svg>Stop workflow</button>
+    <button class="ib" aria-label="Open in a tab" title="Open in a tab"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M10 4v4"></path><path d="M2 8h20"></path><path d="M6 4v4"></path></svg></button>
+    <button class="ib" aria-label="Close" title="Close (Esc)"><svg class="i i16" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+  </header>
+
+  <nav class="wp" aria-label="Phases">
+    <div class="phase">
+      <span class="pnum" style="background:var(--green-soft);color:var(--green)"><svg class="i i12" style="stroke-width:2.4" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span>
+      <div class="grow" style="display:flex;flex-direction:column;line-height:1.3"><span style="font-weight:500">Scan</span><span class="ell pd" style="font-size:11.5px;color:var(--faint)">2 of 2 done · 41s</span></div>
+    </div>
+    <span class="conn"></span>
+    <div class="phase on">
+      <span class="pnum" style="background:var(--accent-fill);color:#fff">2</span>
+      <div class="grow" style="display:flex;flex-direction:column;line-height:1.3;gap:4px"><span style="display:flex;align-items:baseline;gap:8px"><span style="font-weight:500">Verify</span><span class="ell pd" style="font-size:11.5px;color:var(--faint)">2 running · 1 failed · 1 queued</span></span>
+        <span class="bar pd" style="height:4px"><span style="width:25%;background:var(--red);border-radius:2px 0 0 2px;margin-right:2px"></span><span style="width:50%;background:linear-gradient(90deg,var(--accent),var(--accent-soft));border-radius:0"></span></span></div>
+    </div>
+    <span class="conn"></span>
+    <div class="phase wait">
+      <span class="pnum" style="box-shadow:inset 0 0 0 1px var(--line-2);color:var(--faint)">3</span>
+      <div class="grow" style="display:flex;flex-direction:column;line-height:1.3"><span style="font-weight:500;color:var(--muted)">Fix</span><span class="ell pd" style="font-size:11.5px;color:var(--faint)">starts after Verify</span></div>
+    </div>
+  </nav>
+
+  <div class="wbody">
+    <div class="wl">
+      <div class="lanes">
+        <section class="lane" aria-label="Scan">
+          <div class="lane-h"><span class="lbl">Scan</span><span class="mono" style="font-size:11px;color:var(--faint)">2/2</span></div>
+          <button class="ac">
+            <span class="r1"><svg class="i" style="color:var(--green)" viewBox="0 0 24 24" aria-label="Done"><path d="M20 6 9 17l-5-5"></path></svg><span class="nm ell grow">Scan Projects/</span><span class="model">Haiku 4.5</span></span>
+            <span class="act ell">31 notes · 112 links · 47 due dates</span>
+            <span class="meta mono">41s · 18.2k tok · 14 tools</span>
+          </button>
+          <button class="ac">
+            <span class="r1"><svg class="i" style="color:var(--green)" viewBox="0 0 24 24" aria-label="Done"><path d="M20 6 9 17l-5-5"></path></svg><span class="nm ell grow">Scan Areas/</span><span class="model">Haiku 4.5</span></span>
+            <span class="act ell">22 notes · 64 links · 19 due dates</span>
+            <span class="meta mono">33s · 12.1k tok · 9 tools</span>
+          </button>
+        </section>
+
+        <section class="lane" aria-label="Verify">
+          <div class="lane-h"><span class="lbl" style="color:var(--accent)">Verify</span><span class="mono" style="font-size:11px;color:var(--faint)">1/4</span><span style="flex:1"></span><span style="font-size:11px;color:var(--faint)">2 at a time</span></div>
+          <button class="ac run sel" aria-current="true">
+            <span class="r1"><svg class="i spin" style="color:var(--accent)" viewBox="0 0 24 24" aria-label="Running"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg><span class="nm ell grow">Website relaunch</span><span class="model">Sonnet 5.5</span></span>
+            <span class="act mono ell">Read Meetings/2026-10-02 Planning sync.md</span>
+            <span class="meta"><span class="mono grow">1m 33s · 9.4k tok · 6 tools</span><span class="stp" role="button" aria-label="Stop this agent" title="Stop this agent"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" style="fill:currentColor;stroke:none"></rect></svg></span></span>
+          </button>
+          <button class="ac run">
+            <span class="r1"><svg class="i spin" style="color:var(--accent)" viewBox="0 0 24 24" aria-label="Running"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg><span class="nm ell grow">Hiring plan</span><span class="model">Sonnet 5.5</span></span>
+            <span class="act mono ell">Grep "due::" in Projects/Hiring/</span>
+            <span class="meta"><span class="mono grow">1m 29s · 7.9k tok · 5 tools</span><span class="stp" role="button" aria-label="Stop this agent" title="Stop this agent"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" style="fill:currentColor;stroke:none"></rect></svg></span></span>
+          </button>
+          <button class="ac err">
+            <span class="r1"><svg class="i" style="color:var(--red)" viewBox="0 0 24 24" aria-label="Failed"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg><span class="nm ell grow">Budget 2027</span><span class="model">Sonnet 5.5</span></span>
+            <span class="act ell" style="color:var(--red)">Budget 2027.md not found</span>
+            <span class="meta mono">4s · 1.2k tok · 1 tool</span>
+          </button>
+          <button class="ac q">
+            <span class="r1"><svg class="i" style="color:var(--faint)" viewBox="0 0 24 24" aria-label="Queued"><circle cx="12" cy="12" r="9" stroke-dasharray="3.5 3.5"></circle></svg><span class="nm ell grow" style="color:var(--muted)">Newsletter plan</span></span>
+            <span class="act">Queued · next free slot</span>
+          </button>
+        </section>
+
+        <section class="lane" aria-label="Fix">
+          <div class="lane-h"><span class="lbl">Fix</span><span class="mono" style="font-size:11px;color:var(--faint)">0/1</span></div>
+          <button class="ac q">
+            <span class="r1"><svg class="i" style="color:var(--faint)" viewBox="0 0 24 24" aria-label="Waiting"><circle cx="12" cy="12" r="9" stroke-dasharray="3.5 3.5"></circle></svg><span class="nm ell grow" style="color:var(--muted)">Fix links &amp; dates</span><span class="model">Opus 5.5</span></span>
+            <span class="act">Waits for Verify · gets its findings</span>
+          </button>
+        </section>
+      </div>
+
+      <section class="tl" aria-label="Timeline">
+        <div class="tl-r" style="height:22px"><span class="lbl">Timeline</span><div class="tl-ax"><span style="left:0;transform:none">0s</span><span style="left:20%">30s</span><span style="left:40%">1m</span><span style="left:60%">1m 30s</span><span style="left:80%">2m</span><span style="left:89.33%;color:var(--accent);top:-1px">now</span></div></div>
+        <div class="tl-r"><span class="ell">Scan Projects/</span><div class="tl-t"><span class="tl-bar" style="left:0;width:27.33%;background:var(--green);opacity:.75"></span></div></div>
+        <div class="tl-r"><span class="ell">Scan Areas/</span><div class="tl-t"><span class="tl-bar" style="left:0;width:22%;background:var(--green);opacity:.75"></span></div></div>
+        <div class="tl-r" style="color:var(--text)"><span class="ell">Website relaunch</span><div class="tl-t"><span class="tl-bar" style="left:27.33%;width:62%;background:linear-gradient(90deg,var(--accent-fill),var(--accent));box-shadow:0 0 0 2px var(--accent-soft)"></span></div></div>
+        <div class="tl-r"><span class="ell">Hiring plan</span><div class="tl-t"><span class="tl-bar" style="left:30%;width:59.33%;background:var(--accent-fill);opacity:.8"></span></div></div>
+        <div class="tl-r"><span class="ell">Budget 2027</span><div class="tl-t"><span class="tl-bar" style="left:27.33%;width:2.67%;background:var(--red)"></span></div></div>
+        <div class="tl-r"><span class="ell" style="color:var(--faint)">Newsletter plan</span><div class="tl-t"><span class="tl-bar" style="left:90%;width:8%;box-shadow:inset 0 0 0 1px var(--line-2);background:repeating-linear-gradient(135deg,var(--surface-3) 0 3px,transparent 3px 6px)"></span></div></div>
+        <div class="tl-r"><span class="ell" style="color:var(--faint)">Fix links &amp; dates</span><div class="tl-t"></div></div>
+      </section>
+    </div>
+
+    <aside class="wd" aria-label="Selected agent">
+      <div style="padding:14px 12px 12px 16px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <svg class="i spin" style="color:var(--accent)" viewBox="0 0 24 24" aria-label="Running"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+          <span class="grow ell" style="font-weight:600;font-size:14px">Website relaunch</span>
+          <button class="btn btn-d" style="height:26px;padding:0 8px;background:var(--red-soft)"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" style="fill:currentColor;stroke:none"></rect></svg>Stop agent</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--faint)"><span class="model">Sonnet 5.5</span><span class="mono">1m 33s · 9.4k tokens · 6 tools</span></div>
+        <div class="sg" role="tablist"><button class="on" role="tab" aria-selected="true">Activity</button><button role="tab">Prompt</button><button role="tab">Output</button></div>
+      </div>
+      <div style="flex:1;min-height:0;overflow:hidden;padding:8px 12px 12px 12px;display:flex;flex-direction:column;gap:10px">
+        <div style="position:relative">
+          <span style="position:absolute;left:15px;top:15px;bottom:15px;width:1px;background:var(--line-2)"></span>
+          <div class="step"><span class="tile"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path></svg></span><span style="font-weight:500">Read</span><span class="mono ell grow" style="color:var(--faint)">Projects/Website relaunch.md</span></div>
+          <div class="step"><span class="tile"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></span><span style="font-weight:500">Search</span><span class="mono ell grow" style="color:var(--faint)">[[Website relaunch</span><span style="font-size:11px;color:var(--faint)">14 notes</span></div>
+          <div class="step"><span class="tile"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path></svg></span><span style="font-weight:500">Read</span><span class="mono ell grow" style="color:var(--faint)">Areas/Marketing/Launch checklist.md</span></div>
+          <div class="step"><span class="tile"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></span><span style="font-weight:500">Grep</span><span class="mono ell grow" style="color:var(--faint)">due:: in Projects/</span><span style="font-size:11px;color:var(--faint)">6 matches</span></div>
+          <div class="step"><span class="tile"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></span><span style="font-weight:500">Resolve</span><span class="mono ell grow" style="color:var(--faint)">11 links</span><span style="font-size:11px;color:var(--red)">3 broken</span></div>
+          <div class="step"><span class="tile" style="background:var(--accent-soft);color:var(--accent)"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path></svg></span><span style="font-weight:500">Read</span><span class="mono ell grow" style="color:var(--muted)">Meetings/2026-10-02 Planning sync.md</span><span style="display:inline-flex;gap:3px"><span class="dot" style="width:4px;height:4px;background:var(--accent);animation:pulse 1.2s ease-in-out infinite"></span><span class="dot" style="width:4px;height:4px;background:var(--accent);animation:pulse 1.2s ease-in-out .2s infinite"></span><span class="dot" style="width:4px;height:4px;background:var(--accent);animation:pulse 1.2s ease-in-out .4s infinite"></span></span></div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.55">
+          <span class="lbl" style="display:block;margin-bottom:4px">Latest</span>
+          3 of 11 links are broken: <span style="color:var(--accent)">[[Launch FAQ]]</span> was renamed to <span style="color:var(--accent)">[[Launch FAQ 2026]]</span>, and two point at deleted notes. Checking the planning sync for the new launch date<span style="display:inline-block;width:2px;height:13px;background:var(--accent);margin-left:2px;vertical-align:-2px;animation:blink 1s step-end infinite"></span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;padding:8px 8px 8px 12px;border-top:1px solid var(--line)">
+        <button class="btn btn-g" style="padding:0 6px"><svg class="i i12" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>Full transcript</button>
+        <span style="flex:1"></span>
+        <span style="font-size:11.5px;color:var(--faint);margin-right:4px">3 of 7</span>
+        <button class="ib" aria-label="Previous agent"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
+        <button class="ib" aria-label="Next agent"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></button>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"accent":{"editor":"enum","options":["violet","blue","teal"],"default":"violet"},"$preview":{"width":1200,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'dark';
+    const accent = this.props.accent ?? 'violet';
+    return { mods: 't-' + theme + ' acc-' + accent };
+  }
+}
+</script>
+</body>
+</html>

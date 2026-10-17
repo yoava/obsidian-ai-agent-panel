@@ -2,7 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default defineConfig([
-	globalIgnores(["main.js", "src/main.js", "tests/**", "graphify-out/**", "node_modules/**"]),
+	globalIgnores(["main.js", "src/main.js", "tests/**", "graphify-out/**", "node_modules/**", "docs/records/**", "docs/work/research/**", ".claude/worktrees/**"]),
 	...obsidianmd.configs.recommended,
 	{
 		languageOptions: {

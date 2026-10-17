@@ -1,0 +1,843 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Agents.dc.html": {
+      "h": 960,
+      "title": "Agents running · stop any of them",
+      "w": 440,
+      "x": 0,
+      "y": 5680
+    },
+    "Approve.dc.html": {
+      "h": 960,
+      "title": "Approve an edit",
+      "w": 440,
+      "x": 520,
+      "y": 0
+    },
+    "ClearStates.dc.html": {
+      "h": 1040,
+      "title": "/clear · stays in the conversation",
+      "w": 440,
+      "x": 2320,
+      "y": 5680
+    },
+    "Commands.dc.html": {
+      "h": 960,
+      "title": "/context, /usage & the slash menu",
+      "w": 440,
+      "x": 2080,
+      "y": 0
+    },
+    "ContextCache.dc.html": {
+      "h": 960,
+      "title": "Context & cache · click",
+      "w": 440,
+      "x": 0,
+      "y": 7060
+    },
+    "ContextEvents.dc.html": {
+      "h": 960,
+      "title": "Context cleared & compacted",
+      "w": 440,
+      "x": 1800,
+      "y": 5680
+    },
+    "Empty.dc.html": {
+      "h": 960,
+      "title": "New conversation · @-mention",
+      "w": 440,
+      "x": 1560,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 960,
+      "title": "Conversation · working",
+      "w": 440,
+      "x": 0,
+      "y": 0
+    },
+    "Medium.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Roomy · 560–819 px",
+      "w": 680,
+      "x": 900,
+      "y": 1380
+    },
+    "Narrow.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Compact · < 360 px",
+      "w": 300,
+      "x": 0,
+      "y": 1380
+    },
+    "PopAgents.dc.html": {
+      "h": 640,
+      "title": "Running agents · click the run bar",
+      "w": 440,
+      "x": 1560,
+      "y": 7060
+    },
+    "PopModel.dc.html": {
+      "h": 600,
+      "title": "Model & effort · click",
+      "w": 440,
+      "x": 1040,
+      "y": 7060
+    },
+    "PopUsage.dc.html": {
+      "h": 600,
+      "title": "Plan usage · click",
+      "w": 440,
+      "x": 520,
+      "y": 7060
+    },
+    "Question.dc.html": {
+      "h": 960,
+      "title": "Shell output & question",
+      "w": 440,
+      "x": 1040,
+      "y": 0
+    },
+    "Responsive.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Wide · ≥ 820 px, conversation list",
+      "w": 1040,
+      "x": 1660,
+      "y": 1380
+    },
+    "Settings.dc.html": {
+      "h": 900,
+      "title": "Settings · theme & prompt style",
+      "w": 680,
+      "x": 2600,
+      "y": 0
+    },
+    "Short.dc.html": {
+      "h": 600,
+      "is_interactive": true,
+      "title": "Default width · short height",
+      "w": 440,
+      "x": 380,
+      "y": 1380
+    },
+    "SlashConfig.dc.html": {
+      "h": 1360,
+      "title": "/memory · /permissions · /hooks",
+      "w": 440,
+      "x": 1040,
+      "y": 4020
+    },
+    "SlashHelp.dc.html": {
+      "h": 1360,
+      "title": "/help · /clear · loading & errors",
+      "w": 440,
+      "x": 2080,
+      "y": 4020
+    },
+    "SlashMcp.dc.html": {
+      "h": 1360,
+      "title": "/mcp · /status",
+      "w": 440,
+      "x": 520,
+      "y": 4020
+    },
+    "SlashTools.dc.html": {
+      "h": 1360,
+      "title": "/skills · /chrome · /sandbox",
+      "w": 440,
+      "x": 1560,
+      "y": 4020
+    },
+    "SlashUsage.dc.html": {
+      "h": 1360,
+      "title": "/usage · /usage-credits · /cost",
+      "w": 440,
+      "x": 0,
+      "y": 4020
+    },
+    "TabOption1.dc.html": {
+      "h": 508,
+      "page": "tabs",
+      "title": "1 · Folder",
+      "w": 1260,
+      "x": 0,
+      "y": 0
+    },
+    "TabOption2.dc.html": {
+      "h": 508,
+      "page": "tabs",
+      "title": "2 · Folder + accent cap",
+      "w": 1260,
+      "x": 1340,
+      "y": 0
+    },
+    "TabOption3.dc.html": {
+      "h": 508,
+      "page": "tabs",
+      "title": "3 · Browser",
+      "w": 1260,
+      "x": 0,
+      "y": 628
+    },
+    "TabOption4.dc.html": {
+      "h": 508,
+      "page": "tabs",
+      "title": "4 · Outline",
+      "w": 1260,
+      "x": 1340,
+      "y": 628
+    },
+    "TabOption5.dc.html": {
+      "h": 508,
+      "page": "tabs",
+      "title": "5 · Solid accent",
+      "w": 1260,
+      "x": 0,
+      "y": 1256
+    },
+    "TabOption6.dc.html": {
+      "h": 508,
+      "page": "tabs",
+      "title": "6 · Index cards",
+      "w": 1260,
+      "x": 1340,
+      "y": 1256
+    },
+    "TabOption7.dc.html": {
+      "h": 508,
+      "page": "tabs",
+      "title": "7 · Folder + outline (1 + 4)",
+      "w": 1260,
+      "x": 0,
+      "y": 1884
+    },
+    "TabOption8.dc.html": {
+      "h": 508,
+      "page": "tabs",
+      "title": "8 · Browser + outline (3 + 4)",
+      "w": 1260,
+      "x": 1340,
+      "y": 1884
+    },
+    "TabOption9.dc.html": {
+      "h": 508,
+      "page": "tabs",
+      "title": "9 · Index cards + outline (6 + 4)",
+      "w": 1260,
+      "x": 0,
+      "y": 2512
+    },
+    "Tooltips.dc.html": {
+      "h": 1200,
+      "title": "Hover tooltips & cards",
+      "w": 440,
+      "x": 2080,
+      "y": 7060
+    },
+    "WorkflowView.dc.html": {
+      "h": 800,
+      "is_interactive": true,
+      "title": "Workflow view · popup, resizable",
+      "w": 1200,
+      "x": 520,
+      "y": 5680
+    },
+    "LightMain.dc.html": {
+      "h": 960,
+      "title": "Conversation · working",
+      "w": 440,
+      "x": 0,
+      "y": 0,
+      "page": "light"
+    },
+    "LightApprove.dc.html": {
+      "h": 960,
+      "title": "Approve an edit",
+      "w": 440,
+      "x": 520,
+      "y": 0,
+      "page": "light"
+    },
+    "LightQuestion.dc.html": {
+      "h": 960,
+      "title": "Shell output & question",
+      "w": 440,
+      "x": 1040,
+      "y": 0,
+      "page": "light"
+    },
+    "LightEmpty.dc.html": {
+      "h": 960,
+      "title": "New conversation · @-mention",
+      "w": 440,
+      "x": 1560,
+      "y": 0,
+      "page": "light"
+    },
+    "LightCommands.dc.html": {
+      "h": 960,
+      "title": "/context, /usage & the slash menu",
+      "w": 440,
+      "x": 2080,
+      "y": 0,
+      "page": "light"
+    },
+    "LightSettings.dc.html": {
+      "h": 900,
+      "title": "Settings · theme & prompt style",
+      "w": 680,
+      "x": 2600,
+      "y": 0,
+      "page": "light"
+    },
+    "LightNarrow.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Compact · < 360 px",
+      "w": 300,
+      "x": 0,
+      "y": 1380,
+      "page": "light"
+    },
+    "LightShort.dc.html": {
+      "h": 600,
+      "is_interactive": true,
+      "title": "Default width · short height",
+      "w": 440,
+      "x": 380,
+      "y": 1380,
+      "page": "light"
+    },
+    "LightMedium.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Roomy · 560–819 px",
+      "w": 680,
+      "x": 900,
+      "y": 1380,
+      "page": "light"
+    },
+    "LightResponsive.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Wide · ≥ 820 px, conversation list",
+      "w": 1040,
+      "x": 1660,
+      "y": 1380,
+      "page": "light"
+    },
+    "LightSlashUsage.dc.html": {
+      "h": 1360,
+      "title": "/usage · /usage-credits · /cost",
+      "w": 440,
+      "x": 0,
+      "y": 4020,
+      "page": "light"
+    },
+    "LightSlashMcp.dc.html": {
+      "h": 1360,
+      "title": "/mcp · /status",
+      "w": 440,
+      "x": 520,
+      "y": 4020,
+      "page": "light"
+    },
+    "LightSlashConfig.dc.html": {
+      "h": 1360,
+      "title": "/memory · /permissions · /hooks",
+      "w": 440,
+      "x": 1040,
+      "y": 4020,
+      "page": "light"
+    },
+    "LightSlashTools.dc.html": {
+      "h": 1360,
+      "title": "/skills · /chrome · /sandbox",
+      "w": 440,
+      "x": 1560,
+      "y": 4020,
+      "page": "light"
+    },
+    "LightSlashHelp.dc.html": {
+      "h": 1360,
+      "title": "/help · /clear · loading & errors",
+      "w": 440,
+      "x": 2080,
+      "y": 4020,
+      "page": "light"
+    },
+    "LightAgents.dc.html": {
+      "h": 960,
+      "title": "Agents running · stop any of them",
+      "w": 440,
+      "x": 0,
+      "y": 5680,
+      "page": "light"
+    },
+    "LightWorkflowView.dc.html": {
+      "h": 800,
+      "is_interactive": true,
+      "title": "Workflow view · popup, resizable",
+      "w": 1200,
+      "x": 520,
+      "y": 5680,
+      "page": "light"
+    },
+    "LightContextEvents.dc.html": {
+      "h": 960,
+      "title": "Context cleared & compacted",
+      "w": 440,
+      "x": 1800,
+      "y": 5680,
+      "page": "light"
+    },
+    "LightClearStates.dc.html": {
+      "h": 1040,
+      "title": "/clear · stays in the conversation",
+      "w": 440,
+      "x": 2320,
+      "y": 5680,
+      "page": "light"
+    },
+    "LightContextCache.dc.html": {
+      "h": 960,
+      "title": "Context & cache · click",
+      "w": 440,
+      "x": 0,
+      "y": 7060,
+      "page": "light"
+    },
+    "LightPopUsage.dc.html": {
+      "h": 600,
+      "title": "Plan usage · click",
+      "w": 440,
+      "x": 520,
+      "y": 7060,
+      "page": "light"
+    },
+    "LightPopModel.dc.html": {
+      "h": 600,
+      "title": "Model & effort · click",
+      "w": 440,
+      "x": 1040,
+      "y": 7060,
+      "page": "light"
+    },
+    "LightPopAgents.dc.html": {
+      "h": 640,
+      "title": "Running agents · click the run bar",
+      "w": 440,
+      "x": 1560,
+      "y": 7060,
+      "page": "light"
+    },
+    "LightTooltips.dc.html": {
+      "h": 1200,
+      "title": "Hover tooltips & cards",
+      "w": 440,
+      "x": 2080,
+      "y": 7060,
+      "page": "light"
+    },
+    "PromptOption0.dc.html": {
+      "h": 508,
+      "page": "prompts",
+      "title": "0 · Current pop-out",
+      "w": 1700,
+      "x": 0,
+      "y": 0
+    },
+    "PromptOption1.dc.html": {
+      "h": 508,
+      "page": "prompts",
+      "title": "1 · Softer",
+      "w": 1700,
+      "x": 1780,
+      "y": 0
+    },
+    "PromptOption2.dc.html": {
+      "h": 508,
+      "page": "prompts",
+      "title": "2 · Outline",
+      "w": 1700,
+      "x": 0,
+      "y": 628
+    },
+    "PromptOption3.dc.html": {
+      "h": 508,
+      "page": "prompts",
+      "title": "3 · Neutral card",
+      "w": 1700,
+      "x": 1780,
+      "y": 628
+    },
+    "PromptOption4.dc.html": {
+      "h": 508,
+      "page": "prompts",
+      "title": "4 · Rule, no box",
+      "w": 1700,
+      "x": 0,
+      "y": 1256
+    },
+    "PromptOptionB.dc.html": {
+      "h": 508,
+      "page": "prompts",
+      "title": "B · Bubble, for comparison",
+      "w": 1700,
+      "x": 0,
+      "y": 2512
+    },
+    "PromptOption5.dc.html": {
+      "h": 508,
+      "page": "prompts",
+      "title": "5 · Bubble colors",
+      "w": 1700,
+      "x": 1780,
+      "y": 1256
+    },
+    "PromptOption6.dc.html": {
+      "h": 508,
+      "page": "prompts",
+      "title": "6 · Softer, both styles share it",
+      "w": 1700,
+      "x": 0,
+      "y": 1884
+    },
+    "PromptOption7.dc.html": {
+      "h": 508,
+      "page": "prompts",
+      "title": "7 · Outline, both styles share it",
+      "w": 1700,
+      "x": 1780,
+      "y": 1884
+    },
+    "PromptStyleQuiet.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Quiet · numbered, outlined",
+      "w": 440,
+      "x": 0,
+      "y": 2700
+    },
+    "PromptStyleBubble.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Bubble · right-aligned",
+      "w": 440,
+      "x": 520,
+      "y": 2700
+    },
+    "PromptStylePopout.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pop-out · numbered, tinted (default)",
+      "w": 440,
+      "x": 1040,
+      "y": 2700
+    },
+    "LightPromptStyleQuiet.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Quiet · numbered, outlined",
+      "w": 440,
+      "x": 0,
+      "y": 2700,
+      "page": "light"
+    },
+    "LightPromptStyleBubble.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Bubble · right-aligned",
+      "w": 440,
+      "x": 520,
+      "y": 2700,
+      "page": "light"
+    },
+    "LightPromptStylePopout.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pop-out · numbered, tinted (default)",
+      "w": 440,
+      "x": 1040,
+      "y": 2700,
+      "page": "light"
+    },
+    "TabThumbA.dc.html": {
+      "h": 372,
+      "page": "tabthumbs",
+      "title": "A · Miniature with real text",
+      "w": 1040,
+      "x": 0,
+      "y": 0
+    },
+    "TabThumbB.dc.html": {
+      "h": 372,
+      "page": "tabthumbs",
+      "title": "B · Tab area in the accent",
+      "w": 1040,
+      "x": 1120,
+      "y": 0
+    },
+    "TabThumbC.dc.html": {
+      "h": 372,
+      "page": "tabthumbs",
+      "title": "C · The panel in the Obsidian window",
+      "w": 1040,
+      "x": 0,
+      "y": 492
+    },
+    "TabThumbD.dc.html": {
+      "h": 372,
+      "page": "tabthumbs",
+      "title": "D · Automatic shown resizing",
+      "w": 1040,
+      "x": 1120,
+      "y": 492
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-07T12:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "row1": {
+      "kind": "title1",
+      "maxW": 2520,
+      "text": "Sidebar panel · 440 px",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "row2": {
+      "kind": "title1",
+      "maxW": 2700,
+      "text": "Responsive · one fluid panel at four sizes",
+      "w": 240,
+      "x": 0,
+      "y": 1080
+    },
+    "row3": {
+      "kind": "title1",
+      "maxW": 2520,
+      "text": "Slash commands answered by the panel",
+      "w": 240,
+      "x": 0,
+      "y": 3720
+    },
+    "row4": {
+      "kind": "title1",
+      "maxW": 2760,
+      "text": "Agents & context events",
+      "w": 240,
+      "x": 0,
+      "y": 5380
+    },
+    "row5": {
+      "kind": "title1",
+      "maxW": 2520,
+      "text": "Popovers & tooltips",
+      "w": 240,
+      "x": 0,
+      "y": 6760
+    },
+    "tabs1": {
+      "kind": "title1",
+      "maxW": 2600,
+      "page": "tabs",
+      "text": "Tab options · chosen 3 (Browser) · not for implementation",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "light-row1": {
+      "kind": "title1",
+      "maxW": 2520,
+      "text": "Sidebar panel · 440 px",
+      "w": 240,
+      "x": 0,
+      "y": -300,
+      "page": "light"
+    },
+    "light-row2": {
+      "kind": "title1",
+      "maxW": 2700,
+      "text": "Responsive · one fluid panel at four sizes",
+      "w": 240,
+      "x": 0,
+      "y": 1080,
+      "page": "light"
+    },
+    "light-row3": {
+      "kind": "title1",
+      "maxW": 2520,
+      "text": "Slash commands answered by the panel",
+      "w": 240,
+      "x": 0,
+      "y": 3720,
+      "page": "light"
+    },
+    "light-row4": {
+      "kind": "title1",
+      "maxW": 2760,
+      "text": "Agents & context events",
+      "w": 240,
+      "x": 0,
+      "y": 5380,
+      "page": "light"
+    },
+    "light-row5": {
+      "kind": "title1",
+      "maxW": 2520,
+      "text": "Popovers & tooltips",
+      "w": 240,
+      "x": 0,
+      "y": 6760,
+      "page": "light"
+    },
+    "prompts1": {
+      "kind": "title1",
+      "maxW": 3480,
+      "page": "prompts",
+      "text": "Prompt options · chosen 7 (Quiet), B (Bubble), 5 (Pop-out) · not for implementation",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "rowp": {
+      "kind": "title1",
+      "maxW": 1480,
+      "text": "Prompt styles · Settings › Prompt style",
+      "w": 240,
+      "x": 0,
+      "y": 2400
+    },
+    "light-rowp": {
+      "kind": "title1",
+      "maxW": 1480,
+      "text": "Prompt styles · Settings › Prompt style",
+      "w": 240,
+      "x": 0,
+      "y": 2400,
+      "page": "light"
+    },
+    "tabthumbs1": {
+      "kind": "title1",
+      "maxW": 2160,
+      "page": "tabthumbs",
+      "text": "Conversation tabs thumbnails · chosen B · build B only",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Approve.dc.html",
+    "Question.dc.html",
+    "Empty.dc.html",
+    "Commands.dc.html",
+    "Settings.dc.html",
+    "Narrow.dc.html",
+    "Short.dc.html",
+    "Medium.dc.html",
+    "Responsive.dc.html",
+    "PromptStyleQuiet.dc.html",
+    "PromptStyleBubble.dc.html",
+    "PromptStylePopout.dc.html",
+    "SlashUsage.dc.html",
+    "SlashMcp.dc.html",
+    "SlashConfig.dc.html",
+    "SlashTools.dc.html",
+    "SlashHelp.dc.html",
+    "Agents.dc.html",
+    "WorkflowView.dc.html",
+    "ContextEvents.dc.html",
+    "ClearStates.dc.html",
+    "ContextCache.dc.html",
+    "PopUsage.dc.html",
+    "PopModel.dc.html",
+    "PopAgents.dc.html",
+    "Tooltips.dc.html",
+    "TabOption1.dc.html",
+    "TabOption2.dc.html",
+    "TabOption3.dc.html",
+    "TabOption4.dc.html",
+    "TabOption5.dc.html",
+    "TabOption6.dc.html",
+    "TabOption7.dc.html",
+    "TabOption8.dc.html",
+    "TabOption9.dc.html",
+    "LightMain.dc.html",
+    "LightApprove.dc.html",
+    "LightQuestion.dc.html",
+    "LightEmpty.dc.html",
+    "LightCommands.dc.html",
+    "LightSettings.dc.html",
+    "LightNarrow.dc.html",
+    "LightShort.dc.html",
+    "LightMedium.dc.html",
+    "LightResponsive.dc.html",
+    "LightPromptStyleQuiet.dc.html",
+    "LightPromptStyleBubble.dc.html",
+    "LightPromptStylePopout.dc.html",
+    "LightSlashUsage.dc.html",
+    "LightSlashMcp.dc.html",
+    "LightSlashConfig.dc.html",
+    "LightSlashTools.dc.html",
+    "LightSlashHelp.dc.html",
+    "LightAgents.dc.html",
+    "LightWorkflowView.dc.html",
+    "LightContextEvents.dc.html",
+    "LightClearStates.dc.html",
+    "LightContextCache.dc.html",
+    "LightPopUsage.dc.html",
+    "LightPopModel.dc.html",
+    "LightPopAgents.dc.html",
+    "LightTooltips.dc.html",
+    "PromptOption0.dc.html",
+    "PromptOption1.dc.html",
+    "PromptOption2.dc.html",
+    "PromptOption3.dc.html",
+    "PromptOption4.dc.html",
+    "PromptOptionB.dc.html",
+    "PromptOption5.dc.html",
+    "PromptOption6.dc.html",
+    "PromptOption7.dc.html",
+    "TabThumbA.dc.html",
+    "TabThumbB.dc.html",
+    "TabThumbC.dc.html",
+    "TabThumbD.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "panel",
+      "name": "Redesign dark"
+    },
+    {
+      "id": "light",
+      "name": "Redesign light"
+    },
+    {
+      "id": "tabs",
+      "name": "Tab options · not for implementation"
+    },
+    {
+      "id": "prompts",
+      "name": "Prompt options · not for implementation"
+    },
+    {
+      "id": "tabthumbs",
+      "name": "Tab thumbnails · chosen B"
+    }
+  ],
+  "title": "AI Agent Panel Redesign"
+}

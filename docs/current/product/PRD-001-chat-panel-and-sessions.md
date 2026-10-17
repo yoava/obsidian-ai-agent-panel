@@ -1,0 +1,549 @@
+# PRD-001 — Chat panel and sessions
+
+**Status:** accepted (2026-10-11)
+
+## Problem
+
+Obsidian users who work with Claude Code either run it in a terminal beside the vault, where consent prompts, diffs and past sessions are plain text cut off from the notes, or install one of 30+ agent plugins, most of which treat the vault as a folder of text files (docs/current/COMPARISON.md). AI Agent Panel runs the user's own installed, logged-in Claude Code CLI in an Obsidian sidebar with the vault as its working directory, while the plugin itself holds no credentials and makes no network requests (README).
+
+Scope: the panel, its layout and theme, its CLI sessions, conversations and tabs, the composer and its context, message rendering, subagents, panel commands, models and effort, settings, platforms and errors. Elsewhere: PRD-002 permissions, diffs, restore and branch, and the `!` shell escape; PRD-003 history and export; PRD-004 vault tools; PRD-005 plan usage, cost and the context segment.
+
+## Users and jobs
+
+Obsidian desktop users (1.8.7+) on Windows (native, or with Claude Code in WSL), macOS or Linux, with Claude Code 2.x installed and logged in under their own subscription or API key. Jobs:
+
+- Ask about, draft, refactor and link notes without leaving Obsidian, with the note, selection or files at hand as context.
+- Keep several conversations open and return to earlier ones.
+- See what Claude and its subagents are doing during a turn, and steer or stop it.
+- Choose the model, effort and Claude Code installation per conversation.
+- Inspect Claude Code's state (context window, MCP servers, memory, hooks, permission rules, skills) without spending tokens.
+
+## Requirements
+
+- **PRD-001.R1** — Open the panel.
+  - WHEN the user clicks the ribbon icon or runs "Open chat" or "Focus prompt box", the AI Agent Panel shall show its view in the right sidebar and focus the composer.
+  - IF the view is already open, THEN the AI Agent Panel shall reveal that view instead of opening a second one.
+  - IF "Open chat" cannot create a view in the right sidebar, THEN the AI Agent Panel shall show a Notice that the panel could not open.
+  - WHEN the user runs "New conversation", "Previous conversations", "Add selection to chat" or a file explorer's "Add to agent chat" while the view is closed, the AI Agent Panel shall open the view before acting.
+  - WHEN the user runs "Stop Claude's turn", the AI Agent Panel shall stop the active tab's turn as Stop does.
+  - WHEN the user runs "Next conversation tab" or "Previous conversation tab", the AI Agent Panel shall select the tab after or before the active one in strip order, wrapping at the ends.
+  - WHILE the view is closed or its active tab runs no turn, the AI Agent Panel shall leave "Stop Claude's turn" out of the command palette.
+  - WHILE the view is closed or holds fewer than two tabs, the AI Agent Panel shall leave "Next conversation tab" and "Previous conversation tab" out of the command palette.
+  - WHERE several views are open, the AI Agent Panel shall run a command in the focused view, else in the first one.
+  - The AI Agent Panel shall give its commands no default hotkeys.
+- **PRD-001.R2** — Find the Claude Code CLI.
+  - WHEN a conversation needs a CLI and its profile has neither a CLI path nor, on Windows, "Run via WSL" turned on, the AI Agent Panel shall search the platform's standard install locations, then `which` or `where`, and on Windows also the default WSL distribution.
+  - WHERE the platform is Windows and a profile has "Run via WSL" on and no CLI path, the AI Agent Panel shall run `claude` from the WSL distribution's PATH without searching.
+  - WHEN a Windows `where` lookup returns several matches, the AI Agent Panel shall prefer the native `claude.exe` over npm's `claude.cmd` shim and skip npm's extensionless shell shim.
+  - WHEN auto-detection finds the CLI on the other side of the Windows/WSL boundary from the profile's "Run via WSL" setting, the AI Agent Panel shall change and save that setting to match.
+  - WHEN the user presses "Detect" on a profile, the AI Agent Panel shall fill in the found path and WSL setting and show `Found Claude Code: <path>` or `Found Claude Code in WSL: <path>`.
+  - IF "Detect" finds no CLI, THEN the AI Agent Panel shall show `Claude Code CLI not found. Install it from https://code.claude.com` and leave the profile unchanged.
+  - WHEN auto-detection finds a profile's CLI, the AI Agent Panel shall reuse that location for the profile until the plugin reloads.
+  - IF auto-detection finds no CLI, THEN the AI Agent Panel shall search again the next time that profile needs one.
+- **PRD-001.R3** — CLI profiles.
+  - The AI Agent Panel shall keep at least one named CLI profile, each holding a CLI path, "Run via WSL", "Claude in Chrome", "Sandbox" and additional arguments, with exactly one marked as default.
+  - WHEN the user turns on a profile's "Use for new conversations", the AI Agent Panel shall make that profile the default.
+  - WHILE a profile is the default, the AI Agent Panel shall show its "Use for new conversations" on and disabled.
+  - WHILE only one profile exists, the AI Agent Panel shall hide its "Profile <name>" heading, its name, its "Use for new conversations", its "Remove" and the status line's profile segment.
+  - WHEN the user removes the default profile, the AI Agent Panel shall make the first remaining profile the default.
+  - The AI Agent Panel shall start each new conversation on the default profile.
+  - WHEN the user picks a profile from the profile segment of a conversation whose CLI has not started, the AI Agent Panel shall start that conversation's CLI with the picked profile.
+  - WHEN the user clicks the profile segment, the AI Agent Panel shall open the profile list as a popover with the current profile checked.
+  - IF the user picks a profile in a conversation whose CLI only a panel command started, THEN the AI Agent Panel shall stop that CLI so the conversation's next start uses the picked profile.
+  - IF the user picks a profile in a conversation that already has a Claude Code session, running or ended, on a profile this device has, THEN the AI Agent Panel shall keep the conversation, its profile segment, its CLI restarts and its `!` commands on the session's profile and show "This conversation stays on <profile>; start a new conversation to use another."
+  - IF the user picks a profile in a reopened conversation whose stored session's CLI profile does not exist on this device, before its CLI reports a session, THEN the AI Agent Panel shall resume that session with the picked profile.
+  - WHEN the user adds a CLI profile, the AI Agent Panel shall name it `Profile <N>`, N being the number of profiles including the new one.
+  - WHEN the user adds a second profile while the first is still named "Default" and runs via WSL, the AI Agent Panel shall rename the first "WSL".
+- **PRD-001.R4** — Per-profile launch options.
+  - WHERE a profile sets "Claude in Chrome" or "Sandbox" to On or Off, the AI Agent Panel shall launch that profile's CLI with the option forced to that value.
+  - WHERE a profile leaves "Claude in Chrome" or "Sandbox" at "Claude Code default", the AI Agent Panel shall pass nothing for it, leaving the choice to Claude Code's own settings.
+  - WHERE the profile's CLI runs on native Windows, the AI Agent Panel shall hide the sandbox option and ignore its value.
+  - WHERE a profile has additional arguments, the AI Agent Panel shall split them on whitespace with single or double quotes grouping, keep backslashes literal, and append them after the panel's own flags with no `~` or `$VAR` expansion.
+  - IF an additional argument names a flag the panel sets or forbids itself (for example `--model`, `--resume`, `--permission-mode`, `--print` or a stream-JSON flag), THEN the AI Agent Panel shall refuse it with `<flag> is set by the panel itself.`
+  - IF an additional argument is `--chrome` or `--no-chrome`, THEN the AI Agent Panel shall refuse it with `Use the profile's "Claude in Chrome" setting instead of <flag>.`
+  - IF an additional argument is `--settings` while the profile's sandbox option already passes one, THEN the AI Agent Panel shall refuse it.
+  - IF the additional arguments contain an unterminated quote, THEN the AI Agent Panel shall refuse them with `Unterminated <quote> quote in additional arguments.`
+  - IF a conversation starts on a profile whose arguments are refused or unparseable, THEN the AI Agent Panel shall start no process and show the reason in the messages with an instruction to fix that named profile in the plugin settings.
+  - WHEN the settings tab closes after a profile's launch options changed, the AI Agent Panel shall restart each open conversation's CLI on that profile after its current turn, resuming the same Claude Code session.
+  - IF the settings tab closes after a profile's launch options changed and that profile's CLI location changed or its new options cannot launch, THEN the AI Agent Panel shall keep the current process of each open conversation on that profile.
+  - WHILE a profile's launch options are refused, the AI Agent Panel shall show the reason under its additional-arguments field, updated as the user edits the profile.
+- **PRD-001.R5** — One CLI process per conversation.
+  - The AI Agent Panel shall run each conversation in its own `claude` process, started on the conversation's first message or first CLI-backed panel command, with the vault root as working directory.
+  - The AI Agent Panel shall pass the vault instructions in force when a CLI process starts (R25) to that process as an addition to Claude's system prompt.
+  - The AI Agent Panel shall start the CLI with Obsidian's environment plus the file-checkpointing variable of PRD-002.R13 and nothing else, so Claude Code uses whatever login or `ANTHROPIC_API_KEY` that environment provides.
+  - The AI Agent Panel shall pass launch arguments to the CLI without any shell parsing them: directly to a native executable, as positional parameters of `sh` under WSL, and through cmd.exe only for npm's `.cmd` shim.
+  - IF an argument bound for npm's `.cmd` shim contains a cmd.exe metacharacter (`"`, `%`, `!`, `&`, `|`, `<`, `>`, `^`, CR or LF), THEN the AI Agent Panel shall refuse the launch rather than escape the argument.
+  - IF the user sends twice while the CLI path is still resolving, THEN the AI Agent Panel shall start one process for the conversation.
+  - IF a tab closes while its CLI is still being resolved, THEN the AI Agent Panel shall stop the process that starts late.
+  - WHEN a tab or the panel view closes, the AI Agent Panel shall end that conversation's CLI process, force-killing it if it is still running 3 s later.
+- **PRD-001.R6** — CLI failures and recovery.
+  - IF no CLI can be found for a conversation, THEN the AI Agent Panel shall start no process and show in the messages that the Claude Code CLI was not found, with the install link `https://code.claude.com` and a pointer to the plugin settings.
+  - IF a profile's configured CLI path does not exist, THEN the AI Agent Panel shall start no process and show in the messages that the configured path was not found, naming the profile and pointing to the plugin settings.
+  - IF a conversation's CLI process cannot be spawned or ends with an error, THEN the AI Agent Panel shall show the error in the messages, up to 2000 characters (recorded as PRD-003.R2 specifies).
+  - IF the CLI exits with a non-zero code, THEN the AI Agent Panel shall report the error as "Claude exited with code N" followed by the last 40 lines of the CLI's stderr.
+  - WHEN the user sends a message after the conversation's CLI process ended, the AI Agent Panel shall start a new process that resumes the same Claude Code session.
+  - IF the CLI writes a line that is not valid JSON, THEN the AI Agent Panel shall skip that line and keep the session running.
+  - IF writing to the CLI fails because the process died, THEN the AI Agent Panel shall keep running and report the failure through the process-end message.
+  - WHEN a conversation's CLI process ends, the AI Agent Panel shall close out the running turn on screen, keeping partly streamed text and clearing the busy state.
+- **PRD-001.R7** — Conversation tabs.
+  - WHEN the user presses "+" or runs "New conversation", the AI Agent Panel shall open a new empty tab, even if the active tab is empty, and clear the conversation filter.
+  - WHEN the user switches tabs, the AI Agent Panel shall show that tab's own messages, scroll position, composer draft, chips, status line, run bar and turn state.
+  - WHEN the user closes a tab (close button, middle-click or row menu) whose turn is not running and that has no unanswered permission or question card, the AI Agent Panel shall close it without confirmation (process end: R5; save: PRD-003.R2).
+  - IF the user closes a tab while its turn runs or a permission or question card in it is unanswered, THEN the AI Agent Panel shall ask for confirmation and close the tab only once the user confirms.
+  - IF the user closes the last tab, THEN the AI Agent Panel shall open a fresh empty tab.
+  - WHEN the first prompt sent to Claude (not a panel command or `!` run) is recorded, the AI Agent Panel shall title the conversation with the prompt's first line, up to 80 characters, or "Untitled" when that line is empty or blank.
+  - WHEN the user picks "Rename…" in a tab's or a row's menu, the AI Agent Panel shall show a "Rename conversation" dialog with a text field holding the title, selected, and the buttons "Cancel" and "Rename".
+  - WHEN the user presses Enter in the field or "Rename", the AI Agent Panel shall retitle the conversation with the field's first line, trimmed, up to 80 characters, and close the dialog.
+  - WHEN the user presses Escape or "Cancel", the AI Agent Panel shall close the dialog and change nothing.
+  - WHILE the field is empty or blank, the AI Agent Panel shall disable "Rename"; a title equal to the one shown changes nothing.
+  - The AI Agent Panel shall show a renamed conversation's title wherever R7 shows a title, keep it when the first prompt is sent, and save it (PRD-003.R5).
+  - WHEN a conversation is renamed, the AI Agent Panel shall keep its last-updated time and its exported note's path.
+  - WHEN a renamed conversation is exported again, the AI Agent Panel shall write the new title in the note's frontmatter.
+  - WHEN the user renames a conversation that is not open, the AI Agent Panel shall retitle it without opening it.
+  - WHEN the user renames a conversation that is open in another panel, that panel shall show the new title.
+  - WHEN the user drags an open tab, the AI Agent Panel shall reorder it among the unpinned open tabs.
+  - WHILE the tab strip overflows, the AI Agent Panel shall scroll it with the mouse wheel or a tab dragged to its edge.
+  - The AI Agent Panel shall give every tab in the strip the same width, sharing the strip's width between them, at most 150 px (200 px while the main column is 560 px or wider) and at least 76 px; tabs that do not fit at 76 px make the strip overflow.
+  - WHILE the tab strip overflows, the AI Agent Panel shall show an "All conversations" button at the strip's end.
+  - WHEN the user activates "All conversations" by pointer or keyboard, the AI Agent Panel shall show the open-tabs list: every open tab in strip order, each row with the tab's pin or state dot as the tab shows it, its title and a close button, the active row marked as the conversation list column marks it, followed by "Previous conversations…".
+  - WHEN the user activates a row's close button or presses Delete on a row of the open-tabs list, the AI Agent Panel shall close that tab as its tab's close button does, and keep the list open unless closing asks for confirmation or the list's trigger becomes hidden.
+  - WHEN the user selects a conversation from the open-tabs list, the AI Agent Panel shall make it the active tab and scroll its tab into view when the strip is shown.
+  - WHILE a tab's turn runs, the AI Agent Panel shall show a busy indicator on that tab.
+  - WHILE a permission or question card in a tab is unanswered, the AI Agent Panel shall show a steady orange dot titled "Waiting for you" on the tab and set the composer placeholder to "Claude is waiting for your answer above…".
+  - WHEN the pointer rests on a tab, the AI Agent Panel shall show a hover card with the title, "Working" and the elapsed time or "Waiting for you", and the prompt count, model, permission mode, start time and, when above zero, the conversation's cost (PRD-005.R7).
+  - WHILE the pointer is over a tab or the tab is active, the AI Agent Panel shall show the tab's close button.
+  - WHEN the panel view opens, the AI Agent Panel shall reopen the conversations that were open on this device, re-select the active one, and drop any that no longer exist.
+  - The AI Agent Panel shall not restore unsent composer drafts or attachments after the view reopens.
+  - WHILE a conversation has no title, the AI Agent Panel shall show it as "New conversation" in its tab, hover card, column row, tab menu and the "Previous conversations" list.
+  - WHEN a conversation is branched (PRD-002.R15), the AI Agent Panel shall title the branch `<title> (branch)`, without repeating the suffix for a branch of a branch.
+  - WHEN a tab whose conversation has messages closes, the AI Agent Panel shall list that conversation under Recent.
+- **PRD-001.R8** — Tab layout.
+  - WHERE "Conversation tabs" is "Top", the AI Agent Panel shall show the open tabs as a strip above the messages.
+  - WHERE "Conversation tabs" is "Side", the AI Agent Panel shall show the conversation column beside the messages.
+  - WHERE "Conversation tabs" is "Automatic", the AI Agent Panel shall show the column while the panel is at least 820 px wide (780 px while the column is already shown) and the strip otherwise, re-checking on every resize.
+  - WHILE no column width is stored, the AI Agent Panel shall size the column to 26% of the panel width, between 220 px and 300 px and at most half the panel.
+  - WHEN the user drags the column's inner edge, the AI Agent Panel shall resize the column between 140 px and the smaller of 480 px and half the pane, and remember the width on this device only.
+  - WHEN the user double-clicks the column's inner edge, the AI Agent Panel shall forget the stored width and return the column to its default width.
+  - IF the stored column width is 180 px, THEN the AI Agent Panel shall treat it as not stored.
+  - WHEN the user changes "Conversation tabs" in settings, the AI Agent Panel shall re-lay out open panels immediately.
+- **PRD-001.R9** — Conversation list.
+  - WHILE the side column is shown, the AI Agent Panel shall list every conversation once, under "Pinned" (oldest pin first, only when non-empty), "Open" (with a count, in tab order) and "Recent" (saved but not open, newest first, grouped Today, Yesterday, Previous 7 days and Older, empty groups hidden).
+  - The AI Agent Panel shall show Recent rows muted, with a relative time and no close button.
+  - IF Recent has no rows, THEN the AI Agent Panel shall show under it "Loading…" while the first scan of saved conversations runs and no filter is set, "No matches" when a filter matches no row, "No other matches" when a filter matches only pinned or open rows, and "No previous conversations" otherwise.
+  - WHEN the user types in the column filter, the AI Agent Panel shall narrow every section to conversations whose title contains the text, ignoring case, until the filter is cleared or Escape is pressed.
+  - WHEN the user collapses or expands a section, the AI Agent Panel shall remember that state on this device.
+  - WHEN the user clicks a Recent row, the AI Agent Panel shall open that conversation in a tab.
+  - WHEN the user right-clicks or long-presses a row, the AI Agent Panel shall offer Open (Recent rows only), Pin or Unpin, Rename…, Export to Markdown (PRD-003), Close (open rows only) and Delete.
+  - WHEN the user pins or unpins a conversation from the row menu or the row's hover pin, the AI Agent Panel shall move it into or out of Pinned without opening it, storing the pin as PRD-003.R7 specifies.
+  - WHILE a conversation is pinned, the AI Agent Panel shall list it only under Pinned in the column and sort it to the front of the top strip with a pin glyph.
+  - WHEN the user runs "Previous conversations" from the command palette, the header's history button or the "More" menu, the AI Agent Panel shall show a searchable list of saved conversations with relative time and message count, and open the one picked (PRD-003.R9).
+  - IF there are no saved conversations, THEN the AI Agent Panel shall show "No previous conversations yet." instead of the list.
+  - IF a picked conversation cannot be loaded, THEN the AI Agent Panel shall show "Could not load that conversation."
+- **PRD-001.R10** — Delete a conversation.
+  - WHEN the user asks to delete a conversation, with Delete in a row menu or the trash button of a "Previous conversations" row, the AI Agent Panel shall ask for confirmation in a "Delete conversation" dialog stating that the conversation is removed and that exported transcripts and Claude Code's own file checkpoints stay.
+  - WHEN the user confirms the deletion, the AI Agent Panel shall delete the conversation as PRD-003.R8 specifies and detach any open tab showing it, leaving the messages on screen and starting a new conversation record on that tab's next message.
+  - IF the conversation's file still exists after the deletion, THEN the AI Agent Panel shall show "Could not delete that conversation." and leave any open tab attached.
+- **PRD-001.R11** — Send, steer and stop.
+  - WHEN the user presses Enter without Shift outside IME composition, the AI Agent Panel shall send the composer's message.
+  - WHEN the user presses Shift+Enter, the AI Agent Panel shall insert a newline.
+  - IF the message is empty and has no attachments, THEN the AI Agent Panel shall send nothing.
+  - WHILE a turn runs, the AI Agent Panel shall send a new message straight to the running CLI without a context block and mark it "queued mid-turn".
+  - WHILE a turn runs and no permission or question card waits, the AI Agent Panel shall show a Stop button titled "Stop Claude's turn" with the key Esc, label the send button "Queue message", and set the placeholder to "Claude is working. Enter queues another message…".
+  - WHILE a permission or question card waits, the AI Agent Panel shall show Stop, dim the send button labelled "Queue message", and still queue a message sent with Enter or that button.
+  - WHILE a conversation has messages and no turn runs, the AI Agent Panel shall set the placeholder to "Reply, or @ to mention a note…".
+  - WHEN the user presses Escape outside IME composition in the composer while a turn runs and no list, menu or popover is open, the AI Agent Panel shall ask the CLI to interrupt the running turn.
+  - WHEN the user presses Stop or Escape, the AI Agent Panel shall send no stop request for background agents or tasks.
+  - WHEN the user presses Stop, the AI Agent Panel shall ask the CLI to interrupt the running turn.
+  - IF the CLI does not confirm the interrupt within 15 s, THEN the AI Agent Panel shall show no error and keep the turn busy until the CLI reports a result or exits.
+- **PRD-001.R12** — Note context. Behind a context block, a `/` command such as `/compact` runs as an ordinary prompt (real-CLI run 2026-10-10).
+  - WHERE the note chip is on (initially per "Include note context by default", default on), the AI Agent Panel shall start each new turn's message with a context block naming the active note's path and the editor selection, up to 8000 characters, led by the lines the whole selection spans in the file on disk (1-based, frontmatter counted).
+  - WHERE the "links & properties" chip is on (off by default), the AI Agent Panel shall add the active note's properties and its outgoing, incoming and broken links, up to 40 of each, to the context block.
+  - WHERE the active-folder chip is on (off by default), the AI Agent Panel shall add the folder last selected in the file explorer, or else the active note's folder, to the context block.
+  - WHILE text is selected in the active note's editor, the AI Agent Panel shall show "N lines selected" on the note chip in place of the note's name, naming the note and the selected lines in the chip's accessible name.
+  - WHEN the user clicks the note, folder or "links & properties" chip, the AI Agent Panel shall toggle it for that tab's following messages.
+  - The AI Agent Panel shall send note and attachment paths, not note bodies, in the context block.
+  - WHEN a message sent to Claude Code starts with `/`, the AI Agent Panel shall send it without the context block and without attachments, whatever chips are on.
+  - WHEN a message is sent with context, the AI Agent Panel shall label the user's message with what was attached (note name, then "N lines selected" when the editor has a selection, folder, "links & properties", "N attached").
+  - WHILE the panel is taller than 640 px and no context chip is on and nothing is attached, the AI Agent Panel shall hide the chips row and show the active-note offer chip after the commands button.
+- **PRD-001.R13** — File and folder attachments.
+  - WHEN the user picks a vault file or folder from the composer's attach picker or a file explorer's "Add to agent chat" (one or several selected), the AI Agent Panel shall show it as a removable chip and name its path in the context block of every following turn in that tab until the chip is removed.
+  - IF an attached item is the active note or folder whose chip is already on, THEN the AI Agent Panel shall list it in the context block once.
+  - WHEN the user clicks a file chip, the AI Agent Panel shall open that file.
+  - WHEN the user types `@` at the start of a word, the AI Agent Panel shall offer up to 8 fuzzy matches among vault files and folders (the 8 most recently modified files before anything is typed) and insert `@<path>` and a space for the one chosen.
+  - WHEN a sent prompt contains `@<vault path>` mentions, the AI Agent Panel shall store those paths with the message for export links (PRD-003).
+  - WHEN the user runs "Add selection to chat" with text selected in an editor, the AI Agent Panel shall append to the composer, after a blank line, the context block's line naming the note's path and the selection's lines, then the selection.
+  - IF no text is selected, THEN the AI Agent Panel shall show "Select some text first."
+- **PRD-001.R14** — Images. History keeps only their count (PRD-003.R3).
+  - WHEN the user pastes or drops image files into the composer, the AI Agent Panel shall attach each as a thumbnail chip and send them with the next message, ahead of its text.
+  - WHEN the user clicks an image chip's remove button, the AI Agent Panel shall remove that image.
+  - WHEN the user clicks, or presses Enter or Space on, an image chip, a sent prompt's image or a tool result's image, the AI Agent Panel shall show that image in a dialog, fitted to the window, under a caption of its name, file size and pixel dimensions.
+  - WHEN the user clicks the image in the viewer, the AI Agent Panel shall switch between fitted and actual size, scrolling an image larger than the dialog.
+  - WHEN the user presses Left or Right in the viewer, the AI Agent Panel shall show the previous or next image of the same message or tool result, fitted, staying on the first or last image at either end.
+  - WHEN the user presses Escape in the viewer, the AI Agent Panel shall close it.
+  - IF an image is not PNG, JPEG, GIF or WebP, is over 4 MB, the message already has 8 images, or the file cannot be read, THEN the AI Agent Panel shall skip it and list each refusal in one Notice starting "Not attached:".
+- **PRD-001.R15** — Streaming messages.
+  - WHEN reply text streams in, the AI Agent Panel shall show it in a card as Obsidian Markdown, re-rendered at most every 250 ms, and scroll it into view.
+  - WHEN a reply block is complete, the AI Agent Panel shall replace the streamed text with the block rendered as Obsidian Markdown.
+  - IF Markdown rendering fails, THEN the AI Agent Panel shall keep the text as plain text.
+  - WHEN thinking streams in, the AI Agent Panel shall show a collapsed "Thinking…" toggle for that block, in the turn head for the turn's first block and in place for later ones, reading "Thought for Ns" when done or "Thought process" when the time is unknown.
+  - WHEN the user clicks a thinking toggle, the AI Agent Panel shall show or hide that thinking.
+  - WHILE a turn runs and no permission or question card waits, the AI Agent Panel shall show in the turn head "Working", or "Writing" while reply text streams, with the elapsed time.
+  - WHILE a turn runs and no permission or question card waits, the AI Agent Panel shall show at the end of the messages a working line with a loader mark, "Thinking…" while thinking streams, "Writing…" while reply text streams, else "Working…", and the elapsed time.
+  - WHILE a permission or question card in the turn waits, the AI Agent Panel shall show "Waiting for you" and the elapsed time in the turn head.
+  - WHEN a permission card or question form in the active tab starts waiting, the AI Agent Panel shall announce "Claude is waiting for you" to screen readers.
+  - WHEN a turn in the active tab finishes, the AI Agent Panel shall announce "Claude finished" to screen readers.
+  - WHEN a turn finishes, the AI Agent Panel shall show under it an always visible footer with "Restore files" and "Branch" where available (PRD-002), a copy button, and the duration and cost (PRD-005.R7).
+  - IF the turn ends in an error, THEN the AI Agent Panel shall show `Error: <message>` (up to 500 characters) in its footer.
+  - The AI Agent Panel shall offer a copy action on every prompt, shown on hover or keyboard focus, and on every turn footer, copying the prompt's raw text or all the turn's reply text blocks joined by blank lines.
+  - IF the clipboard write fails, THEN the AI Agent Panel shall show "Could not copy to the clipboard."
+- **PRD-001.R16** — Tool steps. A group is a run of a turn's tool calls shown as one steps card.
+  - WHEN Claude starts a tool call, the AI Agent Panel shall add to the turn's open group a step row with the tool's icon and name, a summary of up to 96 characters (file path, command, pattern, URL or description) and a running mark of three pulsing dots.
+  - The AI Agent Panel shall close a group at reply text, thinking, a permission card, a question form, a Task or Agent call, or the end of the turn, and open a new group at the next tool call.
+  - The AI Agent Panel shall show a Task or Agent call as an agent row (R18), outside any group.
+  - WHILE a call waits on its permission card or question form, the AI Agent Panel shall show no step row for it.
+  - WHEN a call's permission card or question form is answered, the AI Agent Panel shall add that call's step row as the first row of a new group.
+  - WHILE a group of two or more calls is open or any of its calls runs, the AI Agent Panel shall show its rows without a header.
+  - WHILE a group of two or more calls is closed and none of its calls runs, the AI Agent Panel shall head it with an error mark if any call failed, else a done mark, then "N steps" and the group's duration, and show it expanded until the user collapses it.
+  - IF a group holds one tool call, THEN the AI Agent Panel shall show it as a single row with its running or error mark and no header; a done row shows no mark and is named "Done" for screen readers.
+  - WHEN the user clicks a group's header, the AI Agent Panel shall expand or collapse the group.
+  - WHEN the tool's result arrives, the AI Agent Panel shall mark the row done (no visible mark, named "Done" for screen readers) or error and offer an expandable "Details" with the input (up to 2000 characters) and the result (up to 1500 characters).
+  - WHEN a Glob, Grep or `obsidian_search` call finishes since the conversation was opened, the AI Agent Panel shall show on its row the count its result states in its first line, or else its non-empty result lines, as "N files" (Glob), "N results" (Grep) or "N notes" (`obsidian_search`).
+  - WHEN a conversation is reopened, the AI Agent Panel shall close its groups only at stored reply text, thinking, Task or Agent calls and turn ends.
+  - WHEN a conversation is reopened, the AI Agent Panel shall head each stored group of two or more calls without a duration and show no counts on its rows.
+  - The AI Agent Panel shall name an MCP tool by its server label and tool name without a repeated server prefix, labelling Claude in Chrome's server "Chrome" and the panel's own server "Obsidian".
+  - WHEN a tool result contains PNG, JPEG, GIF or WebP images, the AI Agent Panel shall show them in the row's details for the live session only.
+- **PRD-001.R17** — Untrusted model output and links.
+  - The AI Agent Panel shall insert model and user text into the panel only as text or through Obsidian's Markdown renderer, never as raw HTML.
+  - WHEN the AI Agent Panel renders model text as Markdown, the AI Agent Panel shall first neutralize every inline code span and every code fence whose language is not on the plugin's allowlist, showing them as inert code, so that no other plugin's processor runs on them.
+  - WHEN the AI Agent Panel renders model text as Markdown, the AI Agent Panel shall load no remote image or other remote embed.
+  - WHEN the user clicks a link to a vault file in the messages, the AI Agent Panel shall open that file, in a new tab on Ctrl/Cmd-click or middle-click.
+  - IF a clicked vault link resolves to no file, THEN the AI Agent Panel shall show `No file in this vault matches "<text>".` and create no note.
+  - WHEN the user clicks an `http`, `https`, `mailto` or `obsidian` link, the AI Agent Panel shall hand it to the operating system's handler.
+  - IF a clicked link uses any other scheme, THEN the AI Agent Panel shall cancel the click and open nothing.
+  - WHEN the pointer rests on a vault link, the AI Agent Panel shall raise Obsidian's page preview for it.
+  - The AI Agent Panel shall percent-encode spaces in Markdown link targets outside code so such links render as links.
+- **PRD-001.R18** — Subagents and background tasks. Shown live only; history leaves them out (PRD-003.R3).
+  - WHEN Claude delegates to a subagent, the AI Agent Panel shall show an agent row with its label, type, model, tool count, tokens, elapsed time and status, holding the subagent's replies, thinking and tool calls as a collapsed thread.
+  - WHEN the user clicks an agent row, the AI Agent Panel shall expand its thread in place.
+  - WHEN the CLI reports that a subagent finished, the AI Agent Panel shall replace the thread's running totals with the CLI's final tokens, tool uses, duration and status.
+  - IF a subagent's Task or Agent call is not in the messages, THEN the AI Agent Panel shall show its agent row on its own.
+  - WHILE the CLI reports background tasks, the AI Agent Panel shall list each above the composer with a Stop button.
+  - WHEN the user presses a background task's Stop, the AI Agent Panel shall ask the CLI to stop that task.
+  - IF stopping the task fails, THEN the AI Agent Panel shall show "Could not stop that task."
+- **PRD-001.R19** — Slash commands.
+  - WHEN the user sends `/<name>` with optional arguments and `<name>` is, in any case, one of `chrome`, `clear`, `context`, `cost`, `extra-usage`, `help`, `hooks`, `mcp`, `memory`, `permissions`, `sandbox`, `skills`, `status`, `usage` or `usage-credits`, the AI Agent Panel shall handle it without a model turn.
+  - WHEN the user sends any other message starting with `/`, the AI Agent Panel shall send it to Claude Code as a normal message.
+  - WHEN the composer text starts with `/` and the command name is not yet followed by whitespace, the AI Agent Panel shall list matching commands in two groups, "Answered by the panel" marked "no tokens" and then "Claude Code", each with its description and argument hint, and insert `/<name>` and a space for the one chosen.
+  - The AI Agent Panel shall use one description per panel command in the command list and in `/help`.
+  - WHILE no CLI has reported its commands, the AI Agent Panel shall list only the panel's commands plus `compact`, `init` and `security-review`.
+  - WHEN the user presses the composer's "/" button, the AI Agent Panel shall open the command list.
+  - WHEN the user runs `/clear`, the AI Agent Panel shall clear the context as R38 specifies.
+  - The AI Agent Panel shall describe `/clear` as "Clear Claude's context; messages above stay, dimmed".
+  - WHEN the user runs `/usage`, `/usage-credits`, `/extra-usage` or `/cost`, the AI Agent Panel shall answer as PRD-005 specifies.
+- **PRD-001.R20** — Panel report commands.
+  - WHEN the user runs `/context`, `/mcp`, `/status`, `/memory`, `/hooks`, `/permissions`, `/skills`, `/chrome` or `/sandbox`, the AI Agent Panel shall fetch the data from Claude Code with a read-only request that starts no model turn and show it as a card.
+  - IF the tab has no running CLI when a report command runs, THEN the AI Agent Panel shall start the tab's CLI without starting a model turn.
+  - WHEN the user runs `/context`, the AI Agent Panel shall show the model, tokens used of the window with a percentage, a bar and legend by category and the auto-compact note, followed by memory files, MCP tools per server, agents and skills as collapsed sections.
+  - WHILE a report command waits for Claude Code, the AI Agent Panel shall show the card's title with "Asking Claude Code…" and mark the card busy.
+  - WHEN the user runs `/status`, the AI Agent Panel shall show the plugin version, profile, CLI path (marked when in WSL), permission mode and effort, followed by Claude Code's own status sections without its terminal-only rows.
+  - WHEN the user runs `/help`, the AI Agent Panel shall list the panel's commands and, once reported, Claude Code's, without starting a CLI.
+  - IF Claude Code returns an error, refuses the request, or gives no answer within 60 s, THEN the AI Agent Panel shall show the card's title with "Couldn't load", the text `Claude Code could not answer: <message>.` with a suggestion to update Claude Code, and "Try again" and "Copy error" buttons.
+  - The AI Agent Panel shall mark each answered report card "no tokens".
+  - The AI Agent Panel shall give every live report card a "Copy as Markdown" action.
+  - The AI Agent Panel shall give every live report card except `/help` a "Refresh" action that re-runs its command into the same card.
+  - WHEN a recorded report card is refreshed, the AI Agent Panel shall replace its recorded Markdown with the new report.
+  - WHEN the user clicks a command in a `/help` card, the AI Agent Panel shall insert `/<name>` and a space into the composer without sending it.
+  - WHILE Claude Code has reported more than three commands, the AI Agent Panel shall list three in a `/help` card behind a "Show all N" button.
+  - WHEN the user clicks "open /mcp" in a `/status` card, the AI Agent Panel shall run `/mcp`.
+  - IF the CLI fails to start for a report, THEN the AI Agent Panel shall show a card reading "Claude Code did not start - see the error above."
+  - IF a Claude Code reply lacks a field a card needs, THEN the AI Agent Panel shall show a message naming the missing data instead of failing.
+  - WHEN a report card is shown outside a running turn, the AI Agent Panel shall record the command and the card, as Markdown, in the conversation, so restore, export and copy show the same content.
+  - WHILE a turn runs, the AI Agent Panel shall show report cards without recording them.
+  - The AI Agent Panel shall escape Markdown in recorded reports and keep only `https` links in them.
+  - The AI Agent Panel shall show in a live `/context` card the prompt cache state, the cached tokens and the time left (PRD-005.R11), and a "/compact now" button after the auto-compact note.
+  - The AI Agent Panel shall leave the cache line out of a `/context` card's recorded Markdown.
+  - WHEN the user presses "/compact now", the AI Agent Panel shall send `/compact` to Claude Code.
+  - WHILE a turn runs, the AI Agent Panel shall disable "/compact now".
+- **PRD-001.R21** — MCP server management.
+  - WHEN the user runs `/mcp`, the AI Agent Panel shall list Claude Code's MCP servers with status, transport, origin and tool count, most severe status first, with Reconnect and Disable or Enable buttons on the live card.
+  - WHEN the user runs `/mcp reconnect|enable|disable <server>|all` or presses one of those buttons, the AI Agent Panel shall ask Claude Code to perform the action and then list the servers again.
+  - The AI Agent Panel shall offer no action buttons for its own in-process `obsidian` server.
+  - IF `/mcp` gets an unknown action, THEN the AI Agent Panel shall reply `Usage: /mcp [reconnect|enable|disable <server>|all]`.
+  - IF `/mcp` names an unknown server, THEN the AI Agent Panel shall reply `No MCP server named "<x>".`
+  - IF `/mcp` targets the panel's own server, THEN the AI Agent Panel shall point the user to the plugin setting that turns it on or off.
+  - IF a button's action fails, THEN the AI Agent Panel shall show `<label> failed: <error>`.
+- **PRD-001.R22** — Model selection.
+  - The AI Agent Panel shall offer in the "Model and effort" popover exactly the models the profile's CLI reported at its last start, plus a configured or picked model missing from that list, each with a description only where the CLI supplies one.
+  - WHILE no CLI has reported models for a profile, the AI Agent Panel shall offer the default profile's last reported list, or else a built-in list.
+  - WHEN the CLI reports the full model id an alias resolved to and that id belongs to the alias's own model family, the AI Agent Panel shall label the alias with that version.
+  - WHEN the user picks another model mid-conversation, the AI Agent Panel shall switch the running CLI to it without restarting the process.
+  - IF the CLI rejects the model switch, THEN the AI Agent Panel shall keep the previous model for the selection, the conversation, its later CLI restarts and the next new conversation.
+  - The AI Agent Panel shall seed each new conversation with the last model picked until the "Model" setting changes.
+  - The AI Agent Panel shall show the label of the model the CLI reports in the model segment and, WHERE "Show tooltips" is on (R32), its full id in the segment's tooltip.
+  - WHEN the user clicks the model segment, the AI Agent Panel shall open the "Model and effort" popover.
+  - The AI Agent Panel shall show "Applies from your next message" in the "Model and effort" popover.
+  - IF the CLI rejects the model switch, THEN the AI Agent Panel shall show `Could not switch model: <error>`.
+- **PRD-001.R23** — Reasoning effort.
+  - The AI Agent Panel shall offer in the popover's effort control "Default" plus every effort level any reported model supports, in the CLI's order, labelled with the effort table's short strings, disabling levels the selected model does not support.
+  - WHEN the user clicks the effort segment, the AI Agent Panel shall open the "Model and effort" popover with focus on the effort control.
+  - WHILE no CLI has reported effort levels, the AI Agent Panel shall offer Low, Medium, High, Extra high and Max.
+  - WHEN the user changes the effort, the AI Agent Panel shall restart the conversation's CLI after the current turn with the new effort, resuming the same Claude Code session without a message to the user.
+  - The AI Agent Panel shall seed each new conversation with the last effort picked until the "Default reasoning effort" setting changes.
+
+  Effort table:
+
+  | Level | Short | Long |
+  | --- | --- | --- |
+  | Default | Default | Default effort |
+  | Low | Low | Low effort |
+  | Medium | Medium | Medium effort |
+  | High | High | High effort |
+  | Extra high | Extra high | Extra high effort |
+  | Max | Max | Max effort |
+  | any other level the CLI reports | its name | its name and "effort" |
+- **PRD-001.R24** — Settings storage and sync.
+  - The AI Agent Panel shall store each settings row either in the vault's synced plugin data or on this device only, per that row's choice.
+  - WHEN the user clicks a settings row's cloud badge, the AI Agent Panel shall move that setting between synced and this-device-only storage and show a device-only row's badge as a crossed-out cloud, its tooltip saying it is stored on this device only.
+  - The AI Agent Panel shall store CLI profiles, the default permission mode, the bypass toggle, the vault instructions, the `!` shell-escape toggle and the vault-tools toggle on this device only until the user chooses to sync each.
+  - The AI Agent Panel shall keep the record of which settings are device-only on this device only.
+  - The AI Agent Panel shall keep the model lists, alias labels and startup permission modes learned from the CLI, the open tabs, the column width and the collapsed sections on this device only.
+  - WHERE a device has no value for a device-only setting other than the CLI profiles, the default profile, the default permission mode, the bypass toggle, the vault instructions, the shell-escape toggle and the vault-tools toggle, the AI Agent Panel shall take the value from the synced plugin data.
+  - The AI Agent Panel shall start the settings the previous clause excepts at their defaults on a device that has no value of its own for them, the CLI profiles at one profile that finds the CLI itself.
+  - WHEN a device updates from 0.5.0 or earlier, which kept the default permission mode, the vault instructions and the shell-escape and vault-tools toggles in the synced plugin data, the AI Agent Panel shall take those four from the synced plugin data once, keeping the default permission mode only if it is "Plan" or "Claude Code default", and treating a missing value as shell escape off, vault tools off, no instructions and "Claude Code default".
+  - WHEN a device updates from 0.5.0 or earlier, the AI Agent Panel shall leave bypass mode off unless this device's own value says on, and take no CLI profiles from the synced plugin data.
+  - WHEN settings saved by an earlier version load (a single CLI path, on a device whose CLI profiles sync; a usage interval in minutes; or the pre-rename device-local key), the AI Agent Panel shall migrate them without user action.
+- **PRD-001.R25** — Settings tab, and which conversations each setting change reaches.
+  - The AI Agent Panel shall default to the account's default model, the CLI's default effort, note context on, conversation tabs Automatic, no vault instructions, vault tools on (PRD-004), permission mode "Claude Code default", `!` shell escape on and bypass mode off (PRD-002), export off (PRD-003), theme "Auto" (R34), tooltips on (R32), prompt style "Card", prompt color "Sand", the pinned prompt and the jump rail on (R33), and plan usage on (PRD-005).
+  - The AI Agent Panel shall list the theme, conversation tabs, "Show tooltips" and the prompt settings under "Appearance" (R39).
+  - WHERE Obsidian is 1.13 or newer, the AI Agent Panel shall make every settings row findable through Obsidian's settings search.
+  - WHERE Obsidian is older than 1.13, the AI Agent Panel shall show the same settings rows in a classic settings tab.
+  - WHEN the user changes "Conversation tabs", the theme, "Show tooltips", a prompt setting, the usage settings or the profile list, the AI Agent Panel shall apply the change to open panels immediately.
+  - WHEN the settings tab closes after the vault instructions, the vault-tools toggle or the bypass toggle changed, the AI Agent Panel shall restart each open conversation's CLI after its current turn with the new values, resuming the same Claude Code session.
+  - WHEN the user presses the panel header's settings button, the AI Agent Panel shall open Obsidian's settings on the plugin's tab.
+  - The AI Agent Panel shall apply changes to "Model", "Default reasoning effort", "Include note context by default" and the default permission mode only to tabs opened afterwards.
+  - WHEN a profile's launch options change, the AI Agent Panel shall apply them to open conversations as R4 specifies.
+  - WHEN the user changes the `!` shell escape toggle or the export settings, the AI Agent Panel shall apply the change from the next message or export in every conversation.
+- **PRD-001.R26** — Platforms and compatibility.
+  - The AI Agent Panel shall run on Obsidian desktop 1.8.7 or newer on Windows, macOS and Linux, and declare itself desktop-only.
+  - The AI Agent Panel shall require a vault on the local file system.
+  - IF the vault is not on the local file system, THEN the AI Agent Panel shall start no CLI and show that the panel needs a vault on the local file system.
+  - WHERE the platform is Windows, the AI Agent Panel shall launch the standalone `claude.exe`, npm's `claude.cmd` or Claude Code inside WSL, per profile, in any mix across profiles.
+  - WHERE the platform is not Windows, the AI Agent Panel shall hide "Run via WSL" and ignore its stored value.
+  - The AI Agent Panel shall work with Claude Code 2.x, with the vault tools requiring 2.1.210 or newer (warning: PRD-004.R1).
+- **PRD-001.R27** — Privacy.
+  - The AI Agent Panel shall make no network request of its own, leaving all model, usage and account traffic to the user's Claude Code process.
+  - The AI Agent Panel shall offer no login, accept no API key, and read or store no credential, including Claude Code's login files and the OS keychain.
+  - The AI Agent Panel shall collect and send no telemetry or analytics.
+  - The AI Agent Panel shall read outside the vault only to locate the CLI (standard install paths, `which` or `where`, a WSL probe) and write no file outside the vault.
+  - The AI Agent Panel shall write to the clipboard only from a copy button and never read it.
+  - The AI Agent Panel shall hand a URL to the browser only when the user clicks it.
+- **PRD-001.R28** — Accessibility.
+  - The AI Agent Panel shall distinguish the user's own messages from Claude's by a "You" label, shown in Card style and given to screen readers in Bubble style, and by alignment or shape, not by color alone.
+  - WHERE "Prompt color" is not "Custom", the AI Agent Panel shall keep the prompt's text at a contrast ratio of at least 4.5:1 on the prompt's fill in both of the plugin's palettes.
+  - WHERE "Prompt color" is neither "Custom" nor "Accent", the AI Agent Panel shall keep the "You" label at a contrast ratio of at least 4.5:1 and the number box's outline at least 3:1 against the prompt's fill, composited over the panel background where translucent.
+  - The AI Agent Panel shall show a modified setting by its reset button as well as its bar, and a missing CLI by icon and text, not by color alone.
+  - The AI Agent Panel shall expose the settings page's section links as a navigation landmark of links, the current one marked `aria-current="location"`.
+  - The AI Agent Panel shall show the waiting-for-you state, MCP server status and step status as text or icon shape as well as color, and as text in their accessible labels.
+  - The AI Agent Panel shall give an accessible label to every icon-only control, every status-line segment, the conversation switcher and the jump rail.
+  - The AI Agent Panel shall let the user focus every conversation tab, conversation-list row, status-line segment, popover control, step row, group header, agent row, thinking toggle, turn duration and cost, and rail tick with the keyboard and activate it with Enter or Space.
+  - The AI Agent Panel shall expose the tab strip and its tabs, and the conversation list and its rows, with ARIA roles matching their function.
+  - WHILE the operating system's reduced-motion preference is on, the AI Agent Panel shall run no animation or animated transition.
+  - The AI Agent Panel shall show the prompt cache state by icon shape as well as color, and as text in the context segment's accessible label: "Prompt cache warm, <left>", "Prompt cache expiring, <left>", "Prompt cache cold" or "Prompt cache refreshing", where <left> is "m:ss left" or "N min left".
+  - The AI Agent Panel shall expose a finished context-event divider as a separator labelled "Context cleared at HH:MM" or "Compacted at HH:MM, <before> to <after> tokens", and one in progress as a status labelled "Compacting automatically" or "Compacting".
+- **PRD-001.R29** — UI performance. Verified by manual DevTools Performance profiles in docs/records/verification/, since no DOM harness exists (DES-003); the rendering mechanism is design.
+  - WHILE reply text streams, the AI Agent Panel shall render the open block's Markdown at most every 250 ms, or every four times the last render took if longer, and not while the block is off screen or its window is in the background, without re-rendering earlier messages.
+  - WHILE reply text streams in any tab, the AI Agent Panel shall echo composer keystrokes within 50 ms (p95) in every open tab.
+  - WHILE nothing visible changes (no streaming, no timer label, no list change), the AI Agent Panel shall run no periodic DOM work.
+  - WHEN a conversation with up to 1,000 stored messages is reopened, the AI Agent Panel shall show its last screen within 1 s and scroll to it without a visible reflow.
+  - WHEN the conversation list re-renders with unchanged inputs, the AI Agent Panel shall skip rebuilding it.
+  - WHEN a tab closes, the AI Agent Panel shall release that tab's DOM, listeners, timers and rendered child components.
+  - The AI Agent Panel shall cause no panel frame longer than 100 ms, including while streaming, rendering a diff or updating the conversation list.
+  - The AI Agent Panel shall drive every per-second display, such as elapsed times, from one shared 1 s ticker that runs only while such a display is visible.
+  - WHILE the cache countdown shows whole minutes and no other per-second display is visible, the AI Agent Panel shall tick once a minute.
+- **PRD-001.R30** — Layout by size. The main column is the panel minus the conversation list column; an offer chip is a context chip that is off.
+  - The AI Agent Panel shall apply this requirement's width rules to the main column and its height rules to the panel, re-checking on every resize.
+  - WHILE the main column is narrower than 360 px and the layout is the tab strip, the AI Agent Panel shall replace the strip with a switcher showing the active conversation's state, its title and the number of open tabs.
+  - WHEN the user clicks the switcher, the AI Agent Panel shall show the open-tabs list (R7).
+  - WHILE the main column is narrower than 360 px, the AI Agent Panel shall replace the history, transcript and settings buttons with a "More" button whose menu offers "Previous conversations", "Open transcript" (when exported), "Export to Markdown" and "Plugin settings".
+  - WHILE the main column is narrower than 360 px, the AI Agent Panel shall show the changes chip without its file count, turn-footer actions without labels and step rows without their item counts.
+  - WHILE the conversation list column is shown, the AI Agent Panel shall show the active conversation's title, prompt count and start time in the header and hide the tab strip and the header's new-conversation and history buttons.
+  - WHILE a conversation has changed files or an exported note, the AI Agent Panel shall show its changes chip (PRD-002.R7) and, while the main column is at least 360 px wide, its "Transcript" button (PRD-003.R11) on a bar under the header, or in the header while the column is shown or the panel is at most 640 px tall.
+  - WHILE the panel is at most 640 px tall, the AI Agent Panel shall hide the offer chips, show the chips that are on or attached in one line after the commands button with "+N" for those that do not fit, and show one line of composer text.
+  - WHEN the user clicks "+N", the AI Agent Panel shall list the hidden chips, each with a button that removes it or turns it off.
+  - The AI Agent Panel shall keep messages in chronological order in the DOM and align a conversation shorter than the view to the bottom.
+  - WHILE the main column is at least 300 px wide, the AI Agent Panel shall show no horizontal scroll bar on the panel or the messages, scrolling code blocks, tables and diffs inside themselves.
+- **PRD-001.R31** — Status line.
+  - The AI Agent Panel shall show under the composer one status line holding, in order, the model, effort, permission-mode and profile segments, then the context segment (PRD-005.R8) and the plan-usage segment (PRD-005.R4).
+  - The AI Agent Panel shall label the effort and permission segments with the short strings of the effort table (R23) and the mode table (PRD-002.R8).
+  - WHILE the main column is at least 560 px wide, the AI Agent Panel shall use those tables' long strings and add the 5-hour reset time to the plan-usage segment.
+  - The AI Agent Panel shall give each status-line segment an accessible label that includes its value, such as "Reasoning effort: High" or "Permissions: Accept edits".
+  - WHILE the status line does not fit on one line, the AI Agent Panel shall shorten it in this order until it fits: the profile segment to its icon, the effort segment to its icon, the permission segment to its icon, the plan-usage segment hidden, the context percentage hidden.
+  - WHILE the main column is narrower than 360 px, the AI Agent Panel shall apply every step of that order.
+  - WHILE a conversation is in Auto-approve or Bypass, the AI Agent Panel shall keep its permission segment red and labelled, at least with its short string, at every width.
+- **PRD-001.R32** — Popovers, hover cards and tooltips. An item is a list or menu row.
+  - WHEN a popover opens, the AI Agent Panel shall expose it as a dialog named by its title, mark its trigger expanded and move focus to its first control.
+  - WHEN a popover opens, the AI Agent Panel shall close any other open popover.
+  - WHEN the user presses Escape in a popover or activates an item to select it, the AI Agent Panel shall close the popover and return focus to its trigger.
+  - WHEN the user activates an open-tabs row's close button, the AI Agent Panel shall follow R7's close and list-retention clauses.
+  - WHEN the user clicks outside an open popover, the AI Agent Panel shall close it and leave focus where the user clicked.
+  - WHILE a popover is wider than the main column less 16 px, the AI Agent Panel shall narrow it to that width.
+  - WHERE "Show tooltips" is on (the default), WHEN the pointer rests on an icon-only control for 400 ms, the AI Agent Panel shall show a text tooltip with the control's label.
+  - WHERE "Show tooltips" is on, WHEN the pointer rests on the model or permission segment for 400 ms, the AI Agent Panel shall show the tooltip that R22 or PRD-002.R8 asks for on it.
+  - WHILE a control shows its label, the AI Agent Panel shall show the tooltip that PRD-002.R18 asks for on it whatever "Show tooltips" says.
+  - WHEN the pointer rests on a rail tick, the AI Agent Panel shall show its tooltip (R33) whatever "Show tooltips" says.
+  - The AI Agent Panel shall offer "Show tooltips" as a checkable item in the panel's menu (the menu of its sidebar tab and its "More options" menu), which turns the setting on or off at once.
+  - WHEN the pointer rests for 500 ms on a tab, the context segment, the plan-usage segment or a turn's duration and cost, the AI Agent Panel shall show that element's hover card.
+  - WHEN one of those elements receives keyboard focus, the AI Agent Panel shall show its hover card until focus leaves or the pointer reaches another control (the element's own descendants count as the element).
+- **PRD-001.R33** — Prompt display.
+  - The AI Agent Panel shall offer "Prompt style" as two cards: "Card" ("numbered, full width") and "Bubble" ("right-aligned").
+  - WHERE "Prompt style" is "Card" (the default), the AI Agent Panel shall show each prompt full width in the prompt color, with its number, "You", its send time when recorded, and its context label, "N lines" for a selection.
+  - WHERE "Prompt style" is "Bubble", the AI Agent Panel shall show each prompt right-aligned in the prompt color with its context label under it, "N lines selected" in full.
+  - The AI Agent Panel shall show a prompt sent bare, such as `/compact`, as a compact monospace message that keeps its number, shown as a number box beside it in Card.
+  - WHERE "Prompt style" is "Card" and "Prompt jump rail" is on (the default), the AI Agent Panel shall show one tick per prompt along the right edge of the messages, at the prompt's relative position.
+  - The AI Agent Panel shall offer "Prompt color" as cards: "Clear", "Sand" (the default), "Stone", "Sage", "Sea", "Mist", "Lavender", "Rose", "Accent" and "Custom".
+  - WHERE "Prompt color" is "Clear", the AI Agent Panel shall outline each prompt over the panel's background with no color fill.
+  - WHERE "Prompt color" is Sand, Stone, Sage, Sea, Mist, Lavender or Rose, the AI Agent Panel shall fill and outline each prompt with that color's version for the palette in effect.
+  - WHERE "Prompt color" is "Accent", the AI Agent Panel shall derive the prompt's fill and outline from Obsidian's accent.
+  - The AI Agent Panel shall draw prompt text and number-box digits in the palette's text color, and the number-box outline, "You" label and current rail tick in the prompt color's ink.
+  - The AI Agent Panel shall draw the pinned prompt with the selected prompt fill and outline over the panel background.
+  - WHERE "Prompt color" is "Custom", the AI Agent Panel shall show a "Custom color" field that takes, typed or picked (the picker writes a hex value), a CSS color of at most 64 characters, using letters, digits, spaces and `#.,%/+-()`, with function names limited to `rgb`, `rgba`, `hsl`, `hsla`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `color`, `color-mix`, `calc`, `min`, `max` and `clamp`, accepted by the host's CSS color parser and containing no `var()`, `env()`, `attr()`, `currentColor` or CSS-wide keyword, and use that color in both palettes.
+  - IF the user clears the "Custom color" field while a color is stored, or the field holds a value that fails the length, character, function or host-parser check and is not refused under the next clause, THEN the AI Agent Panel shall say "Not a CSS color." followed by "The prompt keeps the last valid one." when a valid custom color is stored, else "Prompts use Sand, the default.", and keep the stored color.
+  - IF the "Custom color" field holds a value within the length and character limits that uses `var()`, `env()`, `attr()`, `currentColor` or a CSS-wide keyword, THEN the AI Agent Panel shall say "Use a color, not var(), env(), attr() or currentColor." followed by "The prompt keeps the last valid one." when a valid custom color is stored, else "Prompts use Sand, the default.", and keep the stored color.
+  - WHILE "Prompt color" is "Custom" and no valid custom color is stored, the AI Agent Panel shall draw prompts in the default prompt color.
+  - WHILE "Prompt color" is "Custom", no valid custom color is stored and the "Custom color" field is empty, the AI Agent Panel shall say "No custom color yet. Prompts use Sand, the default."
+  - The AI Agent Panel shall draw the Theme and Prompt style previews in the picked prompt color.
+  - WHEN the settings search holds "outline", "quiet" or "none", the AI Agent Panel shall find "Clear" among the prompt colors.
+  - The AI Agent Panel shall number the prompts sent to Claude in order across the whole conversation.
+  - The AI Agent Panel shall show a panel command or `!` run as a compact monospace message without a number.
+  - WHERE "Pin the current prompt while scrolling" is on (the default), the AI Agent Panel shall pin the prompt of the turn at the top of the view to the top of the messages, cut to one line, in every prompt style.
+  - WHEN the user clicks a pinned prompt, the AI Agent Panel shall scroll to the start of its turn.
+  - WHEN the pointer rests on a rail tick, the AI Agent Panel shall show the prompt's number and first line.
+  - WHEN the user clicks a rail tick, the AI Agent Panel shall scroll to its prompt.
+- **PRD-001.R34** — Theme.
+  - The AI Agent Panel shall draw its own chrome (the panel, the workflow view, their popovers, the board's tabs, the plugin's modals and the settings page, the page in Obsidian's mode whatever "Theme" is) in its own light and dark palettes, with Obsidian's accent color.
+  - The AI Agent Panel shall pass the palette in effect to the content and controls Obsidian renders inside the panel through the variables Obsidian's default theme reads, except callout colors, which keep Obsidian's mode while the plugin supports Obsidian before 1.13.
+  - WHERE "Theme" is "Auto", the AI Agent Panel shall use the palette of Obsidian's current mode and follow Obsidian's mode changes in every window.
+  - WHERE "Theme" is "Light" or "Dark", the AI Agent Panel shall use that palette whatever Obsidian's mode or theme; what a community theme colors by its own rules, and Obsidian's menus, tooltips, notices, modal backdrop and settings window, keep Obsidian's mode.
+  - The AI Agent Panel shall offer the Theme choice in Settings and in the panel's menu.
+- **PRD-001.R35** — Empty conversation.
+  - WHILE a conversation has no messages, the AI Agent Panel shall show the heading "Ask about your vault", the line "Summarize, refactor, link or draft notes. Claude reads and edits files only with your permission." and the placeholder "Ask about your vault… (@ mentions a note, / runs a command)".
+  - WHILE a conversation has no messages and a note is active, the AI Agent Panel shall offer under "From the open note" these starters, each followed by the prompt it inserts:
+    - "Summarize <note file name>": "Summarize @<note path>."
+    - a starter asking for the notes that ought to link to the active note (DES-003 gives its label): "Find notes in this vault that @<note path> could link to, with one line on why for each."
+  - WHILE a conversation has no messages and the active editor has a selection, the AI Agent Panel shall also offer the starter "Draft a follow-up from the selection", inserting "Draft a follow-up from the selected text in @<note path>."
+  - WHEN the user clicks a starter, the AI Agent Panel shall put its prompt into the composer without sending it.
+- **PRD-001.R37** — Compaction markers. The CLI compacts on `/compact` and, by itself, inside the turn of the prompt that filled the context; either keeps the session.
+  - WHILE the CLI reports that it is compacting the conversation, the AI Agent Panel shall show in the messages "Compacting…" in a turn the user started with `/compact`, or "Compacting automatically…" in any other turn, with the sub-line "Context <P>% full · Claude picks up where it left off", P being the last known context percentage.
+  - IF no context percentage is known, THEN the AI Agent Panel shall show the sub-line "Claude picks up where it left off".
+  - WHEN the CLI reports that it compacted the conversation, the AI Agent Panel shall show a "Compacted" divider with the sub-line "HH:MM · <before> → <after> tokens".
+  - IF the compaction report lacks a token count, THEN the AI Agent Panel shall leave that count out of the sub-line.
+  - WHERE the CLI supplies the compaction summary, the AI Agent Panel shall add a collapsed "Summary" toggle to the divider that shows the summary under "What Claude kept", rendered through the boundary of R17.
+  - The AI Agent Panel shall show the compaction summary only under that toggle, never as a prompt.
+  - IF the CLI reports that a compaction ended other than successfully, or a turn that sent `/compact` or showed a compacting status ends without a compaction report, THEN the AI Agent Panel shall show "Compaction did not finish." in place of the status.
+- **PRD-001.R38** — Clear the context. The CLI answers `/clear` with a new session in the same process, keeping the model and permission mode set at runtime; the re-apply clauses guard a CLI that does not keep them, and the restart clauses a CLI that does not answer as observed. Here a message is a prompt, a reply, a panel command or a `!` run, a message to Claude Code is a prompt or a `/compact`, and a turn ends at a `result` with no earlier queued message pending.
+  - WHEN the user sends `/clear` alone in a tab that has a conversation or a running CLI, the AI Agent Panel shall start a new Claude Code session in the same conversation, keeping its tab, title, pin, model, effort, permission mode, profile and attached items.
+  - IF the user sends `/clear` in a tab whose conversation has no message to Claude Code since it began or since its last clear, or in a tab with no conversation, THEN the AI Agent Panel shall empty the composer and record nothing.
+  - WHILE the tab's CLI process runs, the AI Agent Panel shall clear by writing `/clear` to that process without restarting it.
+  - IF the tab has no running CLI process, THEN the AI Agent Panel shall clear by recording the clear and dropping the conversation's resume id, so its next message starts a new session.
+  - IF the user sends `/clear` in a branch tab before the branch's first message, THEN the AI Agent Panel shall drop the pending fork and rewind and record nothing.
+  - IF the user sends `/clear` between a restore's preview and its end, THEN the AI Agent Panel shall keep `/clear` in the composer and send nothing.
+  - WHEN the CLI acknowledges a written `/clear` and reports a new session id, the AI Agent Panel shall complete the clear and store the new session's id as the conversation's resume id.
+  - The AI Agent Panel shall record no turn, footer or cost for the CLI's answer to `/clear` and not let that answer end a later turn.
+  - WHEN a clear completes and the CLI reports a permission mode or model other than the ones in force in the CLI before the clear, the AI Agent Panel shall set those again, leaving its own Auto-approve policy unchanged.
+  - IF the CLI rejects that re-apply or does not answer it within 15 s, THEN the AI Agent Panel shall restart the CLI with the conversation's model and mode flags, resuming the new session.
+  - WHILE a written `/clear` awaits its new session or the CLI's answer to it, or a re-apply of the picks has not settled, the AI Agent Panel shall hold every send from that tab.
+  - IF the CLI ends a turn of its own before acknowledging a written `/clear`, THEN the AI Agent Panel shall record that turn as any other and keep waiting for the acknowledgement.
+  - IF the CLI does not acknowledge a written `/clear` with a new session within 15 s of the write, not counting time while a turn of its own runs, or exits first, THEN the AI Agent Panel shall stop the tab's CLI and complete the clear as when no CLI runs.
+  - IF the CLI's answer to a completed clear does not arrive within 15 s, THEN the AI Agent Panel shall restart the tab's CLI resuming the new session and send the held messages.
+  - WHEN a clear completes, the AI Agent Panel shall show a "Context cleared" divider with the sub-line "HH:MM · Claude can't see anything above" and an "Undo" button.
+  - WHEN a clear completes, the AI Agent Panel shall dim the messages above its divider, keeping their copy actions and their Branch actions as PRD-002.R15 allows.
+  - The AI Agent Panel shall describe the dimmed messages to screen readers as "Before the clear. Claude no longer sees these messages."
+  - WHILE an earlier segment (the messages before a clear and after the previous one) holds more than four messages, the AI Agent Panel shall fold all but its last prompt and reply behind an "N earlier messages" button that unfolds them.
+  - WHEN the user clicks the rail tick of a folded prompt, the AI Agent Panel shall unfold its segment and scroll to the prompt.
+  - The AI Agent Panel shall offer "Undo" only on the conversation's latest clear, only once that clear has completed and the CLI's answer to it has arrived, only until a message to Claude Code follows it, and never while another Undo is pending.
+  - IF the session a clear ended is not one this device recorded (PRD-003.R4), THEN the AI Agent Panel shall show its "Undo" disabled, titled "The cleared session is not available on this device".
+  - WHEN the user presses "Undo", the AI Agent Panel shall start a CLI for the tab resuming the session the clear ended, leaving the tab's running CLI as it is, and ask it for its context usage.
+  - WHEN the CLI started by Undo answers that request successfully, the AI Agent Panel shall make it the tab's CLI, stop the one it replaces, remove the divider, the dimming and the clear's record, and store the resumed session id as the conversation's session id.
+  - WHILE an Undo has not completed or failed, the AI Agent Panel shall hold every send from that tab.
+  - IF the CLI started by Undo answers with an error, ends with an error, exits, or does not answer within 15 s, or the tab's launch settings or profile change meanwhile, THEN the AI Agent Panel shall stop that CLI, leave the tab's CLI, the divider, the dimming and the clear's record as they were, and show "Could not undo the clear." in the messages before sending anything.
+  - WHEN a conversation whose last clear has no later message to Claude Code is reopened, the AI Agent Panel shall offer that clear's "Undo".
+  - WHILE a turn runs, the AI Agent Panel shall hold a sent `/clear` until the turn ends, writing nothing to the CLI meanwhile, shown as "Queued · clears when this turn ends" with a "Cancel" button, leaving the turn's permission requests answerable.
+  - WHILE a `/clear` is held, the AI Agent Panel shall hold every later message and send them in order after the clear completes.
+  - WHEN the user presses "Cancel" on a held `/clear`, the AI Agent Panel shall drop it and send the messages held behind it in order.
+  - IF agents or background tasks run when the user sends `/clear`, or when a held `/clear` is released, THEN the AI Agent Panel shall ask before clearing, with "Cancel", "Stop and clear", the body "Clearing stops them. What they reported so far stays above, dimmed." and this title:
+    - "1 agent is still running" or "N agents are still running";
+    - "1 background task is still running" or "N background tasks are still running";
+    - for both kinds, the two counts joined by "and" ("2 agents and 1 background task are still running").
+  - WHERE a workflow runs (PRD-001.R36, change 003), the AI Agent Panel shall word that body "Clearing stops them and the <name> workflow. What they reported so far stays above, dimmed."
+  - WHEN the user presses "Stop and clear", the AI Agent Panel shall deny the tab's pending permission requests, ask the CLI to stop every agent and background task, then interrupt the CLI whether or not a turn runs, and clear once no turn runs and the CLI has reported every agent and task ended, including any started meanwhile.
+  - The AI Agent Panel shall not take the CLI's reply to a stop request as a report that the agent or task ended.
+  - IF the agents and tasks have not all ended within 15 s of the first stop request, THEN the AI Agent Panel shall show "Could not stop every agent, so the context was not cleared.", leave the context as it was, and return the messages held behind the clear to the composer unsent.
+  - IF the tab's CLI exits during "Stop and clear", THEN the AI Agent Panel shall abandon the clear as when an agent could not be stopped.
+  - IF text follows `/clear`, THEN the AI Agent Panel shall ask "Clear the context? The text after /clear is not sent." with "Clear" and "Cancel".
+  - WHEN the user presses "Clear" in that dialog, the AI Agent Panel shall clear as for `/clear` alone.
+  - WHEN the user presses "Cancel" in that dialog, the AI Agent Panel shall keep the whole text in the composer.
+- **PRD-001.R39** — Settings page.
+  - The AI Agent Panel shall show its settings as one scrolling page of the sections General, Permissions, Appearance, Usage, Export and Claude Code, in that order, each a heading, a one-line lead and its rows.
+  - The AI Agent Panel shall end the page with a "Support development" row, led by a heart and described "AI Agent Panel is free and open source. If it helps you, consider supporting it. No feature is gated behind it.", holding one button per `fundingUrl` entry in `manifest.json` that opens its address in the browser, left out of the search and the filters.
+  - The AI Agent Panel shall keep a bar at the top of the page while it scrolls, holding a search field, a "Modified" filter with the number of modified settings, "Reset all…" and one link per section, the links wrapping onto more rows when the page is narrow.
+  - WHEN the user activates a section link, the AI Agent Panel shall scroll that section's heading to just under the bar, smoothly unless the reduced-motion preference is on, and move focus to the heading.
+  - The AI Agent Panel shall mark as current the link of the section under the bar, and the last section's link once the page is scrolled to its end, without moving focus.
+  - WHILE the search field holds text, the AI Agent Panel shall show only the rows whose name, description or shown value contains it, ignoring case, mark the matching text, hide each section with no row shown, show on each link the number of rows shown in its section, dim a link whose number is zero, hide the sections' reset buttons and show a "Show" link on each row.
+  - WHEN the user activates a row's "Show" link, the AI Agent Panel shall clear the search, scroll the row to just under the bar and focus its control.
+  - WHEN the user presses Escape in the search field, the AI Agent Panel shall clear the search.
+  - WHILE "Modified" is on, the AI Agent Panel shall show only the rows whose setting differs from its default, hide each section and CLI profile with none, and show on each link the number of rows shown in its section; with text in the search field, a row shows only when it meets both.
+  - The AI Agent Panel shall treat a CLI profile's "Profile name", "Run via WSL" and "Use for new conversations" as naming the profile, never as modified, and reset none of them.
+  - WHILE a row's setting differs from its default, the AI Agent Panel shall show a bar on the row's leading edge and a reset button named "Reset <name> to default: <value>".
+  - WHILE "Modified" is on, the AI Agent Panel shall show "Default: <value>" under the description of each row shown.
+  - WHEN the user activates a row's reset button, the AI Agent Panel shall reset that setting at once and show a notice with Undo.
+  - WHILE a section has rows that differ from their defaults and the search field is empty, the AI Agent Panel shall show "Reset N" on the section's heading, N counting every such row in the section whatever "Modified" says.
+  - WHEN the user activates a section's "Reset N" or "Reset all…", the AI Agent Panel shall open a dialog listing each change by name, old value and new value, whether it syncs or stays on this device, "turns on" for a change that switches a capability on, and the first line of any text it deletes, and change nothing until the user confirms.
+  - The AI Agent Panel shall group the "Reset all…" dialog's changes by section, state that synced settings change on every device that syncs the vault, and offer "Also reset Claude Code" and "Also reset what syncs", both off; the Claude Code section is reset only with the first, and the sync choices only with the second.
+  - WHEN a reset is saved, the AI Agent Panel shall show a notice naming what was reset, with an Undo button that restores every value the reset changed that has not been changed since, sync choices included, and names any value it left.
+  - IF saving a reset or its Undo fails, THEN the AI Agent Panel shall say so in a notice and keep offering Undo.
+  - The AI Agent Panel shall store each value a reset or its Undo writes where that setting's sync choice says (R24).
+  - The AI Agent Panel shall show the Claude Code section's profiles one under another, each under "Profile <name>" with all its rows, "Use for new conversations" and "Remove", followed by "Add a CLI profile".
+  - WHERE a CLI profile's CLI cannot be found, the AI Agent Panel shall show a banner at the top of the page naming that profile with a "Fix it" link that scrolls to it, an alert icon on the Claude Code link and heading, and a notice inside that profile saying what is missing.
+  - The AI Agent Panel shall offer each choice that has previews (Theme, Conversation tabs, Prompt style, Prompt color) as cards, each a preview over its name.
+
+Every accepted ID must appear in an automated test name or an explicit manual verification row before release close.
+
+## Non-goals
+
+- Agents other than Claude Code, Codex and ChatGPT included: deferred to a later release (README); the code has no agent boundary a second CLI could plug into (ADR-012).
+- Mobile Obsidian: it cannot spawn a local process (README).
+- An accent setting: the panel takes its colors from the Obsidian theme (owner decision D2, 2026-10-10).
+- A login, API-key entry or any credential handling of the plugin's own: Anthropic's terms forbid third parties collecting or relaying Claude credentials (docs/current/LEGAL.md); authentication stays with the CLI.
+- Bundling Anthropic's Agent SDK or any Anthropic code: its license is proprietary and the plugin is MIT (docs/current/design/DES-001-system-overview.md, docs/current/LEGAL.md).
+- Changing effort without restarting the CLI: Claude Code has no control request for it (docs/current/design/DES-002-cli-client-and-session-lifecycle.md), so R23 restarts the process.
+- Claude in Chrome inside WSL and the Bash sandbox on native Windows: Claude Code does not support them there (RELEASE_NOTES.md, 0.5.0).
+- Terminal emulation, in-note chats and floating chat windows: docs/current/COMPARISON.md sends users who need them to other plugins; no reason is recorded.
+- A cap on concurrent CLI processes or an idle stop: every open tab keeps its process until it closes (R5); not in 0.x, no reason recorded.
+- UI text in languages other than English: no reason recorded.
+
+## Security and privacy
+
+- Leaves the machine, through the CLI, to Anthropic under the user's account: prompts, the context block (note paths, selection up to 8000 characters, properties and links when chosen), pasted images, and whatever Claude reads. The plugin itself sends nothing (R27).
+- Trust boundary, settings to process: the CLI path and additional arguments come only from settings; no shell parses arguments, cmd.exe metacharacters are refused, panel-owned flags are refused (R4, R5).
+- Trust boundary, CLI output to panel: stdout, including model text, is untrusted; it is parsed line by line and rendered only as text or Obsidian Markdown; link schemes reaching the OS are limited (R6, R17).
+- Credentials: none held or read (R27). An `ANTHROPIC_API_KEY` in Obsidian's environment reaches the CLI, which then bills that key (R5).
+- Sync exposure: CLI profiles, vault instructions, the default permission mode and the bypass, shell-escape and vault-tools toggles are device-only by default, as is the record of which settings are (R24); a setting the user switches to synced is set on every device by shared plugin data.
+- Retention: report cards are recorded with the conversation, so `/status` stores the account email and organization in history and exports (R20, PRD-003). History, checkpoints, export and deletion: PRD-003 and PRD-002. Permission prompts and the `!` escape: PRD-002.
+- Rendered model text loads no remote image or embed, and its inline code and non-allowlisted fences reach no other plugin's processor (R17). Residual: plugins that read arbitrary DOM still see the rendered text (inferred).
+
+## Failure and recovery
+
+- CLI not found, invalid profile, spawn failure, crash with stderr tail: R2, R4, R6. Lookup timeouts: 5 s for `which`/`where`, 15 s for the WSL probe.
+- After a crash or deliberate restart, the next message resumes the same Claude Code session (R6). A restored conversation whose session cannot be resumed: PRD-003.
+- Control-request timeouts: 15 s for interrupt, model and mode switches, background-task stop, usage and context; 30 s for rewind and other requests; 60 s for panel report commands; 120 s for the initialize handshake. A failed or timed-out handshake is not reported; it surfaces only if the process then ends.
+- Malformed CLI output is skipped; a dead stdin does not crash the plugin (R6).
+- Duplicate sends while the CLI resolves start one process (R5).
+- Interruption: Stop asks the CLI to interrupt (R11); closing a tab mid-turn asks first, then ends its process (R7).
+- Partial failure: model switch rollback (R22), `/mcp` action failures (R21), background-task stop (R18), clipboard (R15), deletion that leaves the file (R10).
+- Degraded dependency: a Claude Code reply missing a field, or a request it does not support, yields a message in the card (R20). An API outage shows as turn errors (R15); the panel does not retry turns.
+- A configured CLI path that does not exist, a non-local vault and a failed "Open chat" each get their own message (R6, R26, R1); a CLI that is not logged in shows Claude Code's own error (R6).
+- A `/clear` the CLI does not acknowledge with a new session within 15 s completes by restarting the CLI on a new session (R38); an Undo the resumed CLI does not answer within 15 s leaves the clear and the tab as they were (R38).
+
+## Open questions
+
+None.

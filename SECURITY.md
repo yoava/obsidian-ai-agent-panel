@@ -28,7 +28,7 @@ where things stand rather than left waiting.
 A confirmed vulnerability is handled as a GitHub Security Advisory on this
 repository: drafted privately, fixed, and then published. Where the issue
 warrants one, a CVE is requested through GitHub. The published advisory is
-also recorded in [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md) against the
+also recorded in [RELEASE_NOTES.md](RELEASE_NOTES.md) against the
 version that fixes it.
 
 Fixes are not folded silently into a release, and the advisory is never a
@@ -38,4 +38,4 @@ public issue opened before the fix exists.
 
 What this plugin does and does not trust - process spawning, permission modes,
 credential handling, local data, and the known residual risks - is documented
-in [docs/SECURITY.md](docs/SECURITY.md).
+in [docs/current/SECURITY.md](docs/current/SECURITY.md).
