@@ -192,6 +192,8 @@ unpublished 0.5.0 build updates the same way.
   scaffold 2.4.0, and edits outside the repository ask in Claude Code.
 - **Dependabot** opens one pull request per runtime package update, so each
   passes the dependency screen.
+- **PRD-001.R7** says a tab's close button shows on hover only, as the tabs
+  have drawn it since 2026-10-13.
 - **README and listing:** the README is written as the directory page, with
   two screenshots of a fixture conversation under `docs/images/`; the
   manifest's description names the permission card, the vault tools and the

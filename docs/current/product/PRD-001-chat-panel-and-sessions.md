@@ -111,7 +111,7 @@ Obsidian desktop users (1.8.7+) on Windows (native, or with Claude Code in WSL),
   - WHILE a tab's turn runs, the AI Agent Panel shall show a busy indicator on that tab.
   - WHILE a permission or question card in a tab is unanswered, the AI Agent Panel shall show a steady orange dot titled "Waiting for you" on the tab and set the composer placeholder to "Claude is waiting for your answer above…".
   - WHEN the pointer rests on a tab, the AI Agent Panel shall show a hover card with the title, "Working" and the elapsed time or "Waiting for you", and the prompt count, model, permission mode, start time and, when above zero, the conversation's cost (PRD-005.R7).
-  - WHILE the pointer is over a tab or the tab is active, the AI Agent Panel shall show the tab's close button.
+  - WHILE the pointer is over a tab, the AI Agent Panel shall show the tab's close button.
   - WHEN the panel view opens, the AI Agent Panel shall reopen the conversations that were open on this device, re-select the active one, and drop any that no longer exist.
   - The AI Agent Panel shall not restore unsent composer drafts or attachments after the view reopens.
   - WHILE a conversation has no title, the AI Agent Panel shall show it as "New conversation" in its tab, hover card, column row, tab menu and the "Previous conversations" list.

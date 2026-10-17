@@ -375,7 +375,7 @@ No manual rows: 006, 022 (dropped), 027, 045.
    480 px and half the panel; double-click returns to unset and clears `ai-agent-panel:side-width`; a stored
    180 reads as unset; the width survives a reload on this device.
 3. Tabs: pinned first with a pin; pulsing dot while working (`basic`); steady orange dot titled "Waiting for
-   you" (`permission`); x on hover and on the active tab; middle-click closes; a screen reader reads the
+   you" (`permission`); x on hover only; middle-click closes; a screen reader reads the
    tablist "Conversations" and each tab's state.
 4. M6 keyboard: Tab reaches the active tab; Left, Right, Home, End move; Enter or Space selects; Delete
    closes; Shift+F10 opens the row menu; in the column every row, section header, filter and "+" are
