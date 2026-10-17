@@ -1,6 +1,6 @@
 # Release notes
 
-## Unreleased
+## 1.0.0
 
 **The panel is redrawn, `/clear` keeps your conversation on screen, and
 Claude Code's status commands are answered without spending tokens.** The
