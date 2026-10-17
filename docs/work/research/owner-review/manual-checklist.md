@@ -500,7 +500,8 @@ No manual rows: 006, 022 (dropped), 027, 045.
 ### 038 Permission card and question form (300 and 1040 px)
 
 1. `permission` in Ask: card in the turn with orange ring, shield-alert tile, "Allow Edit?", summary
-   `note.md`, "Reading the file..." then the diff (none if `note.md` is missing), Full input collapsed;
+   `note.md` ("Vault root", the file's folder, once the file is read), "Reading the file..." then the diff
+   (none if `note.md` is missing), Full input collapsed;
    footer Deny, Always allow, Allow; tab dot and head say "Waiting for you"; Allow -> "Allowed" in place of
    the buttons, ring gone, focus on the card; new turns: Always allow -> "Always allowed", Deny -> "Denied";
    the card scrolls into view when it appears, also after scrolling up.

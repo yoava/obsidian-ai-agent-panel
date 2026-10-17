@@ -198,7 +198,9 @@ unpublished 0.5.0 build updates the same way.
   only), in-range ESLint and typescript-eslint updates.
 - **Records for this release:** the owner's real-CLI run of `/clear` and
   Undo on native Linux and WSL (task 110), the cross-review's design
-  corrections, and the comparison's download counts from 2026-10-17.
+  corrections, the comparison's download counts from 2026-10-17, and the
+  release check of the same day: leakage sweep, byte-identical builds, the
+  checklist rows a headless harness can drive, and the PRD-001.R29 profiles.
 
 ## 0.4.0
 
