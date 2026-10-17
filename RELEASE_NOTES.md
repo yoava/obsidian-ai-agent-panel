@@ -208,6 +208,8 @@ unpublished 0.5.0 build updates the same way.
 - **The constitution** now states the two bounds SECURITY.md discloses: vault
   paths are checked as spelled, and an embedded vault note renders as
   Obsidian renders it.
+- **Deferred to 1.0.x** (plan.md): the DES-003 matrix rows that need the
+  real CLI, the R28 accessibility audit and the R29 profiles in Obsidian.
 - **Records for this release:** the owner's real-CLI run of `/clear` and
   Undo on native Linux and WSL (task 110), the cross-review's design
   corrections, the comparison's download counts from 2026-10-17, and the

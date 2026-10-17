@@ -64,8 +64,10 @@ In order; each is its own change with its own tasks and commits:
      `docs/records/tasks/r06-panel-redesign/`. Phase 4 is done: tasks 030 to 042 have landed, the last with
      headless-harness evidence for PRD-001.R28 and R29
      ([record](../records/verification/2026-10-12-r06-accessibility-and-performance-harness.md)).
-     Owed before the release is cut: the DES-003 matrix, the R28 audit and
-     the R29 profiles in Obsidian.
+     Deferred to 1.0.x: the DES-003 matrix rows that need the real CLI, the
+     R28 audit and the R29 profiles in Obsidian; the mechanism-level profiles
+     and the harness rows are in the
+     [1.0.0 release record](../records/verification/2026-10-17-release-1.0.0-qa-and-sweep.md).
    - Change 002 (context events): approved and built (backlog below); it
      ships in 1.0.0 with change 001, pending the owner's confirmation. Change
      003 (agents and workflows): a draft in `docs/work/changes/`; it ships in
