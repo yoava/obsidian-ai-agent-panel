@@ -17,7 +17,7 @@ credentials of its own, and runs nothing sensitive without the user's consent.
 | Horizon | Scope | Status |
 | --- | --- | --- |
 | 0.x | Claude Code integration: chat panel, permission cards with diffs, vault tools, conversation history and checkpoints, CLI profiles, panel commands | shipped; last published version 0.4.0 |
-| 1.0 | The panel redesign, `/clear` in the conversation, the settings redesign and the release-review fixes; Claude Code only | in release |
+| 1.0 | The panel redesign, `/clear` in the conversation, the settings redesign and the release-review fixes; Claude Code only | 1.0.0 tagged 2026-10-17; the GitHub release is a draft until the owner publishes it |
 | Later | Codex / ChatGPT (OpenAI) as a second agent beside Claude Code | planned, not started; an L change: PRD, ADRs (D-04), design, and a walking skeleton before feature work |
 
 ## Baseline documents
@@ -52,8 +52,7 @@ In order; each is its own change with its own tasks and commits:
 1. **Pre-redesign fixes** (M changes): the confirmed defects below.
 2. **Panel redesign** (L change; the canvas, spec and brief in
    `docs/work/research/redesign-canvas/`), in three changes:
-   - Change 001, panel shell: ships with change 002 in 1.0.0, as built,
-     pending the owner's confirmation. Phase 1 is done: the delta is
+   - Change 001, panel shell: shipped in 1.0.0 with change 002. Phase 1 is done: the delta is
      incorporated into PRD-001, PRD-002, PRD-003 and PRD-005
      ([record](../records/changes/CHG-001-panel-redesign.md)). Phase 2 is partly
      done: [ADR-016](adr/ADR-016-panel-ui-architecture.md) and
@@ -68,8 +67,8 @@ In order; each is its own change with its own tasks and commits:
      R28 audit and the R29 profiles in Obsidian; the mechanism-level profiles
      and the harness rows are in the
      [1.0.0 release record](../records/verification/2026-10-17-release-1.0.0-qa-and-sweep.md).
-   - Change 002 (context events): approved and built (backlog below); it
-     ships in 1.0.0 with change 001, pending the owner's confirmation. Change
+   - Change 002 (context events): approved and built (backlog below);
+     shipped in 1.0.0 with change 001. Change
      003 (agents and workflows): a draft in `docs/work/changes/`; it ships in
      the minor release after 1.0.0 (owner question O6).
    - Owner questions O1 to O6, with recommendations: in the change 001 record;
@@ -83,6 +82,11 @@ In order; each is its own change with its own tasks and commits:
 4. **Equal-width tabs and the open-tabs list** (M change 017,
    [record](../records/changes/CHG-017-equal-tabs-and-open-tabs-list.md)):
    incorporated; tasks 125 and 126 have landed.
+5. **Bounds and platform fixes** (M changes, 1.0.x): tasks 142 to 145 in
+   `docs/work/tasks/r11-bounds-and-platform-fixes/`: real paths before the
+   vault-bounds check, the WSL `/mnt` mapping, a `!` command passed verbatim
+   to cmd.exe, and the rename existence check ignoring case (owner,
+   2026-10-17; they need a Windows and a macOS machine).
 
 ## Backlog
 
@@ -108,25 +112,25 @@ In order; each is its own change with its own tasks and commits:
       extensions); decide which to refuse.
     - PRD-004.R7: `renameFile` on a case-insensitive file system can overwrite
       a note whose name differs only by case (`Notes/README.md` exists,
-      target `notes/readme.md`); check for an existing file ignoring case.
+      target `notes/readme.md`); check for an existing file ignoring case
+      (task 145).
     - PRD-003.R4: the launch-argument screen reads a short flag's first
       letter, so a bundled form (`-dr`) passes as `-d`; commander today reads
       `-dr` as `-d r`, no reserved flag is reached, so this is hardening.
     - DES-004 `!` escape: on native Windows the command line goes through
       `cmd.exe /d /s /c` (`src/bash.ts`); a `"` inside the command can end
-      the quoted line early. Refuse or escape it, or document the bound.
+      the quoted line early. Pass the command verbatim (task 144).
     - PRD-001 images: a remote image whose URL is percent-encoded is fetched
       by Obsidian's renderer, not the plugin; confirm in a vault that the
       image rule (DES-003) holds for such a URL and record the evidence.
     - PRD-004.R7, PRD-002.R6: vault checks compare path spelling, so an
       approved edit or rename can reach a folder symlinked or junctioned out
-      of the vault; resolve real paths before the check. Target 1.0.x, not a
-      release blocker (owner, 2026-10-13).
+      of the vault; resolve real paths before the check (task 142).
   - Behavior:
     - PRD-002.R6, R14: under a WSL profile the CLI reports `/mnt/<drive>/...`
       paths, which `vaultRelativePath` (`src/edits.ts`) does not map, so edit
       cards, the change list and the restore dialog treat vault files as
-      outside the vault.
+      outside the vault (task 143).
     - PRD-001.R12: a slash command's local output
       (`<local-command-stdout>`, the result text of a turn with no assistant
       text) is not shown. Its echo never becomes the turn's rewind uuid:

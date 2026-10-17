@@ -1,5 +1,14 @@
 # Release notes
 
+## Unreleased
+
+### For contributors
+
+- **Tasks 142 to 145** open the 1.0.x fixes for four of the 1.0.0 known
+  issues: real paths before the vault-bounds check, the WSL `/mnt` mapping, a
+  `!` command passed verbatim to cmd.exe, and the rename existence check
+  ignoring case (`docs/work/tasks/r11-bounds-and-platform-fixes/`).
+
 ## 1.0.0
 
 **The panel is redrawn, `/clear` keeps your conversation on screen, and
