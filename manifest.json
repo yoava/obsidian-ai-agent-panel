@@ -1,7 +1,7 @@
 {
 	"id": "ai-agent-panel",
 	"name": "AI Agent Panel",
-	"version": "0.5.0",
+	"version": "1.0.0",
 	"minAppVersion": "1.8.7",
 	"description": "Chat with Claude Code inside your vault: a native panel with a permission card for every sensitive action, and vault tools for links, properties and backlink-safe renames. Unofficial; uses the Claude Code CLI you install and log in to yourself.",
 	"author": "Yoav Aharoni",
