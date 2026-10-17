@@ -58,8 +58,9 @@ The design:
 - Versioning: SemVer 0.x. The release notes' Unreleased section is titled
   with the version and committed first, since `npm version` refuses a dirty
   tree; `npm version` runs `version-bump.mjs` to sync `manifest.json` and
-  `versions.json` and creates a bare tag (`.npmrc`
-  `tag-version-prefix=""`).
+  `versions.json`, commits as `chore(release): <version>` (`.npmrc`
+  `message`), so release tooling reads the one commit npm writes, and
+  creates a bare tag (`.npmrc` `tag-version-prefix=""`).
 - `release.yml` on a tag push (`.github/workflows/release.yml:3-5`), with
   `contents`, `id-token` and `attestations` write (`release.yml:7-12`):
   setup-node with `node-version-file: .nvmrc` (`release.yml:19-22`),

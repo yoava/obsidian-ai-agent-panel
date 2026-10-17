@@ -141,9 +141,9 @@ Releases follow the Obsidian convention, not `vX.Y.Z` tags:
 - The tag equals `version` in `manifest.json`, with no `v` prefix (`0.5.0`;
   `.npmrc` sets `tag-version-prefix=""`). Tag locally; a human pushes.
 - Bump only with `npm version <patch|minor|major>`: `version-bump.mjs` syncs
-  `manifest.json` and `versions.json`, then npm commits (subject: the bare
-  version, the one non-Conventional subject) and tags. Commit the titled
-  *Unreleased* notes first; steps in `docs/current/DEVELOPMENT.md`.
+  `manifest.json` and `versions.json`, then npm commits
+  (`chore(release): <version>`, from `.npmrc` `message`) and tags. Commit the
+  titled *Unreleased* notes first; steps in `docs/current/DEVELOPMENT.md`.
 - A pushed tag runs `release.yml`: build, attest, draft GitHub release with
   `main.js`, `manifest.json`, `styles.css`; a human publishes it.
 

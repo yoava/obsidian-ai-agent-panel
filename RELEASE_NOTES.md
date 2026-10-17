@@ -201,6 +201,8 @@ unpublished 0.5.0 build updates the same way.
   user's own CLI login.
 - **TypeScript 6.0**, `moment` pinned to 2.31 through `overrides` (dev
   only), in-range ESLint and typescript-eslint updates.
+- **The release commit reads `chore(release): <version>`**, so release
+  tooling can read every commit; tags stay bare versions, pushed by name.
 - **Every release asset is attested**, `manifest.json` now included, so a
   verified install checks all three files it copies.
 - **Records for this release:** the owner's real-CLI run of `/clear` and

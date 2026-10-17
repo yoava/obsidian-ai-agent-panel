@@ -263,17 +263,17 @@ spends real tokens.
    about to be cut, and commit it - `npm version` refuses a dirty tree, so the
    notes have to land first, and this way the tagged commit carries its own.
 2. `npm version <patch|minor|major>` - the `version` script syncs
-   `manifest.json` and `versions.json`, commits, and creates the bare tag.
-3. Push: `git push && git push --tags`.
+   `manifest.json` and `versions.json`, commits as `chore(release): <version>`
+   and creates the bare tag.
+3. Push the branch and that one tag by name, `git push origin main <version>`,
+   never `--tags`, which would push every local tag.
 4. The `release.yml` workflow builds and attaches `main.js`, `manifest.json`,
    and `styles.css` to a draft GitHub release - review and publish it. It also
    attests all three with `actions/attest-build-provenance`,
    so each asset carries a signed statement of the run that built it; the
    verify command is in the [README](../../README.md).
 
-While change 001 (the panel redesign) is being built, no release is cut
-from `main` ([ADR-016](adr/ADR-016-panel-ui-architecture.md)). A hotfix
-branches from the last tag: fix it there, run steps 1 to 4 on that branch,
+A hotfix branches from the last tag: fix it there, run steps 1 to 4 on that branch,
 then cherry-pick the fix to `main`, resolving the `manifest.json`,
 `versions.json` and `RELEASE_NOTES.md` conflicts by keeping `main`'s
 *Unreleased* notes and the new version.
