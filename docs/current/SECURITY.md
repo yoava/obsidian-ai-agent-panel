@@ -277,7 +277,10 @@ and every one of these except the clipboard depends on it.
   links shows as code); a fence in a display language is rendered alone from
   a fence the module built. So no other
   plugin's code-block or inline-code processor (Dataview's JavaScript
-  queries, for example) runs on model text. Images become their alt text and
+  queries, for example) runs on model text. In table cells the panel puts
+  that text back as plain text before other post processors run, so a table
+  view that copies cell text copies text, not placeholders, with a word joiner
+  between any two colons so Dataview reads no inline field from it. Images become their alt text and
   URL unless plainly from the vault, raw HTML other than simple inline
   formatting shows as text, and a line cannot start indented code with a
   Dataview query, so displaying a reply loads nothing from the network. An
@@ -333,12 +336,16 @@ and every one of these except the clipboard depends on it.
 
 - **What still sees rendered replies.** Other plugins' post processors run
   on the rendered reply, so a plugin that reads arbitrary DOM sees its text,
-  and one that reads it after rendering finishes also sees the rebuilt code.
+  table cells' code included as plain text, and one that reads it after
+  rendering finishes also sees the rebuilt code. A table view (TableBase)
+  that links `[[...]]` or URLs in a cell opens them through its own click
+  handler, not the panel's.
   A plugin that acts on a display language the panel renders (a run button
   on `python` blocks, for example) acts on model code too; the allowlist
   rests on known plugins, since Obsidian cannot list what is registered.
   Embeds of vault notes render as they do when opened. Following a link is
-  always your click: vault links open only when they resolve to a file that
+  always your click: in the panel's own rendering (a table view's links
+  aside, above), vault links open only when they resolve to a file that
   already exists (a stray click can't create a note), only `http(s)`,
   `mailto` and `obsidian` targets go to the OS handler, and a `file:` link or
   any other scheme opens nothing. An `obsidian://` link still runs whatever

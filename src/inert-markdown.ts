@@ -194,8 +194,30 @@ export function attributeValue(name: string, value: string, cut: RenderCut): str
 /** Attribute text (an image's alt, a heading's data-heading) with its placeholders read as text. */
 export function plainText(text: string, cut: RenderCut): string {
 	return splitPlaceholders(text, cut)
-		.map((bit) => (typeof bit === "string" ? bit : bit.kind === "math" ? bit.source : bit.text))
+		.map((bit) => (typeof bit === "string" ? bit : pieceText(bit)))
 		.join("");
+}
+
+/** A piece read as plain text: math as its source, the rest as the text it shows. */
+export function pieceText(piece: InertPiece): string {
+	return piece.kind === "math" ? piece.source : piece.text;
+}
+
+/**
+ * A table cell's text nodes, in order, with a word joiner before every colon
+ * that follows another in the cell's text, so neither the cell's HTML nor a
+ * copy of its `textContent` holds `::` (Dataview reads inline fields from both).
+ */
+export function breakCellColons(texts: readonly string[]): string[] {
+	let previous = "";
+	return texts.map((text) => {
+		let out = "";
+		for (const char of text) {
+			out += char === ":" && previous === ":" ? WORD_JOINER + char : char;
+			previous = char;
+		}
+		return out;
+	});
 }
 
 /** Schemes a click hands to the OS; `file:` and everything else open nothing. */

@@ -6,7 +6,32 @@ import {
 	type App,
 	type Component,
 } from "obsidian";
-import { attributeValue, cutForRender, loadsResource, splitPlaceholders, type RenderCut } from "../inert-markdown";
+import {
+	attributeValue,
+	breakCellColons,
+	cutForRender,
+	loadsResource,
+	pieceText,
+	splitPlaceholders,
+	type InertPiece,
+	type RenderCut,
+} from "../inert-markdown";
+
+/** A text node the table-cell pass wrote: what it held, what it wrote, the piece it stands for. */
+interface Written {
+	original: string;
+	data: string;
+	piece?: InertPiece;
+}
+
+/** A render whose post processors are running: its root, its cut, the text nodes written in its cells. */
+interface InFlight {
+	root: HTMLElement;
+	cut: RenderCut;
+	written: Map<Text, Written>;
+}
+
+const inFlight = new Set<InFlight>();
 
 /**
  * The one way model Markdown reaches the DOM (DES-001 Rendering boundary):
@@ -25,12 +50,68 @@ export async function renderMarkdown(
 	live: () => boolean = () => true
 ): Promise<void> {
 	if (!live()) return;
-	const cut = cutForRender(markdown);
-	await MarkdownRenderer.render(app, cut.markdown, el, "", owner);
+	const render: InFlight = { root: el, cut: cutForRender(markdown), written: new Map() };
+	inFlight.add(render);
+	try {
+		await MarkdownRenderer.render(app, render.cut.markdown, el, "", owner);
+	} finally {
+		inFlight.delete(render);
+	}
 	if (!live()) return;
-	await restoreInert(el, cut, (fence, into) =>
+	await restoreInert(el, render, (fence, into) =>
 		live() ? MarkdownRenderer.render(app, fence, into, "", owner) : Promise.resolve()
 	);
+}
+
+/**
+ * A post processor run early (DES-001 Rendering boundary, step 9): in the
+ * table cells of a render in flight, placeholders become the plain text they
+ * stand for and no two colons meet, so a plugin that copies a cell's text (a
+ * table view) copies text, not tokens, and no `::` for Dataview.
+ * `restoreInert` reverts what is still in place.
+ */
+export function protectTableCells(section: HTMLElement): void {
+	for (const render of inFlight) {
+		const ours = render.root === section || render.root.contains(section);
+		if (!ours && !holdsPlaceholder(section.textContent ?? "", render.cut)) continue;
+		const cells = section.matches("td, th") ? [section] : Array.from(section.querySelectorAll("td, th"));
+		for (const cell of cells)
+			if (ours || holdsPlaceholder(cell.textContent ?? "", render.cut)) protectCell(cell, render);
+	}
+}
+
+function holdsPlaceholder(text: string, cut: RenderCut): boolean {
+	return text.includes(cut.token) && splitPlaceholders(text, cut).some((part) => typeof part !== "string");
+}
+
+function protectCell(cell: Element, { cut, written }: InFlight): void {
+	for (const node of textNodes(cell)) {
+		// Inside rendered code a placeholder waits for the late pass, which writes the Markdown it replaced.
+		if (!holdsPlaceholder(node.data, cut) || node.parentElement?.closest("pre, code")) continue;
+		const nodes = splitPlaceholders(node.data, cut).map((part) => {
+			if (typeof part === "string") return node.doc.createTextNode(part);
+			const text = node.doc.createTextNode(pieceText(part));
+			written.set(text, { original: text.data, data: text.data, piece: part });
+			return text;
+		});
+		node.replaceWith(...nodes);
+	}
+	const nodes = textNodes(cell);
+	breakCellColons(nodes.map((node) => node.data)).forEach((data, n) => {
+		const node = nodes[n];
+		if (data === node.data) return;
+		const entry = written.get(node) ?? { original: node.data, data };
+		entry.data = data;
+		written.set(node, entry);
+		node.data = data;
+	});
+}
+
+function textNodes(root: Element): Text[] {
+	const walker = root.doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+	const nodes: Text[] = [];
+	for (let node = walker.nextNode(); node; node = walker.nextNode()) if (node.instanceOf(Text)) nodes.push(node);
+	return nodes;
 }
 
 /**
@@ -38,21 +119,44 @@ export async function renderMarkdown(
  * post processor ever saw the code they hold. An allowlisted fence is
  * rendered alone from the fence `inert-markdown` built, math through
  * MathJax. Inside rendered code (an indented block) a placeholder comes back
- * as the Markdown it replaced.
+ * as the Markdown it replaced. A text node the table-cell pass wrote and no
+ * one changed since gets its text back, or its piece built here.
  */
 async function restoreInert(
 	root: HTMLElement,
-	cut: RenderCut,
+	{ cut, written }: InFlight,
 	renderFence: (markdown: string, into: HTMLElement) => Promise<void>
 ): Promise<void> {
-	if (cut.pieces.length === 0) return;
+	if (cut.pieces.length === 0 && written.size === 0) return;
 	const hasMath = cut.pieces.some((piece) => piece.kind === "math");
 	if (hasMath) await loadMathJax();
+	const fences: Promise<void>[] = [];
+	const build = (frag: DocumentFragment, piece: InertPiece): void => {
+		if (piece.kind === "code") frag.createEl("code", { text: piece.text });
+		else if (piece.kind === "fence" && piece.markdown !== undefined) {
+			const box = frag.createDiv();
+			// A fence that fails to render falls back to plain code alone.
+			fences.push(
+				renderFence(piece.markdown, box).catch(() => {
+					box.empty();
+					box.createEl("pre").createEl("code", { text: piece.text });
+				})
+			);
+		} else if (piece.kind === "fence") frag.createEl("pre").createEl("code", { text: piece.text });
+		else if (piece.kind === "math") frag.appendChild(withoutRemoteStyles(renderMath(piece.text, piece.display)));
+		else frag.appendText(piece.text);
+	};
+	for (const [node, entry] of written) {
+		// A copy another plugin made, or text it changed, stays as it is.
+		if (!root.contains(node) || node.data !== entry.data) continue;
+		const piece = entry.piece;
+		if (piece) node.replaceWith(createFragment((frag) => build(frag, piece)));
+		else node.data = entry.original;
+	}
 	const walker = root.doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 	const hits: Text[] = [];
 	for (let node = walker.nextNode(); node; node = walker.nextNode())
 		if (node.instanceOf(Text) && node.data.includes(cut.token)) hits.push(node);
-	const fences: Promise<void>[] = [];
 	for (const node of hits) {
 		const parts = splitPlaceholders(node.data, cut);
 		const parent = node.parentElement;
@@ -61,19 +165,7 @@ async function restoreInert(
 			for (const part of parts) {
 				if (typeof part === "string") frag.appendText(part);
 				else if (inCode) frag.appendText(part.source);
-				else if (part.kind === "code") frag.createEl("code", { text: part.text });
-				else if (part.kind === "fence" && part.markdown !== undefined) {
-					const box = frag.createDiv();
-					// A fence that fails to render falls back to plain code alone.
-					fences.push(
-						renderFence(part.markdown, box).catch(() => {
-							box.empty();
-							box.createEl("pre").createEl("code", { text: part.text });
-						})
-					);
-				} else if (part.kind === "fence") frag.createEl("pre").createEl("code", { text: part.text });
-				else if (part.kind === "math") frag.appendChild(withoutRemoteStyles(renderMath(part.text, part.display)));
-				else frag.appendText(part.text);
+				else build(frag, part);
 			}
 		});
 		// A block's placeholder is a paragraph of its own; the block replaces it.

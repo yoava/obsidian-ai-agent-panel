@@ -214,7 +214,8 @@ Obsidian desktop users (1.8.7+) on Windows (native, or with Claude Code in WSL),
   - WHEN a tool result contains PNG, JPEG, GIF or WebP images, the AI Agent Panel shall show them in the row's details for the live session only.
 - **PRD-001.R17** — Untrusted model output and links.
   - The AI Agent Panel shall insert model and user text into the panel only as text or through Obsidian's Markdown renderer, never as raw HTML.
-  - WHEN the AI Agent Panel renders model text as Markdown, the AI Agent Panel shall first neutralize every inline code span and every code fence whose language is not on the plugin's allowlist, showing them as inert code, so that no other plugin's processor runs on them.
+  - WHEN the AI Agent Panel renders model text as Markdown, the AI Agent Panel shall first neutralize every inline code span and every code fence whose language is not on the plugin's allowlist, showing them as inert code, so that no other plugin's processor runs on them as code.
+  - WHILE model text rendered as Markdown is being post-processed, the AI Agent Panel shall show other plugins each table cell's code, math and images as their plain text, never as a placeholder, with no two colons meeting in the cell's text.
   - WHEN the AI Agent Panel renders model text as Markdown, the AI Agent Panel shall load no remote image or other remote embed.
   - WHEN the user clicks a link to a vault file in the messages, the AI Agent Panel shall open that file, in a new tab on Ctrl/Cmd-click or middle-click.
   - IF a clicked vault link resolves to no file, THEN the AI Agent Panel shall show `No file in this vault matches "<text>".` and create no note.

@@ -6,6 +6,8 @@ const {
 	cutForExport,
 	breakTemplateCommands,
 	breakInlineFields,
+	breakCellColons,
+	pieceText,
 	attributeValue,
 	freshToken,
 	fenceForExport,
@@ -875,6 +877,25 @@ test("PRD-001.R17: property - no two colons meet, in text or an attribute, rende
 			assert.doesNotMatch(attributeDecoded(text), /::/, `${form}, attribute: ${context}`);
 		}
 	}
+});
+
+test("PRD-001.R17: no two colons meet in a table cell's text, across its text nodes", () => {
+	assert.deepEqual(breakCellColons(["k:: v"]), [`k:${JOINER}: v`]);
+	assert.deepEqual(breakCellColons([":::"]), [`:${JOINER}:${JOINER}:`]);
+	// `**a:**:b` and a code piece's seam: the pair spans two nodes.
+	assert.deepEqual(breakCellColons(["[k", ":", ": `= 1 + 1`]"]), ["[k", ":", `${JOINER}: \`= 1 + 1\`]`]);
+	// Four nodes of one colon each, and an empty node between two.
+	assert.deepEqual(breakCellColons([":", ":", ":", ":"]), [":", `${JOINER}:`, `${JOINER}:`, `${JOINER}:`]);
+	assert.deepEqual(breakCellColons(["a:", "", ":b"]), ["a:", "", `${JOINER}:b`]);
+	// Ordinary text and single colons stay as they are.
+	for (const texts of [["a: b", "c :d"], ["std", ": x"], ["", ""]]) assert.deepEqual(breakCellColons(texts), texts);
+	for (const texts of [["std::vector", "fe80::1"], ["a:", ":b", "::"]])
+		assert.doesNotMatch(breakCellColons(texts).join(""), /::/, texts.join("|"));
+});
+
+test("PRD-001.R17: a piece read as plain text is its shown text, math its source", () => {
+	const cut = render("`a` $x^2$ ![alt](https://e.test/i.png)");
+	assert.deepEqual(cut.pieces.map(pieceText), ["a", "$x^2$", cut.pieces[2].text]);
 });
 
 test("PRD-003.R13: no two colons meet in an exported note, fences included", () => {

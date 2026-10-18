@@ -24,6 +24,7 @@ import {
 	type AgentPanelSettings,
 	type CliProfile,
 } from "./settings";
+import { protectTableCells } from "./ui/markdown";
 import { AgentPanelView, VIEW_TYPE_AGENT_PANEL } from "./view";
 
 /** App.saveLocalStorage key for device-local settings (per vault+machine). */
@@ -106,6 +107,8 @@ export default class AgentPanelPlugin extends Plugin {
 
 		registerAgentIcon();
 		this.registerView(VIEW_TYPE_AGENT_PANEL, (leaf) => new AgentPanelView(leaf, this));
+		// Ahead of post processors at the default order (0) and Dataview's (100).
+		this.registerMarkdownPostProcessor((el) => protectTableCells(el), -10000);
 		// Lets the 'Page preview' core plugin preview vault links in replies.
 		this.registerHoverLinkSource(VIEW_TYPE_AGENT_PANEL, {
 			display: "AI Agent Panel",

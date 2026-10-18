@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixes
+
+- **Code in tables shows in table views.** A table plugin that redraws
+  tables (TableBase) showed inline code, math and images in a reply's table
+  as random tokens such as `i5a1105fz7yzq2z`; it now shows their text. Other
+  plugins still never see them as code.
+
 ### For contributors
 
 - **Tasks 142 to 145** open the 1.0.x fixes for four of the 1.0.0 known
