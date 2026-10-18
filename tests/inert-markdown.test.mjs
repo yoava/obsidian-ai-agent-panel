@@ -8,6 +8,7 @@ const {
 	breakInlineFields,
 	breakCellColons,
 	pieceText,
+	cellText,
 	attributeValue,
 	freshToken,
 	fenceForExport,
@@ -893,9 +894,12 @@ test("PRD-001.R17: no two colons meet in a table cell's text, across its text no
 		assert.doesNotMatch(breakCellColons(texts).join(""), /::/, texts.join("|"));
 });
 
-test("PRD-001.R17: a piece read as plain text is its shown text, math its source", () => {
-	const cut = render("`a` $x^2$ ![alt](https://e.test/i.png)");
-	assert.deepEqual(cut.pieces.map(pieceText), ["a", "$x^2$", cut.pieces[2].text]);
+test("PRD-001.R17: a piece read as plain text is its shown text, math its source; in a cell code is its span", () => {
+	const cut = render("`a` $x^2$ ``b`c`` ![alt](https://e.test/i.png)");
+	const image = cut.pieces.find((piece) => piece.kind === "text").text;
+	assert.deepEqual(cut.pieces.map(pieceText), ["a", "$x^2$", "b`c", image]);
+	assert.deepEqual(cut.pieces.map((piece) => cellText(piece, false)), ["`a`", "$x^2$", "``b`c``", image]);
+	assert.deepEqual(cut.pieces.map((piece) => cellText(piece, true)), cut.pieces.map(pieceText));
 });
 
 test("PRD-003.R13: no two colons meet in an exported note, fences included", () => {

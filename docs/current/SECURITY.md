@@ -279,7 +279,8 @@ and every one of these except the clipboard depends on it.
   plugin's code-block or inline-code processor (Dataview's JavaScript
   queries, for example) runs on model text. In table cells the panel puts
   that text back as plain text before other post processors run, so a table
-  view that copies cell text copies text, not placeholders, with a word joiner
+  view that copies cell text copies text (code as its backtick span), not
+  placeholders, with a word joiner
   between any two colons so Dataview reads no inline field from it. Images become their alt text and
   URL unless plainly from the vault, raw HTML other than simple inline
   formatting shows as text, and a line cannot start indented code with a

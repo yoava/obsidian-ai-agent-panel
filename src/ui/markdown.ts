@@ -9,9 +9,9 @@ import {
 import {
 	attributeValue,
 	breakCellColons,
+	cellText,
 	cutForRender,
 	loadsResource,
-	pieceText,
 	splitPlaceholders,
 	type InertPiece,
 	type RenderCut,
@@ -65,8 +65,8 @@ export async function renderMarkdown(
 
 /**
  * A post processor run early (DES-001 Rendering boundary, step 9): in the
- * table cells of a render in flight, placeholders become the plain text they
- * stand for and no two colons meet, so a plugin that copies a cell's text (a
+ * table cells of a render in flight, placeholders become the text they stand
+ * for (code as its Markdown span) and no two colons meet, so a plugin that copies a cell's text (a
  * table view) copies text, not tokens, and no `::` for Dataview.
  * `restoreInert` reverts what is still in place.
  */
@@ -90,7 +90,7 @@ function protectCell(cell: Element, { cut, written }: InFlight): void {
 		if (!holdsPlaceholder(node.data, cut) || node.parentElement?.closest("pre, code")) continue;
 		const nodes = splitPlaceholders(node.data, cut).map((part) => {
 			if (typeof part === "string") return node.doc.createTextNode(part);
-			const text = node.doc.createTextNode(pieceText(part));
+			const text = node.doc.createTextNode(cellText(part, cell.tagName === "TH"));
 			written.set(text, { original: text.data, data: text.data, piece: part });
 			return text;
 		});

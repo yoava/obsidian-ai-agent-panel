@@ -204,6 +204,15 @@ export function pieceText(piece: InertPiece): string {
 }
 
 /**
+ * A piece as a table cell shows it to other plugins before the restore: in a
+ * body cell code as its Markdown span, so a table view that parses cell text
+ * can show it as code; in a header, a column name, and otherwise plain text.
+ */
+export function cellText(piece: InertPiece, header: boolean): string {
+	return piece.kind === "code" && !header ? piece.source : pieceText(piece);
+}
+
+/**
  * A table cell's text nodes, in order, with a word joiner before every colon
  * that follows another in the cell's text, so neither the cell's HTML nor a
  * copy of its `textContent` holds `::` (Dataview reads inline fields from both).
