@@ -28,7 +28,8 @@ TypeScript version change cannot change the shipped output. Note that
 `tsconfig.json` names `"types": ["node"]` explicitly: without that line every
 `process` and `node:*` reference fails to resolve under a TypeScript that does
 not include `@types/*` implicitly. `@types/node` deliberately tracks the major
-that CI runs on (Node 22), not the newest published.
+that CI runs on (Node 24, the Node of Obsidian's Electron), not the newest
+published.
 
 ## Linting
 

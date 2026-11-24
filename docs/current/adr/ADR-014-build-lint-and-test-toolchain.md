@@ -1,6 +1,6 @@
 # ADR-014 — Build, lint and test toolchain
 
-**Status:** accepted (2026-10-10)
+**Status:** accepted (2026-11-24)
 
 ## Context
 
@@ -50,7 +50,7 @@ Why esbuild, a type-check-only tsc, the directory's rules and `node:test`:
   esbuild (`package.json:8`), so a TypeScript upgrade can add type errors but
   cannot change `main.js`.
 - Over Vitest or Jest: `node:test` ships with the Node `.nvmrc` pins
-  (22.23.1) and adds no package; `npm view <package> dependencies` lists 13
+  (24.22.3) and adds no package; `npm view <package> dependencies` lists 13
   direct dependencies for vitest 5.0.3 and 4 for jest 30.5.2.
 - Over typescript-eslint alone: Obsidian says "Use our eslint plugin to
   check your Obsidian plugin against the official developer guidelines
@@ -65,7 +65,9 @@ The design:
   Node builtin from `node:module`, in both spellings. `npm run build` runs
   `tsc -noEmit -skipLibCheck`, then esbuild.
 - `typescript` stays in the range typescript-eslint supports (`~6.0`);
-  `@types/node` tracks Node 22, the major of Obsidian's Electron and of CI;
+  `.nvmrc` and `@types/node` track the Node major of Obsidian's Electron
+  (24 in Electron 43, Obsidian's in 2026-11), so tests run on the Node the
+  plugin runs on;
   `tslib` serves `importHelpers`; `moment` is overridden past an advisory
   (types only; the app supplies it at runtime).
 - `obsidian` typings are pinned exactly in `package.json`, and Dependabot

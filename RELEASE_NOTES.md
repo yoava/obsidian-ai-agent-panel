@@ -12,6 +12,8 @@
 
 ### For contributors
 
+- **Node 24.** `.nvmrc` pins 24.22.3 and `@types/node` moves to 24, the
+  Node of Obsidian's Electron 43; run `nvm install` in the repo once.
 - **Tasks 142 to 145** open the 1.0.x fixes for four of the 1.0.0 known
   issues: real paths before the vault-bounds check, the WSL `/mnt` mapping, a
   `!` command passed verbatim to cmd.exe, and the rename existence check
