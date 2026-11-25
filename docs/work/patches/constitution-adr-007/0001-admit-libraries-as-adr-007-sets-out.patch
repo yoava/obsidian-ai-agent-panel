@@ -1,0 +1,13 @@
+diff --git a/docs/current/constitution.md b/docs/current/constitution.md
+index f096efc91c9c1563b42da80b3dffb22b1c0adfb2..8b120282a40f518727ca443127d3112894e707e4 100644
+--- a/docs/current/constitution.md
++++ b/docs/current/constitution.md
+@@ -98,7 +98,7 @@ a human decision, never an autonomous agent edit. Evidence and detail:
+   lockfile review; an accepted ADR is required only for a significant choice
+   (framework, external service, storage format, public contract, or
+   load-bearing structural decision), not per package; a runtime library is
+-  admitted by an accepted ADR of its own (ADR-007).
++  admitted as ADR-007 sets out.
+ - Every new dependency and every version change of one, with the packages it
+   pulls in, passes the dependency screen before it lands, and a human accepts
+   the result:
