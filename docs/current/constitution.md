@@ -98,7 +98,7 @@ a human decision, never an autonomous agent edit. Evidence and detail:
   lockfile review; an accepted ADR is required only for a significant choice
   (framework, external service, storage format, public contract, or
   load-bearing structural decision), not per package; a runtime library is
-  admitted by an accepted ADR of its own (ADR-007).
+  admitted as ADR-007 sets out.
 - Every new dependency and every version change of one, with the packages it
   pulls in, passes the dependency screen before it lands, and a human accepts
   the result:
