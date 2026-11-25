@@ -5,6 +5,13 @@ Protected paths are blocked; ask-first paths return an "ask" decision so a
 human confirms the edit. A path outside the repository also asks, unless it is
 under a folder in `permissions.additionalDirectories` of the gitignored local
 settings, which keeps machine-local paths out of the shared configuration.
+Protection follows the path's own repository: the lists apply relative to
+every checkout or folder above the path that the scaffold governs (it holds
+`.agentic/version`, or its main checkout does), so a listed folder silences
+the ask and never opens a protected path of a sibling checkout or worktree.
+Git's own folder and a worktree's `.git` pointer file are blocked at each of
+those folders too: the pointer names the checkout that governs a worktree.
+A `.git` entry that is there and cannot be followed governs its folder.
 Both the path as written and its symlink target are judged; the stricter wins.
 """
 
@@ -13,6 +20,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import stat
 import sys
 from pathlib import Path
 from typing import Any
@@ -21,6 +29,9 @@ from typing import Any
 # Entries ending in / protect a prefix; every other entry is exact.
 PROTECTED_GOVERNANCE = (
     "Makefile",
+    # GNU make reads these two before Makefile.
+    "GNUmakefile",
+    "makefile",
     ".agentic/",
     ".claude/settings.json",
     ".github/workflows/",
@@ -48,16 +59,25 @@ PROTECTED_EXCEPTIONS = (
 )
 
 # Decisions in force change rarely; a human confirms each edit.
+# The local settings list the outside folders this hook lets through.
 # package.json holds the gate's npm scripts and dependency ranges, but feature
 # work edits it too (a new testable module joins pretest), so it asks.
-# The local settings list the outside folders this hook lets through.
 ASK_FIRST = (
     "docs/current/adr/",
-    "package.json",
     ".claude/settings.local.json",
+    "package.json",
 )
 
 LOCAL_SETTINGS = ".claude/settings.local.json"
+# The file that marks a folder as governed by the scaffold.
+VERSION_FILE = ".agentic/version"
+# Git's folder, or the one-line file that points a linked worktree at it. The pointer decides which checkout
+# governs a worktree, and git runs the hooks and the config the folder holds; no file tool has a reason to write either.
+GIT_ENTRIES = (".git", ".git/")
+# A pointer file holds one path; the hook reads no more of it than this.
+POINTER_BYTES = 4096
+# The local settings are read whole or not at all: a longer file lists no folder.
+LOCAL_SETTINGS_BYTES = 1 << 20
 
 
 def path_spellings(raw_path: str, project_dir: Path) -> tuple[Path, Path] | None:
@@ -87,11 +107,102 @@ def repo_relative(absolute: Path, project_dir: Path) -> str | None:
     return None
 
 
-def local_folders(project_dir: Path) -> list[Path]:
-    """Outside folders the user lets agents edit without this hook asking."""
+def pointer_text(path: Path, limit: int = POINTER_BYTES) -> str:
+    """The start of a regular file, at most `limit` bytes. Anything else raises OSError unread: a FIFO would hold
+    the hook past its timeout and a device such as /dev/zero never ends, and the hook reads these files before it
+    decides."""
+    if not stat.S_ISREG(path.stat().st_mode):
+        raise OSError(f"not a regular file: {path}")
+    # O_NONBLOCK: a FIFO put there after the stat must not hold the open either.
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOCTTY", 0))
     try:
-        settings = json.loads((project_dir / LOCAL_SETTINGS).read_text(encoding="utf-8"))
-        entries = settings["permissions"]["additionalDirectories"]
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise OSError(f"not a regular file: {path}")
+        data = b""
+        while len(data) < limit and (chunk := os.read(descriptor, limit - len(data))):
+            data += chunk
+        return data.decode("utf-8")
+    finally:
+        os.close(descriptor)
+
+
+def present(path: Path) -> bool:
+    """Whether a name is taken, by anything: a dangling link counts. An entry that cannot be looked at raises."""
+    try:
+        path.lstat()
+    except (FileNotFoundError, NotADirectoryError):
+        return False
+    return True
+
+
+def repository(folder: Path) -> bool:
+    """Whether a folder holds what git asks of a repository: `objects/` and `refs/`."""
+    return (folder / "objects").is_dir() and (folder / "refs").is_dir()
+
+
+def main_checkout(checkout: Path) -> Path | None:
+    """The checkout that holds a linked worktree's repository. None where git says the folder is no linked
+    worktree: no `.git` entry, git's own folder, or a pointer to a git folder without a `commondir` (a submodule,
+    a separate git folder). Any other entry raises OSError or ValueError: it cannot be read as git writes it,
+    and that includes a folder that holds no repository."""
+    entry = checkout / ".git"
+    if not present(entry):
+        return None
+    if entry.is_dir():
+        if not repository(entry):
+            raise OSError(f"no git folder: {entry}")
+        return None
+    pointer = pointer_text(entry)
+    if not pointer.startswith("gitdir:"):
+        raise ValueError(f"not a git pointer: {entry}")
+    gitdir = checkout / pointer.removeprefix("gitdir:").strip()
+    if not (gitdir / "HEAD").is_file():
+        raise OSError(f"the pointer leads to no git folder: {entry}")
+    if not present(gitdir / "commondir"):
+        if not repository(gitdir):
+            raise OSError(f"the pointer leads to no repository: {entry}")
+        return None
+    named = pointer_text(gitdir / "commondir").strip()
+    common = (gitdir / named).resolve()
+    if not named or not repository(common):
+        raise OSError(f"the pointer leads to no repository: {entry}")
+    return common.parent if common.name == ".git" else None
+
+
+def governed(folder: Path) -> bool:
+    """Whether the scaffold governs a folder: it holds the version file, or it is a linked worktree of a checkout
+    that does (a worktree of a commit older than the scaffold is governed too). A `.git` entry that is there and
+    cannot be followed governs the folder as well: read as "no worktree", a pointer made unreadable took the
+    protection off the worktree it names."""
+    if (folder / VERSION_FILE).is_file():
+        return True
+    try:
+        main = main_checkout(folder)
+    except (OSError, ValueError, RuntimeError):
+        return True
+    return main is not None and (main / VERSION_FILE).is_file()
+
+
+def governed_roots(absolute: Path) -> list[Path]:
+    """Every folder above a path that the scaffold governs."""
+    return [ancestor for ancestor in absolute.parents if governed(ancestor)]
+
+
+def names_of(absolute: Path, project_dir: Path) -> list[str]:
+    """The path relative to this repository and to every governed folder above it."""
+    names = [absolute.relative_to(root).as_posix() for root in governed_roots(absolute)]
+    in_project = repo_relative(absolute, project_dir)
+    return names if in_project is None or in_project in names else [in_project, *names]
+
+
+def local_folders(project_dir: Path) -> list[Path]:
+    """Outside folders the user lets agents edit without this hook asking. Settings that are no regular file of
+    at most LOCAL_SETTINGS_BYTES list none."""
+    try:
+        text = pointer_text(project_dir / LOCAL_SETTINGS, LOCAL_SETTINGS_BYTES + 1)
+        if len(text.encode("utf-8")) > LOCAL_SETTINGS_BYTES:
+            return []
+        entries = json.loads(text)["permissions"]["additionalDirectories"]
     except (OSError, ValueError, KeyError, TypeError):
         return []
     if not isinstance(entries, list):
@@ -119,30 +230,23 @@ def is_protected(raw_path: str, project_dir: Path) -> bool:
     spellings = path_spellings(raw_path, project_dir)
     if spellings is None:
         return True
-    for absolute in spellings:
-        normalized = repo_relative(absolute, project_dir)
-        if normalized is None or normalized in PROTECTED_EXCEPTIONS:
-            continue
-        if matches(normalized, PROTECTED_GOVERNANCE):
-            return True
-    return False
+    return any(
+        name not in PROTECTED_EXCEPTIONS and matches(name, PROTECTED_GOVERNANCE + GIT_ENTRIES)
+        for absolute in spellings
+        for name in names_of(absolute, project_dir)
+    )
 
 
 def confirmation_reason(raw_path: str, project_dir: Path) -> str | None:
     spellings = path_spellings(raw_path, project_dir)
     if spellings is None:
         return None
-    names = [repo_relative(absolute, project_dir) for absolute in spellings]
+    names = [name for absolute in spellings for name in names_of(absolute, project_dir)]
     target = spellings[1]
-    if target == (project_dir / LOCAL_SETTINGS).resolve() or any(
-        name is not None and matches(name, ASK_FIRST) for name in names
-    ):
-        return (
-            f"Edits a human-confirmed path (decision in force, package.json "
-            f"or local settings): {raw_path}"
-        )
+    if target == (project_dir / LOCAL_SETTINGS).resolve() or any(matches(name, ASK_FIRST) for name in names):
+        return f"Edits a decision in force, package.json or the local settings: {raw_path}"
     # Where the edit lands decides; approved folders are stored resolved.
-    if names[1] is None and not any(
+    if repo_relative(target, project_dir) is None and not any(
         target.is_relative_to(folder) for folder in local_folders(project_dir)
     ):
         return f"Edits a path outside the repository: {raw_path}"

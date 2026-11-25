@@ -13,12 +13,26 @@
       "Bash(make verify)",
       "Bash(npm run build)",
       "Bash(npm run lint)",
-      "Bash(npm test)"
+      "Bash(npm test)",
+      "Bash(git worktree add *)",
+      "Bash(git worktree remove *)",
+      "Bash(git worktree prune*)",
+      "Bash(git worktree list*)",
+      "Bash(bash scripts/orchestrator/gate-slot.sh make verify)",
+      "Bash(bash scripts/orchestrator/gate-slot.sh make test)",
+      "Bash(bash scripts/orchestrator/heartbeat.sh status)",
+      "Bash(bash scripts/orchestrator/workspace.sh note)"
     ],
     "ask": [
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git push *--tags*)",
+      "Bash(git tag*)",
+      "Bash(gh release *)"
     ],
     "deny": [
+      "Bash(git worktree remove *--force*)",
+      "Bash(git worktree remove -f*)",
+      "Bash(git worktree remove * -f*)",
       "Bash(git push *--force*)",
       "Bash(git push -f*)",
       "Bash(git * push *--force*)",
@@ -54,8 +68,24 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && out=$(make lint-fast 2>&1) || { printf '%s\\n' \"$out\" >&2; exit 1; }",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" || exit 1; python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get(\"stop_hook_active\") is True else 1)' 2>/dev/null && exit 0; out=$(make lint-fast 2>&1) && exit 0; printf '%s\\n' \"$out\" >&2; p='before Phase 0 closes|unresolved customization TODO'; printf '%s\\n' \"$out\" | grep ERROR | grep -Eqv \"$p\" && exit 2; printf '%s\\n' \"$out\" | grep -Eq \"$p\" || exit 2; exit 0",
             "timeout": 120
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/orchestrator/stop-guard.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/orchestrator/report-capture.sh\"",
+            "timeout": 30
           }
         ]
       }

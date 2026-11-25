@@ -3,20 +3,28 @@
 
 approve: docs/work/{adr,product,design}/... to docs/current/..., status accepted.
 close: docs/work/{tasks,changes,research}/... to docs/records/..., tasks become
-closed and change deltas incorporated.
+closed and change deltas incorporated. A task closes only with its review and
+outcome recorded and every acceptance item checked.
+A move that rewrites links in a record listed in .agentic/legacy-records gives
+that line the record's new digest, so the record stays listed.
+Both move a same-stem sibling folder (assets such as a diagram model) with the
+document.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import re
 import subprocess
 import sys
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 from urllib.parse import unquote
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import check_governance as governance  # noqa: E402
 import doc_layers as layers  # noqa: E402
 
 
@@ -47,16 +55,28 @@ def mark_status(action: str, kind: str, text: str, today: str) -> str:
     return text
 
 
-def rebase_links(text: str, source: Path, destination: Path) -> str:
-    """Keep the moved document's own links pointing where they did."""
+def relocation(moves: list[tuple[Path, Path]]) -> Callable[[Path], Path]:
+    """Where a path is after the moves: a moved file, or anything under a moved folder."""
+
+    def where(path: Path) -> Path:
+        for old, new in moves:
+            if path == old:
+                return new
+            if old in path.parents:
+                return new / path.relative_to(old)
+        return path
+
+    return where
+
+
+def rebase_links(text: str, source: Path, destination: Path, where: Callable[[Path], Path]) -> str:
+    """Keep a moved document's own links pointing where they did, into moved files too."""
 
     def replace(target: str) -> str | None:
         path, anchor = layers.split_anchor(target)
         if not path:
             return None
-        absolute = (source.parent / unquote(path)).resolve()
-        if absolute == source:
-            absolute = destination
+        absolute = where((source.parent / unquote(path)).resolve())
         if (destination.parent / unquote(path)).resolve() == absolute:
             return None
         return layers.relative_link(destination.parent, absolute) + anchor
@@ -64,22 +84,47 @@ def rebase_links(text: str, source: Path, destination: Path) -> str:
     return layers.rewrite_links(text, replace)
 
 
-def redirect_inbound(root: Path, source: Path, destination: Path) -> list[Path]:
+def relist_legacy(root: Path, digests: dict[str, tuple[str, str]]) -> Path | None:
+    """Give each listed record whose links a move rewrote its new digest; digests maps path to (old, new)."""
+    path = root / governance.LEGACY_RECORDS
+    if not digests or not path.is_file():
+        return None
+    lines = path.read_text(encoding="utf-8").splitlines()
+    for position, line in enumerate(lines):
+        match = governance.LEGACY_LINE.match(line.strip())
+        if match and digests.get(match.group(2), ("", ""))[0] == match.group(1):
+            lines[position] = f"{digests[match.group(2)][1]}  {match.group(2)}"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    return path
+
+
+def redirect_inbound(root: Path, where: Callable[[Path], Path], moved: set[Path]) -> list[Path]:
     changed: list[Path] = []
+    legacy = governance.legacy_records(root)[0]
+    digests: dict[str, tuple[str, str]] = {}
     for path in layers.markdown_files(root):
-        if path.resolve() == destination:
+        if path.resolve() in moved:
             continue
         text = path.read_text(encoding="utf-8")
+        name = path.relative_to(root).as_posix()
+        before = hashlib.sha256(path.read_bytes()).hexdigest() if name in legacy else ""
 
         def replace(target: str, here: Path = path) -> str | None:
-            if layers.resolve(here, target) != source:
+            old = layers.resolve(here, target)
+            if old is None or where(old) == old:
                 return None
-            return layers.relative_link(here.parent, destination) + layers.split_anchor(target)[1]
+            return layers.relative_link(here.parent, where(old)) + layers.split_anchor(target)[1]
 
         updated = layers.rewrite_links(text, replace)
         if updated != text:
             path.write_text(updated, encoding="utf-8", newline="\n")
             changed.append(path)
+            # Only a record that still matched its line: one edited since is already under the close checks.
+            if before and before == legacy[name]:
+                digests[name] = (before, hashlib.sha256(path.read_bytes()).hexdigest())
+    relisted = relist_legacy(root, digests)
+    if relisted is not None:
+        changed.append(relisted)
     return changed
 
 
@@ -142,14 +187,30 @@ def move(action: str, source: Path, root: Path, today: str) -> tuple[Path, list[
     if not source.is_file():
         raise ValueError(f"not a file: {source}")
     destination = destination_for(action, source, root)
-    if destination.exists():
-        raise ValueError(f"already exists: {destination.relative_to(root).as_posix()}")
+    folder, target = source.with_suffix(""), destination.with_suffix("")
+    moves = [(source, destination)]
+    if folder.is_dir() and not folder.is_symlink():
+        moves.append((folder, target))
+    for _, new in moves:
+        if new.exists():
+            raise ValueError(f"already exists: {new.relative_to(root).as_posix()}")
     kind = source.relative_to(root / layers.WORK).parts[0]
-    text = mark_status(action, kind, source.read_text(encoding="utf-8"), today)
-    text = rebase_links(text, source, destination)
-    git_move(source, destination, root)
-    destination.write_text(text, encoding="utf-8", newline="\n")
-    changed = redirect_inbound(root, source, destination)
+    text = source.read_text(encoding="utf-8")
+    if action == "close" and kind == "tasks":
+        refused = governance.task_close_errors(text)
+        if refused:
+            raise ValueError(f"cannot close {source.name}: " + "; ".join(refused))
+    where = relocation(moves)
+    # Every moved document's links are rebased from where it was, before anything moves.
+    texts = {destination: rebase_links(mark_status(action, kind, text, today), source, destination, where)}
+    if len(moves) > 1:
+        for path in sorted(folder.rglob("*.md")):
+            texts[where(path)] = rebase_links(path.read_text(encoding="utf-8"), path, where(path), where)
+    for old, new in moves:
+        git_move(old, new, root)
+    for path, updated in texts.items():
+        path.write_text(updated, encoding="utf-8", newline="\n")
+    changed = redirect_inbound(root, where, set(texts))
     if action == "approve" and kind == "adr":
         index = index_adr(root, destination, today)
         if index is not None and index not in changed:

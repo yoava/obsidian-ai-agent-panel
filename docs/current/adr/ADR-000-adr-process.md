@@ -29,9 +29,11 @@ its question.
 Rewriting in place wins because agents load every decision file they find, so
 an amended or superseded record competes with the answer in force.
 
-Write one ADR before implementation for every new dependency, framework,
-external service, storage format, public contract, or load-bearing structural
-decision. Draft it at `docs/work/adr/ADR-NNN-short-slug.md` from
+Write one ADR before implementation for every new framework, external
+service, storage format, public contract, or load-bearing structural
+decision. Any other dependency follows the constitution's dependency policy
+(registry verification, the dependency screen, human lockfile review)
+without an ADR. Draft an ADR at `docs/work/adr/ADR-NNN-short-slug.md` from
 `.agentic/templates/adr.md`. `make approve DOC=<path>` moves it into
 `docs/current/adr/` and marks it accepted; committing that move is the human
 approval.

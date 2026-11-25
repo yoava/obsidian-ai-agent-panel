@@ -27,7 +27,7 @@ format: ## check tracked files for whitespace errors (no code formatter yet)
 lint: docs format ## governance docs, whitespace, then ESLint (npm run lint)
 	@npm run lint
 
-lint-fast: docs format ## fast advisory Stop-hook feedback
+lint-fast: docs format ## fast Stop-hook feedback; a failure blocks the stop once
 	@npm run lint
 
 test: ## policy-script tests, then the node:test suite (npm test)
@@ -38,3 +38,6 @@ verify: toolchain build lint test ## run the complete local and CI gate
 	@echo "verify: OK (toolchain + build + docs + format + lint + tests)"
 
 .PHONY: help docs approve close toolchain build format lint lint-fast test verify
+
+# make never rebuilds this file: without the rule a newer Makefile.sh, Makefile.c or s.Makefile replaces it.
+Makefile: ;

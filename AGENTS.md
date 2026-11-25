@@ -26,7 +26,7 @@ session state never constitutes approval.
 - `docs/current/`: what governs now: `constitution.md`, `plan.md`,
   `open-decisions.md`, `adr/`, `product/` (requirements), `design/`
   (mechanisms), `SECURITY.md` (threat model), `DEVELOPMENT.md`,
-  `COMPARISON.md`, `LEGAL.md`.
+  `COMPARISON.md`, `LEGAL.md`, `runbooks/` (binding).
 - `docs/work/`: in progress, not binding: drafts under the same folder names,
   `changes/` requirement deltas, active `tasks/` and `research/`.
 - `docs/records/`: closed tasks, verification evidence, incorporated changes,
@@ -34,15 +34,15 @@ session state never constitutes approval.
 - `RELEASE_NOTES.md` (root): what each release shipped. It sits outside
   `docs/records/` because its *Unreleased* section is edited on every change.
 - `.agentic/`: document templates and the scaffold version.
-- `scripts/`: deterministic governance checks and their tests.
+- `scripts/`: governance checks, their tests, `orchestrator/` (run liveness).
 - `.claude/`: shared permissions and hooks, the graphify skill. `.github/`:
   CI, release, Dependabot, templates. Root `SECURITY.md` is the reporting
   policy GitHub shows.
 
-Load this guide, the constitution, your task, and what it cites; search
-`docs/current/` first. Only `docs/current/` governs; never treat a draft,
-research note, or record as a requirement or decision. For why or when
-something changed, use `git log --follow -p <file>` and `docs/records/`.
+Load this guide, `runbooks/agent-work.md`, the constitution, your task, and what
+it cites; search `docs/current/` first. Only `docs/current/` governs; never
+treat a draft, research note, or record as a requirement or decision. For why or
+when something changed, use `git log --follow -p <file>` and `docs/records/`.
 
 Current documents state the present answer completely. Rewrite them in place,
 never add amendment, history, or log sections, and put why a document changed
@@ -82,8 +82,8 @@ for the threat model and capabilities (consent, what is stored where, what each
 mode skips); `LEGAL.md`, `DEVELOPMENT.md`, `COMPARISON.md` for licensing, build
 and release steps, and dated competitor facts.
 
-Never add a dependency, framework, external service, storage format, public
-contract, or load-bearing structural decision without an accepted ADR.
+Never add a framework, external service, storage format, public contract, or
+load-bearing structural decision without an accepted ADR; dependencies: the constitution.
 
 ## 4. Design rules
 
@@ -112,10 +112,11 @@ honestly and is accepted before implementation.
 
 ## 6. Task workflow
 
-M and L work uses `.agentic/templates/task.md`; active tasks live in
-`docs/work/tasks/<rNN-slug>/`, task numbers are monotonic repository-wide, and
-a code-landing task is one commit with a `Task: NNN` trailer. Humans control
-phase approvals, pushes, and merges. File names lead with the ID (`TASK-048-`).
+M and L work uses `.agentic/templates/task.md`; active tasks live at
+`docs/work/tasks/<rNN-slug>/TASK-NNN-slug.md`, task numbers are monotonic
+repository-wide, and a code-landing task is one commit with a `Task: NNN`
+trailer. Humans control phase approvals, pushes, and merges. Unattended runs
+follow `docs/current/runbooks/orchestration.md`.
 
 Commit each requested feature or fix as its own commit once `make verify`
 passes. Do not batch unrelated changes; stage only the files that belong to
@@ -198,7 +199,7 @@ IDs or record explicit manual evidence in `docs/records/verification/`.
 - Do not add dependencies from memory; verify the registry, review lockfiles,
   and land no dependency or version the dependency screen has not passed.
 - Do not weaken or bypass a failing gate to make a change pass.
-- Do not edit protected governance without explicit human authorization.
+- Do not edit protected governance with any tool; the owner applies a patch.
 - Do not read secrets or commit credentials, transcripts, or sensitive fixtures.
 - Do not let shared repository configuration activate machine-local executable
   paths, credentials, or network endpoints; those go in
@@ -211,9 +212,8 @@ IDs or record explicit manual evidence in `docs/records/verification/`.
 
 - Remote branch protection, required checks, secret scanning, and bot
   permissions cannot be proven from this checkout; verify them remotely.
-- `make format` checks whitespace only, and coverage, dead-code,
-  duplicate-code, and architecture gates are missing
-  (`docs/current/open-decisions.md`).
+- `make format` checks whitespace only, and coverage, dead-code, duplicate-code,
+  and architecture gates are missing (`docs/current/open-decisions.md`).
 - Code that imports `obsidian` has no automated tests.
 - The protected-path hook runs in Claude Code only; for other agents the
   boundary is advisory, with CI and human review as the backstop.

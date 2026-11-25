@@ -94,8 +94,11 @@ a human decision, never an autonomous agent edit. Evidence and detail:
   bypass rights.
 - Unsupervised automation shall never combine private-data access, untrusted
   content, and external communication.
-- Dependencies and external services require an accepted ADR, registry
-  verification, and human lockfile review.
+- Dependency policy: every dependency needs registry verification and human
+  lockfile review; an accepted ADR is required only for a significant choice
+  (framework, external service, storage format, public contract, or
+  load-bearing structural decision), not per package; a runtime library is
+  admitted by an accepted ADR of its own (ADR-007).
 - Every new dependency and every version change of one, with the packages it
   pulls in, passes the dependency screen before it lands, and a human accepts
   the result:
@@ -119,6 +122,10 @@ a human decision, never an autonomous agent edit. Evidence and detail:
   A version change re-runs the security and legal reviews every time, and the
   whole screen for a major version, a new transitive package, or a change of
   license or maintainer.
+  The task record that adds or bumps the dependency holds the result in a
+  `Dependency screen` section, one entry per package screened: name,
+  version, maturity, security review, risk, license, and lockfile reviewed by
+  (the human who accepted it).
 - Shared repository configuration shall not activate machine-local executable
   paths, credentials, or network endpoints without explicit local approval.
 
@@ -146,7 +153,7 @@ Agents never edit these paths without explicit human authorization:
 - `docs/current/constitution.md`
 - `docs/current/adr/ADR-000-adr-process.md`
 - `.agentic/`
-- `Makefile`
+- `Makefile`, and `GNUmakefile` and `makefile`, which make reads before it
 - `scripts/` (except `scripts/README.md`)
 - `.claude/settings.json`
 - `.github/workflows/` and `.github/dependabot.yml`
@@ -156,8 +163,10 @@ Agents never edit these paths without explicit human authorization:
 - Architecture and dependency-policy files added by accepted ADRs
 - Metrics ledgers and holdout evidence
 
-The Claude Code PreToolUse hook blocks file-tool edits to these paths and asks
-before any file-tool edit to `docs/current/adr/` or `package.json`. Shell
+The Claude Code PreToolUse hook blocks file-tool edits to these paths and to
+`.git`, and asks before any file-tool edit to `docs/current/adr/`,
+`package.json`, `.claude/settings.local.json`, or a path outside the
+repository that no folder in `permissions.additionalDirectories` covers. Shell
 permissions remain a separate boundary; the hook does not parse arbitrary
 shell writes. Other agents must map the boundary to their sandbox or tool
 policy. CI and human review remain the independent backstop.

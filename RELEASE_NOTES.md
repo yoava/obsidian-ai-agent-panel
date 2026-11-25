@@ -18,6 +18,20 @@
   issues: real paths before the vault-bounds check, the WSL `/mnt` mapping, a
   `!` command passed verbatim to cmd.exe, and the rename existence check
   ignoring case (`docs/work/tasks/r11-bounds-and-platform-fixes/`).
+- **Governance scaffold 2.8.3** (from 2.4.0). A task closes with
+  `make close` only when its Outcome checks each acceptance ID of its Spec
+  and its review names a reviewer and a verdict; records closed earlier are
+  listed in `.agentic/legacy-records`. A dependency passes the
+  constitution's dependency screen and needs an ADR only for a significant
+  choice. The Stop hook blocks a stop once on a lint failure. The
+  protected-path hook judges a path by the repository that holds it, so a
+  folder in `permissions.additionalDirectories` no longer opens a sibling
+  checkout's or worktree's protected files; it blocks `GNUmakefile`,
+  `makefile` and `.git`, and treats a `.git` entry it cannot follow as a
+  repository. Governance checks the hook's list, the `Makefile` rule
+  `Makefile: ;` and the scaffold hooks of `.claude/settings.json`. Liveness
+  scripts for unattended runs arrive in `scripts/orchestrator/`; their rules
+  and the agent working rules are in `docs/current/runbooks/`.
 
 ## 1.0.0
 

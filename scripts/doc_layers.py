@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Callable, Iterator
+from typing import Callable, Iterable, Iterator
 from urllib.parse import quote, unquote
 
 
@@ -26,7 +26,7 @@ LINK = re.compile(r"(\]\()(<[^>\n]+>|[^)\s]+)((?:\s+\"[^\"]*\")?\))")
 LINK_DEFINITION = re.compile(r"^( {0,3}\[[^\]]+\]:[ \t]*)(<[^>\n]+>|\S+)(.*)$")
 EXTERNAL = re.compile(r"^(?:[a-zA-Z][a-zA-Z0-9+.-]*:|#|/)")
 INLINE_CODE = re.compile(r"`[^`]*`")
-FENCE = re.compile(r"^\s*(?:```|~~~)")
+FENCE = re.compile(r"^[ \t]*(`{3,}|~{3,})")
 
 
 def markdown_files(root: Path) -> Iterator[Path]:
@@ -37,15 +37,28 @@ def markdown_files(root: Path) -> Iterator[Path]:
                 yield Path(directory) / name
 
 
+def fenced(lines: Iterable[str]) -> Iterator[tuple[bool, str]]:
+    """Yield (in_code, line): a fence line and what it encloses are code. A fence closes on a line of its own
+    character, at least as long, with nothing after it; any other fence line inside it is code."""
+    fence = ""
+    for line in lines:
+        found = FENCE.match(line)
+        if fence:
+            if found and found.group(1)[0] == fence[0] and len(found.group(1)) >= len(fence) \
+                    and not line.strip().lstrip(fence[0]):
+                fence = ""
+            yield True, line
+        elif found:
+            fence = found.group(1)
+            yield True, line
+        else:
+            yield False, line
+
+
 def prose_lines(text: str) -> Iterator[tuple[bool, str]]:
     """Yield (is_prose, line) with line endings; fenced code is not prose."""
-    in_fence = False
-    for line in text.splitlines(keepends=True):
-        if FENCE.match(line):
-            in_fence = not in_fence
-            yield False, line
-        else:
-            yield not in_fence, line
+    for in_code, line in fenced(text.splitlines(keepends=True)):
+        yield not in_code, line
 
 
 def headings(text: str) -> Iterator[str]:

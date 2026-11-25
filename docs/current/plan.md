@@ -37,7 +37,7 @@ gate below.
 
 | Phase | Scope | Gate | Status |
 | --- | --- | --- | --- |
-| 0 Foundation | Agent guide, constitution, templates, gates, CI calling `make verify`, remote controls | local and remote verify; deliberate control tests | closed locally 2026-10-10: gate green, lint fails on warnings, scaffold 2.1.0; D-01 and D-02 deferred past the redesign; remote controls verified outside this checkout |
+| 0 Foundation | Agent guide, constitution, templates, gates, CI calling `make verify`, remote controls | local and remote verify; deliberate control tests | closed locally 2026-10-10: gate green, lint fails on warnings, scaffold 2.1.0 (now 2.8.3); D-01 and D-02 deferred past the redesign; remote controls verified outside this checkout |
 | 1 Requirements | the second agent's PRD with EARS criteria | human PRD approval commit | planned |
 | 2 Design | ADRs and design for the agent abstraction | human ADR/design approval | planned |
 | 3 Plan | Dependency-ordered tasks, skeleton first | human plan approval commit | planned |
