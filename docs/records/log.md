@@ -3,6 +3,10 @@
 Events Git cannot show: deployments, external approvals, re-prioritizations,
 work abandoned before a commit. Newest on top: date, event, evidence link.
 
+- 2026-11-25 — The owner approved the scaffold 2.8.3 port as patched,
+  authorized its protected-path edits, applied it, and had an agent close
+  TASK-147. Evidence: owner commit `3d69bb1` and
+  `records/tasks/r12-scaffold-2-8-3/TASK-147-port-scaffold-2-8-3.md`.
 - 2026-10-12 — The owner admitted runtime libraries built into the release
   files, required every new dependency or version to be mature,
   security-reviewed, risk-analyzed and permissively licensed (MIT,

@@ -1,5 +1,5 @@
 ---
-status: active
+status: closed
 release: r12-scaffold-2-8-3
 number: 147
 size: M
@@ -90,12 +90,11 @@ Negative scope: `src/`, `tests/`, `package.json`, `package-lock.json`,
   advisory; `make test` runs about 70 s longer.
 
 Owner command, on the branch `chore/asdlc-2.8.3` (it puts Node 24.22.3 first
-on PATH: on this machine another Node precedes nvm's). Add
-`--expect-tree <tree>` with the tree the port report names; this file cannot
-hold it, since the tree includes this file:
+on PATH: on this machine another Node precedes nvm's), with the tree review r2
+checked:
 
 ```bash
-export PATH="$HOME/.nvm/versions/node/v24.22.3/bin:$PATH" && cd /home/yoava/Projects/yoava/obsidian-ai-agent-panel.wt/asdlc-2.8.3 && npm ci && bash docs/work/patches/asdlc-2.8.3/owner-apply.sh
+export PATH="$HOME/.nvm/versions/node/v24.22.3/bin:$PATH" && cd /home/yoava/Projects/yoava/obsidian-ai-agent-panel.wt/asdlc-2.8.3 && npm ci && bash docs/work/patches/asdlc-2.8.3/owner-apply.sh --expect-tree 031f7ac286bd74e63c10d50dd8f26f840802b868
 ```
 
 Commit message `owner-apply.sh` uses, by patch number:
@@ -144,20 +143,51 @@ git config --global agentic.workspace ""
   run made one commit and `make verify` passed; the second committed nothing
   and passed; the 2.8.3 `validate_project.py` reported no error and no
   warning. Rehearsed again after the review fixes.
+- The owner answered the six owner questions with the recommended options
+  and ran the owner command: commit `3d69bb1`, tree
+  `031f7ac286bd74e63c10d50dd8f26f840802b868` as expected, `make verify`
+  passed.
 
 ## Independent review
 
 Reviewer: Claude Opus 5.5, fresh general-purpose agent (Codex capped)
+Verdict: accepted
 
-Review r1 of `939f9d7`: apply, no blocker. Resolved in the rebuilt patch: F1
+Review r1 of `939f9d7`: apply, no blocker. Resolved in `dbb7341`: F1
 (major: the moved rules were never loaded; now imported and named), F2 (the
 script checks the tree before committing), F3 (a refused apply is taken back
 out), F4 (ADR-007 kept in the dependency policy), F5 (plan row), F9 (hooks-off
-advice), F10 (whitespace exemption narrowed to `*.patch`). Left as
-follow-ups: F7 (`AGENTS.md` at the 220-line cap, one 89-column line), F8
-(owner steps, partly addressed above), F11 (upstream "colour"). The rebuilt
-patch was not re-reviewed.
+advice), F10 (whitespace exemption narrowed to `*.patch`).
+
+Review r2 of `dbb7341`: apply, no blocker or major; r1 fixes confirmed, tree
+after the owner command as expected, a second run idempotent. R2-1 (the
+owner command lacked `--expect-tree`) is fixed in the command above. R2-2
+(the constitution's dependency policy asks for an ADR of a library's own,
+where ADR-007 also accepts a section in the area's ADR) is an owner patch in
+`docs/work/patches/constitution-adr-007/`.
+
+Follow-ups: F7 (`AGENTS.md` at the 220-line cap, one 89-column line), F11
+(upstream "colour"), R2-3 (the load sentence cites `runbooks/agent-work.md`
+without `docs/current/`).
 
 ## Outcome
 
-Pending.
+Accepted. Checked against `3d69bb1`:
+
+- [x] AC-1: `.agentic/version` reads `2.8.3`; the 2.8.3
+  `validate_project.py` reports 0 errors and 0 warnings.
+- [x] AC-2: `make verify` passed on Node 24.22.3 in the owner command, on
+  tree `031f7ac286bd74e63c10d50dd8f26f840802b868`.
+- [x] AC-3: `scripts/check_protected_paths.py` keeps the eight project paths
+  and `package.json` in `ASK_FIRST`; the `Makefile` keeps `toolchain` and the
+  gate allow rules stay in `.claude/settings.json`; section 6 keeps
+  monotonic task numbers; the constitution's project text stays (review r1
+  interdiff).
+- [x] AC-4: `scripts/test_agentic_gates.py` covers `GNUmakefile`,
+  `makefile`, `.git` and the sibling worktree under an additional directory;
+  `Makefile` line 43 is `Makefile: ;`.
+- [x] AC-5: `.agentic/legacy-records` lists the 137 records closed before
+  the port.
+- [x] AC-6: the agent commits `55cfa3d`, `939f9d7` and `dbb7341` touch only
+  `docs/work/` and `.gitattributes`; `3d69bb1` is the owner's commit with
+  no agent trailer; review r2 found a second run commits nothing.
