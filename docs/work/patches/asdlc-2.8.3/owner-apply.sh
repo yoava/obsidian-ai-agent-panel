@@ -4,7 +4,7 @@
 #   bash docs/work/patches/asdlc-2.8.3/owner-apply.sh [--expect-tree <tree hash>]
 # The commit message comes from the owner-commits block of TASK-147. A second run finds the files
 # already at their expected content, commits nothing and runs make verify again.
-# --expect-tree fails the run when HEAD's tree after the commit differs. It never tags, pushes or merges.
+# --expect-tree refuses to commit a tree other than the reviewed one. It never tags, pushes or merges.
 set -u -o pipefail
 
 PATCH=docs/work/patches/asdlc-2.8.3/0001-port-scaffold-2-8-3.patch
@@ -20,13 +20,13 @@ dc9aa7eba21370af8cd014c645ed584a2012d5a6 .agentic/templates/live-note.md
 e79c585d3da9ab9345350e1d64c11e455148b6c9 .claude/settings.json
 5c3cc1a5d395c4a1f0772633c6eddf9a3e3f8a4f .github/PULL_REQUEST_TEMPLATE.md
 fd4243553ef24cfe2ec45ffd4a161473bba40863 .gitignore
-6fbe03b7b11a967c24ee524eb8522f660f43412b AGENTS.md
-ff1d5f2d32ab5f6e9665df666bbdca6f7ba59dad CLAUDE.md
+4720adf4990afe67641008028191bfbb0daafdb3 AGENTS.md
+6a5a8d78687a5f0ceb5eb5564b36f83d358f1748 CLAUDE.md
 2e6fe06be0d9cb5f779e99d8cb2d7847207eb59c Makefile
 c698f7c1f825cf0286d867136fa0da1cbf35c65f RELEASE_NOTES.md
 c9d4d271b81ec4d2ce9e0000d6e96f7d694b9ed3 docs/current/adr/ADR-000-adr-process.md
-507aac83dc72a10870399df03e2688410abf4ccf docs/current/constitution.md
-7a67b6ad79bff474d7cc8172c093c88ce21008de docs/current/plan.md
+f096efc91c9c1563b42da80b3dffb22b1c0adfb2 docs/current/constitution.md
+307851446c58fbcd5da0e2221afdb96bb62ba3f2 docs/current/plan.md
 4c822f3af5b86aecc8ce08cd85cb6b67c7290db9 docs/current/runbooks/agent-work.md
 5e2886e5601689ee4d00a942b1bac33b83790944 docs/current/runbooks/orchestration.md
 be062cf9bc6e7a6606904f8dcb8a5936901171bc scripts/check_governance.py
@@ -117,13 +117,23 @@ else
     die "the patch does not apply to $base and the files are not at their patched content; nothing was applied"
   fi
   git apply --index "$PATCH" || die "git apply failed; the index may hold part of it (git status)"
+  # refuse REASON: take the patch back out of the index and the tree, then stop.
+  refuse() {
+    if git apply --index --reverse "$PATCH" 2>/dev/null; then
+      die "$1; the patch was taken back out, nothing was committed"
+    fi
+    die "$1; nothing was committed, but taking the patch back out failed: the tree was clean before, so git reset --hard HEAD restores it"
+  }
   # The staged change must be exactly the expected files, contents and creates.
   got=$(git diff --cached --name-only | sort)
   [ "$got" = "$(printf '%s\n' "$EXPECTED" | sed '/^$/d' | cut -d' ' -f2 | sort)" ] \
-    || die "the patch staged other files than expected (git diff --cached --name-only); nothing was committed"
-  at : || die "a staged file does not match its expected content; nothing was committed (git diff --cached)"
+    || refuse "the patch staged other files than expected"
+  at : || refuse "a staged file does not match its expected content"
   [ "$(git diff --cached --summary | sed 's/^ //')" = "$(printf '%s\n' "$CREATES" | sed '/^$/d')" ] \
-    || die "the patch creates, deletes or changes the mode of other files than expected; nothing was committed"
+    || refuse "the patch creates, deletes or changes the mode of other files than expected"
+  staged=$(git write-tree) || refuse "git write-tree failed"
+  [ -z "$expect_tree" ] || [ "$staged" = "$expect_tree" ] \
+    || refuse "the commit would hold tree $staged, not the expected $expect_tree (is HEAD the reviewed branch tip?)"
   git commit --quiet -F "$m.final" || die "applied and staged, but the commit failed (git status)"
   printf 'owner-apply: %s  %s on %s\n' "$(git rev-parse --short HEAD)" "$subject" "$base"
 fi

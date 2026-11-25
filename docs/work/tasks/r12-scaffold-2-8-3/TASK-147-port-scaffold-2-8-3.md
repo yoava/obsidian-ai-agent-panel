@@ -80,14 +80,19 @@ Negative scope: `src/`, `tests/`, `package.json`, `package-lock.json`,
   keeps "task numbers are monotonic"; the constitution and ADR-000 take the
   2.8 dependency policy; the ADR index keeps `main`'s rows.
 - The constitution's hook paragraph also names `.git`, the local settings
-  and outside paths, which the hook already handles.
+  and outside paths, which the hook already handles; its dependency policy
+  keeps ADR-007's ADR per runtime library.
+- `CLAUDE.md` imports `docs/current/runbooks/agent-work.md`, and the guide's
+  load sentence names it, so the moved rules load in every session.
 - Verification: `make verify`, the 2.8.3 `validate_project.py`, hook probes,
   and two rehearsals of the owner command in throwaway clones.
 - Risk: the Stop hook now blocks a stop once on a lint failure, where it was
   advisory; `make test` runs about 70 s longer.
 
 Owner command, on the branch `chore/asdlc-2.8.3` (it puts Node 24.22.3 first
-on PATH: on this machine another Node precedes nvm's):
+on PATH: on this machine another Node precedes nvm's). Add
+`--expect-tree <tree>` with the tree the port report names; this file cannot
+hold it, since the tree includes this file:
 
 ```bash
 export PATH="$HOME/.nvm/versions/node/v24.22.3/bin:$PATH" && cd /home/yoava/Projects/yoava/obsidian-ai-agent-panel.wt/asdlc-2.8.3 && npm ci && bash docs/work/patches/asdlc-2.8.3/owner-apply.sh
@@ -117,20 +122,41 @@ Commit message `owner-apply.sh` uses, by patch number:
 ```
 <!-- /owner-commits -->
 
-After it, the owner sets the run workspace once if unset
-(`git config --global agentic.workspace <absolute path>`, or `""`), and logs
-the approval in `docs/records/log.md`.
+After it: the owner sets the run workspace once if unset (recommended `""`,
+run files stay in the run state folder); an agent then logs the approval in
+`docs/records/log.md`, records the verdict here, and lands `make close` of
+this task in one commit; the patch folder stays as the record of what was
+applied.
+
+```bash
+git config --global agentic.workspace ""
+```
 
 ## Run log
 
 - `main` holds scaffold 2.4.0 on a rebuilt history, so the 2.8.1 and 2.8.2
   patches do not apply to it; rebuilt from `main`.
-- `AGENTS.md` came to 222 lines after the merge; the ADR sentence and section
-  6 were reflowed and the runbook pointer moved into the Layout line.
+- `AGENTS.md` came to 222 lines after the merge; the ADR sentence, section 6,
+  the load sentence and one limitation were reflowed to stay at 220.
+- The agent commits carry no `RELEASE_NOTES.md` entry; the note lands with
+  the owner commit, which is where the change happens.
+- Rehearsed twice in fresh clones on Node 24.22.3 after `npm ci`: the first
+  run made one commit and `make verify` passed; the second committed nothing
+  and passed; the 2.8.3 `validate_project.py` reported no error and no
+  warning. Rehearsed again after the review fixes.
 
 ## Independent review
 
-Pending.
+Reviewer: Claude Opus 5.5, fresh general-purpose agent (Codex capped)
+
+Review r1 of `939f9d7`: apply, no blocker. Resolved in the rebuilt patch: F1
+(major: the moved rules were never loaded; now imported and named), F2 (the
+script checks the tree before committing), F3 (a refused apply is taken back
+out), F4 (ADR-007 kept in the dependency policy), F5 (plan row), F9 (hooks-off
+advice), F10 (whitespace exemption narrowed to `*.patch`). Left as
+follow-ups: F7 (`AGENTS.md` at the 220-line cap, one 89-column line), F8
+(owner steps, partly addressed above), F11 (upstream "colour"). The rebuilt
+patch was not re-reviewed.
 
 ## Outcome
 

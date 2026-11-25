@@ -511,7 +511,7 @@ index 159574846fcc0f1e2ef3ee78e153ceb867b10aa3..fd4243553ef24cfe2ec45ffd4a161473
  # Scratch data
  tmp/
 diff --git a/AGENTS.md b/AGENTS.md
-index 06816920b9a99cc631c0c4f15ba30f85003f9842..6fbe03b7b11a967c24ee524eb8522f660f43412b 100644
+index 06816920b9a99cc631c0c4f15ba30f85003f9842..4720adf4990afe67641008028191bfbb0daafdb3 100644
 --- a/AGENTS.md
 +++ b/AGENTS.md
 @@ -26,7 +26,7 @@ session state never constitutes approval.
@@ -519,11 +519,11 @@ index 06816920b9a99cc631c0c4f15ba30f85003f9842..6fbe03b7b11a967c24ee524eb8522f66
    `open-decisions.md`, `adr/`, `product/` (requirements), `design/`
    (mechanisms), `SECURITY.md` (threat model), `DEVELOPMENT.md`,
 -  `COMPARISON.md`, `LEGAL.md`.
-+  `COMPARISON.md`, `LEGAL.md`, `runbooks/` (binding; `agent-work.md` extends this guide).
++  `COMPARISON.md`, `LEGAL.md`, `runbooks/` (binding).
  - `docs/work/`: in progress, not binding: drafts under the same folder names,
    `changes/` requirement deltas, active `tasks/` and `research/`.
  - `docs/records/`: closed tasks, verification evidence, incorporated changes,
-@@ -34,7 +34,7 @@ session state never constitutes approval.
+@@ -34,15 +34,15 @@ session state never constitutes approval.
  - `RELEASE_NOTES.md` (root): what each release shipped. It sits outside
    `docs/records/` because its *Unreleased* section is edited on every change.
  - `.agentic/`: document templates and the scaffold version.
@@ -532,6 +532,18 @@ index 06816920b9a99cc631c0c4f15ba30f85003f9842..6fbe03b7b11a967c24ee524eb8522f66
  - `.claude/`: shared permissions and hooks, the graphify skill. `.github/`:
    CI, release, Dependabot, templates. Root `SECURITY.md` is the reporting
    policy GitHub shows.
+ 
+-Load this guide, the constitution, your task, and what it cites; search
+-`docs/current/` first. Only `docs/current/` governs; never treat a draft,
+-research note, or record as a requirement or decision. For why or when
+-something changed, use `git log --follow -p <file>` and `docs/records/`.
++Load this guide, `runbooks/agent-work.md`, the constitution, your task, and what
++it cites; search `docs/current/` first. Only `docs/current/` governs; never
++treat a draft, research note, or record as a requirement or decision. For why or
++when something changed, use `git log --follow -p <file>` and `docs/records/`.
+ 
+ Current documents state the present answer completely. Rewrite them in place,
+ never add amendment, history, or log sections, and put why a document changed
 @@ -82,8 +82,8 @@ for the threat model and capabilities (consent, what is stored where, what each
  mode skips); `LEGAL.md`, `DEVELOPMENT.md`, `COMPARISON.md` for licensing, build
  and release steps, and dated competitor facts.
@@ -543,7 +555,7 @@ index 06816920b9a99cc631c0c4f15ba30f85003f9842..6fbe03b7b11a967c24ee524eb8522f66
  
  ## 4. Design rules
  
-@@ -112,10 +112,10 @@ honestly and is accepted before implementation.
+@@ -112,10 +112,11 @@ honestly and is accepted before implementation.
  
  ## 6. Task workflow
  
@@ -554,11 +566,12 @@ index 06816920b9a99cc631c0c4f15ba30f85003f9842..6fbe03b7b11a967c24ee524eb8522f66
 +M and L work uses `.agentic/templates/task.md`; active tasks live at
 +`docs/work/tasks/<rNN-slug>/TASK-NNN-slug.md`, task numbers are monotonic
 +repository-wide, and a code-landing task is one commit with a `Task: NNN`
-+trailer. Humans control phase approvals, pushes, and merges.
++trailer. Humans control phase approvals, pushes, and merges. Unattended runs
++follow `docs/current/runbooks/orchestration.md`.
  
  Commit each requested feature or fix as its own commit once `make verify`
  passes. Do not batch unrelated changes; stage only the files that belong to
-@@ -198,7 +198,7 @@ IDs or record explicit manual evidence in `docs/records/verification/`.
+@@ -198,7 +199,7 @@ IDs or record explicit manual evidence in `docs/records/verification/`.
  - Do not add dependencies from memory; verify the registry, review lockfiles,
    and land no dependency or version the dependency screen has not passed.
  - Do not weaken or bypass a failing gate to make a change pass.
@@ -567,11 +580,30 @@ index 06816920b9a99cc631c0c4f15ba30f85003f9842..6fbe03b7b11a967c24ee524eb8522f66
  - Do not read secrets or commit credentials, transcripts, or sensitive fixtures.
  - Do not let shared repository configuration activate machine-local executable
    paths, credentials, or network endpoints; those go in
+@@ -211,9 +212,8 @@ IDs or record explicit manual evidence in `docs/records/verification/`.
+ 
+ - Remote branch protection, required checks, secret scanning, and bot
+   permissions cannot be proven from this checkout; verify them remotely.
+-- `make format` checks whitespace only, and coverage, dead-code,
+-  duplicate-code, and architecture gates are missing
+-  (`docs/current/open-decisions.md`).
++- `make format` checks whitespace only, and coverage, dead-code, duplicate-code,
++  and architecture gates are missing (`docs/current/open-decisions.md`).
+ - Code that imports `obsidian` has no automated tests.
+ - The protected-path hook runs in Claude Code only; for other agents the
+   boundary is advisory, with CI and human review as the backstop.
 diff --git a/CLAUDE.md b/CLAUDE.md
-index 37fd1c4cc76245950ef5cdbae5b6c76d2a53126a..ff1d5f2d32ab5f6e9665df666bbdca6f7ba59dad 100644
+index 37fd1c4cc76245950ef5cdbae5b6c76d2a53126a..6a5a8d78687a5f0ceb5eb5564b36f83d358f1748 100644
 --- a/CLAUDE.md
 +++ b/CLAUDE.md
-@@ -7,8 +7,9 @@
+@@ -1,19 +1,22 @@
+ # AI Agent Panel
+ 
+ @AGENTS.md
++@docs/current/runbooks/agent-work.md
+ 
+ ## Claude Code only
+ 
  - `.claude/settings.json` is committed and shared, so it stays least
    privilege: gate commands allowed, `git push` asks, destructive git and secret
    reads denied, bypass mode disabled, the protected-path PreToolUse hook
@@ -583,6 +615,14 @@ index 37fd1c4cc76245950ef5cdbae5b6c76d2a53126a..ff1d5f2d32ab5f6e9665df666bbdca6f
    machine-local binary, such as graphify's `hook-guard`, go in
    `.claude/settings.local.json` (gitignored); Claude Code merges both files.
  - The protected-path hook asks before an edit outside the repository, unless
+   the path is under a folder in `permissions.additionalDirectories` of
+   `.claude/settings.local.json` (absolute paths); edits to that file ask too.
+-- Committed hooks run with your privileges. Before reviewing an untrusted
+-  branch, set `"disableAllHooks": true` in `.claude/settings.local.json`.
++- Committed hooks run with your privileges. Review an untrusted branch in a
++  throwaway clone: `"disableAllHooks": true` in `.claude/settings.local.json`
++  also turns off the protected-path hook, and governance warns while it is set.
+ - The graphify skill is `.claude/skills/graphify/` (`/graphify`).
 diff --git a/Makefile b/Makefile
 index 8a8d09377372ddba394ea69b2b894bc0fecbd979..2e6fe06be0d9cb5f779e99d8cb2d7847207eb59c 100644
 --- a/Makefile
@@ -648,10 +688,10 @@ index 2d0d3700f4e22ec269e418c144e0cfaec8237da7..c9d4d271b81ec4d2ce9e0000d6e96f7d
  `docs/current/adr/` and marks it accepted; committing that move is the human
  approval.
 diff --git a/docs/current/constitution.md b/docs/current/constitution.md
-index f6ad4d2e08cdae9e6019b6c718f2ee3ff0b17d2b..507aac83dc72a10870399df03e2688410abf4ccf 100644
+index f6ad4d2e08cdae9e6019b6c718f2ee3ff0b17d2b..f096efc91c9c1563b42da80b3dffb22b1c0adfb2 100644
 --- a/docs/current/constitution.md
 +++ b/docs/current/constitution.md
-@@ -94,8 +94,10 @@ a human decision, never an autonomous agent edit. Evidence and detail:
+@@ -94,8 +94,11 @@ a human decision, never an autonomous agent edit. Evidence and detail:
    bypass rights.
  - Unsupervised automation shall never combine private-data access, untrusted
    content, and external communication.
@@ -660,11 +700,12 @@ index f6ad4d2e08cdae9e6019b6c718f2ee3ff0b17d2b..507aac83dc72a10870399df03e268841
 +- Dependency policy: every dependency needs registry verification and human
 +  lockfile review; an accepted ADR is required only for a significant choice
 +  (framework, external service, storage format, public contract, or
-+  load-bearing structural decision), not per package.
++  load-bearing structural decision), not per package; a runtime library is
++  admitted by an accepted ADR of its own (ADR-007).
  - Every new dependency and every version change of one, with the packages it
    pulls in, passes the dependency screen before it lands, and a human accepts
    the result:
-@@ -119,6 +121,10 @@ a human decision, never an autonomous agent edit. Evidence and detail:
+@@ -119,6 +122,10 @@ a human decision, never an autonomous agent edit. Evidence and detail:
    A version change re-runs the security and legal reviews every time, and the
    whole screen for a major version, a new transitive package, or a change of
    license or maintainer.
@@ -675,7 +716,7 @@ index f6ad4d2e08cdae9e6019b6c718f2ee3ff0b17d2b..507aac83dc72a10870399df03e268841
  - Shared repository configuration shall not activate machine-local executable
    paths, credentials, or network endpoints without explicit local approval.
  
-@@ -146,7 +152,7 @@ Agents never edit these paths without explicit human authorization:
+@@ -146,7 +153,7 @@ Agents never edit these paths without explicit human authorization:
  - `docs/current/constitution.md`
  - `docs/current/adr/ADR-000-adr-process.md`
  - `.agentic/`
@@ -684,7 +725,7 @@ index f6ad4d2e08cdae9e6019b6c718f2ee3ff0b17d2b..507aac83dc72a10870399df03e268841
  - `scripts/` (except `scripts/README.md`)
  - `.claude/settings.json`
  - `.github/workflows/` and `.github/dependabot.yml`
-@@ -156,8 +162,10 @@ Agents never edit these paths without explicit human authorization:
+@@ -156,8 +163,10 @@ Agents never edit these paths without explicit human authorization:
  - Architecture and dependency-policy files added by accepted ADRs
  - Metrics ledgers and holdout evidence
  
@@ -698,7 +739,7 @@ index f6ad4d2e08cdae9e6019b6c718f2ee3ff0b17d2b..507aac83dc72a10870399df03e268841
  shell writes. Other agents must map the boundary to their sandbox or tool
  policy. CI and human review remain the independent backstop.
 diff --git a/docs/current/plan.md b/docs/current/plan.md
-index d9d22ede55695ec8428e89843c4b48ed9017810d..7a67b6ad79bff474d7cc8172c093c88ce21008de 100644
+index d9d22ede55695ec8428e89843c4b48ed9017810d..307851446c58fbcd5da0e2221afdb96bb62ba3f2 100644
 --- a/docs/current/plan.md
 +++ b/docs/current/plan.md
 @@ -37,7 +37,7 @@ gate below.
@@ -706,7 +747,7 @@ index d9d22ede55695ec8428e89843c4b48ed9017810d..7a67b6ad79bff474d7cc8172c093c88c
  | Phase | Scope | Gate | Status |
  | --- | --- | --- | --- |
 -| 0 Foundation | Agent guide, constitution, templates, gates, CI calling `make verify`, remote controls | local and remote verify; deliberate control tests | closed locally 2026-10-10: gate green, lint fails on warnings, scaffold 2.1.0; D-01 and D-02 deferred past the redesign; remote controls verified outside this checkout |
-+| 0 Foundation | Agent guide, constitution, templates, gates, CI calling `make verify`, remote controls | local and remote verify; deliberate control tests | closed locally 2026-10-10: gate green, lint fails on warnings, scaffold 2.8.3; D-01 and D-02 deferred past the redesign; remote controls verified outside this checkout |
++| 0 Foundation | Agent guide, constitution, templates, gates, CI calling `make verify`, remote controls | local and remote verify; deliberate control tests | closed locally 2026-10-10: gate green, lint fails on warnings, scaffold 2.1.0 (now 2.8.3); D-01 and D-02 deferred past the redesign; remote controls verified outside this checkout |
  | 1 Requirements | the second agent's PRD with EARS criteria | human PRD approval commit | planned |
  | 2 Design | ADRs and design for the agent abstraction | human ADR/design approval | planned |
  | 3 Plan | Dependency-ordered tasks, skeleton first | human plan approval commit | planned |

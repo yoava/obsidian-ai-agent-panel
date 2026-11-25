@@ -1,3 +1,3 @@
 graphify-out/graph.json merge=graphify
 docs/work/research/redesign-canvas/** -whitespace
-docs/work/patches/** -whitespace
+docs/work/patches/**/*.patch -whitespace
